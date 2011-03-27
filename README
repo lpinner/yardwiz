@@ -12,6 +12,11 @@ Requirements
 ##################
 YARDWiz has been tested successfully on Windows 7 Pro, Ubuntu 10.04 and 10.10 (32 bit only so far) with python 2.6, wxPython 2.8 & 2.9, and getWizPnP 0.4.3a. It should work on Windows XP/Vista and other linux flavours. I have no access to a Mac, so no idea if it will run on one.
 
+On Windows:
+    A windows executable, built with py2exe, is now available. It still doesn't have an installer (one day...) but is self contained and doesn't require the installation of python, wxpython or getWizPnP
+
+From source:
+
 Before running you will need to install the following software:
 * python >=2.6 and < 3.0  (http://www.python.org)
 * wxpython 2.8+  (http://www.wxpython.org)
@@ -22,22 +27,28 @@ Before running you will need to install the following software:
 ##################
 Installation
 ##################
-Currently no OS specific installers have been created, just a simple python setupy.py script. 
-To install, unzip the source archive, then:
-    Windows - run install.bat (you _may_ need to run it as Administrator).
-    Linux - sudo python setupy.py install
 
-For easy access to the application, I just create shortcuts in my Windows Start Menu/Linux Gnome Menu:
-    Windows: create a shortcut to <python dir>\pythonw.exe <python dir>\Scripts\yardwiz
-             E.G. C:\Python26\pythonw.exe C:\Python26\Scripts\yardwiz
-    Linux: create a desktop/menu launcher to /usr/local/bin/yardwiz
-    
-    To bling up your shortcut/launcher, there is an icon in the yardwizgui\icons folder.
-    
-To uninstall (assuming you still have a copy of the source :):
-    Windows - run uninstall.bat (you _may_ need to run it as Administrator).
-    Linux - sudo python setupy.py uninstall
-    
+Windows executable:
+
+    A windows executable, built with py2exe, is now available. It still doesn't have an installer (one day...) but is self contained and doesn't require the installation of python, wxpython or getWizPnP
+
+From source:
+
+    Currently no OS specific installers have been created, just a simple python setupy.py script. 
+    To install, unzip the source archive, then:
+        Windows - run install.bat (you _may_ need to run it as Administrator).
+        Linux - sudo python setupy.py install
+
+    For easy access to the application, I just create shortcuts in my Windows Start Menu/Linux Gnome Menu:
+        Windows: create a shortcut to <python dir>\pythonw.exe <python dir>\Scripts\yardwiz
+                 E.G. C:\Python26\pythonw.exe C:\Python26\Scripts\yardwiz
+        Linux: create a desktop/menu launcher to /usr/local/bin/yardwiz
+        
+        To bling up your shortcut/launcher, there is an icon in the yardwizgui\icons folder.
+        
+    To uninstall (assuming you still have a copy of the source :):
+        Windows - run uninstall.bat (you _may_ need to run it as Administrator).
+        Linux - sudo python setupy.py uninstall
 ##################
 Known issues
 ##################
