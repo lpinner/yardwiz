@@ -3,9 +3,9 @@ YARDWiz - Yet Another Recording Downloader for the Wiz
 ##################
 Introduction
 ##################
-YARDWiz is a simple GUI front end for prl's getWizPnP prgram.  getWixPnP is a command line program allows that you (among other things) to list and download recordings from a Beyonwiz DP series PVR over the network using the WizPnP interface. It draws a lot of inspiration from the Two Wizards WizZilla software, though YARDWiz is simpler in functionality and design.
+YARDWiz is a simple GUI front end for prl's getWizPnP prgram.  getWizPnP is a command line program allows that you (among other things) to list and download recordings from a Beyonwiz DP series PVR over the network using the WizPnP interface. It draws a lot of inspiration from the Two Wizards WizZilla software, though YARDWiz is simpler in functionality and design.
 
-I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran my Linux laptop.
+I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
 
 ##################
 Requirements
