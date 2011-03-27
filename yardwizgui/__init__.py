@@ -60,7 +60,7 @@ class GUI( gui.GUI ):
         gui.GUI.__init__( self, parent=None )
 
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
-        icons=os.path.join(os.path.dirname(__file__),u'icons')
+        icons=os.path.join(data_path(),u'icons')
         ico = wx.Icon( os.path.join(icons, u"icon.png"), wx.BITMAP_TYPE_ANY )
         self.SetIcon(ico)
         self.btnConnect.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"reload.png"), wx.BITMAP_TYPE_ANY ) )
@@ -145,7 +145,7 @@ class GUI( gui.GUI ):
             else:
                 configdir = os.path.join(os.environ['HOME'], '.'+APPNAME.lower())
 
-        defaultconfig=os.path.join(os.path.dirname(__file__),'config','defaults.ini')
+        defaultconfig=os.path.join(data_path(),'config','defaults.ini')
         self.userconfig=os.path.join(configdir,'config.ini')
         self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
         self.config.read([defaultconfig,self.userconfig])
@@ -906,6 +906,11 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
                 else:result.append(pext)
     return result
 
+def frozen():
+    return hasattr(sys, "frozen")
+def data_path():
+    if frozen():return os.path.dirname(sys.executable)
+    return os.path.dirname(__file__)
 #######################################################################
 #Custom WX Events
 #######################################################################
