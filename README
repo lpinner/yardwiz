@@ -1,0 +1,46 @@
+YARDWiz - Yet Another Recording Downloader for the Wiz
+
+##################
+Introduction
+##################
+YARDWiz is a simple GUI front end for prl's getWizPnP prgram.  getWixPnP is a command line program allows that you (among other things) to list and download recordings from a Beyonwiz DP series PVR over the network using the WizPnP interface. It draws a lot of inspiration from the Two Wizards WizZilla software, though YARDWiz is simpler in functionality and design.
+
+I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran my Linux laptop.
+
+##################
+Requirements
+##################
+YARDWiz has been tested successfully on Windows 7 Pro, Ubuntu 10.04 and 10.10 (32 bit only so far) with python 2.6, wxPython 2.8 & 2.9, and getWizPnP 0.4.3a. It should work on Windows XP/Vista and other linux flavours. I have no access to a Mac, so no idea if it will run on one.
+
+Before running you will need to install the following software:
+* python >=2.6 and < 3.0  (http://www.python.org)
+* wxpython 2.8+  (http://www.wxpython.org)
+* getWizPnP   (http://www.openwiz.org/wiki/GetWizPnP_Release)
+    - Windows: download the pre-compiled Windows executable version and save getWizPnP.exe somewhere in your PATH
+    - Linux: install the perl package from source as per the installation notes in getWizPnP README.txt
+
+##################
+Installation
+##################
+Currently no OS specific installers have been created, just a simple python setupy.py script. 
+To install, unzip the source archive, then:
+    Windows - run install.bat (you _may_ need to run it as Administrator).
+    Linux - sudo python setupy.py install
+
+For easy access to the application, I just create shortcuts in my Windows Start Menu/Linux Gnome Menu:
+    Windows: create a shortcut to <python dir>\pythonw.exe <python dir>\Scripts\yardwiz
+             E.G. C:\Python26\pythonw.exe C:\Python26\Scripts\yardwiz
+    Linux: create a desktop/menu launcher to /usr/local/bin/yardwiz
+    
+    To bling up your shortcut/launcher, there is an icon in the yardwizgui\icons folder.
+    
+To uninstall (assuming you still have a copy of the source :):
+    Windows - run uninstall.bat (you _may_ need to run it as Administrator).
+    Linux - sudo python setupy.py uninstall
+    
+##################
+Known issues
+##################
+* On Windows when running from pythonw.exe, the getwizpnp.exe subprocess has proven troublesome to kill (i.e if you want to pause or stop a download). I've had to fallback to using the taskkill.exe program that is included in most recent versions of Windows (XP and later). Taskkill.exe is _not_ included in Windows XP Home edition and I don't know if it is included in Windows Vista/7 basic/home/starter editions. If this is an issue, an alternative is to download PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 and extract PsKill.exe to somewhere on your PATH. YARDWiz will then attempt to use pskill instead.
+
+* The app really should use a lawnmower icon...
