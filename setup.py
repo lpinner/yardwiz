@@ -1,9 +1,15 @@
 #!/usr/bin/python
 from distutils.core import setup
-import sys
+import sys,ConfigParser
+
+config=ConfigParser.ConfigParser()
+config.read('build.ini')
+version=config.get('Build','VERSION')                 #N.N.N.N format version number
+display_version=config.get('Build','DISPLAY_VERSION') #Version text string
+short_version=version[:-2]
 
 setupargs={'name':'YARDWiz',
-      'version':'0.1.1',
+      'version':short_version,
       'description':'Yet Another Recording Downloader for the Wiz',
       'long_description':'YARDWiz is a simple GUI front end for prl\'s getWizPnP prgram. getWixPnP is a command line program allows that you (among other things) to list and download recordings from a Beyonwiz DP series PVR over the network using the WizPnP interface.',
       'platforms':['linux','windows'],
@@ -45,14 +51,41 @@ if len(sys.argv)>1 and sys.argv[1]=='uninstall':
     print 'Uninstall successfull'
 
 elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
-    import py2exe,glob,os
+    import py2exe,glob,os,subprocess,zipfile,shutil
+
     setupargs['windows'] = [{'script':'yardwiz',
                             'icon_resources':[(2, r'yardwizgui/icons/icon.ico')]
                             }]
-    setupargs['data_files']=[('',['getwizpnp.exe']),('config', ['yardwizgui/config/defaults.ini']), ('icons', glob.glob('yardwizgui/icons/*.*'))]
+    setupargs['data_files']=[('',['getwizpnp.exe']),
+                             ('',['README']),
+                             ('',['LICENSE']),
+                             ('',['TODO']),
+                             ('config', ['yardwizgui/config/defaults.ini']),
+                             ('icons', glob.glob('yardwizgui/icons/*.*'))]
     #setupargs['options'] = {'py2exe': {'bundle_files': 1}}
     #setupargs['zipfile'] = None
+
     setup(**setupargs)
+
+    print 'Compiling installer.'
+    cmd=[r'C:\Program Files\NSIS\makensis','/V2','/DVERSION=',version,'/DDISPLAY_VERSION=',display_version,'build.nsi']
+    cmd=subprocess.list2cmdline(cmd).replace('= ','=')
+    proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout,stderr=proc.communicate()
+    exit_code=proc.wait()
+    if exit_code:print stderr
+    else:
+        print stdout
+        print 'Zipping files'
+        fout='dist/YARDWiz-%s-win32setup.zip'%short_version
+        zout=zipfile.ZipFile(fout,'w',zipfile.ZIP_DEFLATED)
+        zout.write('dist/setup.exe','setup.exe')
+        zout.close()
+        for f in os.listdir('dist'):
+            f='dist/'+f
+            if not f==fout:
+                if os.path.isdir(f):shutil.rmtree(f)
+                else:os.unlink(f)
 
 else:        
     setup(**setupargs)
