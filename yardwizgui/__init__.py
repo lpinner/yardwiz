@@ -21,7 +21,7 @@
 '''Subclass of gui.GUI'''
 
 import os,sys,threading,thread,time,ConfigParser,signal,ctypes
-import locale,subprocess
+import locale,subprocess,re
 import ordereddict 
 import wx
 import gui
@@ -118,6 +118,10 @@ class GUI( gui.GUI ):
             errdial.ShowModal()
             sys.exit(1)
 
+        #Regular expressions for IP, IP:port, and hostname
+        self._regexip=r'^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}$' #May not be a valid IP, but it's the right form...
+        self._regexipport=self._regexip[:-1]+'(:(\d{1,5}))$'
+
     #######################################################################
     #Methods
     #######################################################################
@@ -152,10 +156,9 @@ class GUI( gui.GUI ):
 
     def _ApplyConfig(self):
         #write stuff to various controls, eg server & port
-        self.txtServer.Clear()
-        self.txtServer.WriteText(self.config.get('Settings','server'))
-        self.txtPort.Clear()
-        self.txtPort.WriteText(self.config.get('Settings','port'))
+        device=self.config.get('Settings','device')
+        self.cbxDevice.Clear()
+        self.cbxDevice.SetValue(device)
         xsize=self.config.getint('Settings','xsize')
         ysize=self.config.getint('Settings','ysize')
         xmin=self.config.getint('Settings','xmin')
@@ -180,7 +183,7 @@ class GUI( gui.GUI ):
         self.display_dateformat=self.config.get('Settings','dateformat')
         self.lstPrograms.datetimeformat=self.display_dateformat
         self.lstPrograms.timeformat=self.getwizpnp_timeformat #Program length
-            
+        
     def _WriteConfig(self):
         #Write self.config back
         if not os.path.exists(os.path.dirname(self.userconfig)):
@@ -192,6 +195,7 @@ class GUI( gui.GUI ):
         self.config.set('Settings', 'xmin', str(xmin))
         self.config.set('Settings', 'ymin', str(ymin))
         self.config.write(open(self.userconfig,'w'))
+        device=self.config.get('Settings','device')
 
     def _Queue(self,clear=False):
         if self._downloading:return
@@ -200,6 +204,7 @@ class GUI( gui.GUI ):
             self.queue=[]
             self.lstQueue.ClearAll()
             self.lstQueue.InsertColumn( 0, u"" )
+            self.lstQueue.InsertColumn( 1, u"" )
         
         idx = self.lstPrograms.GetFirstSelected()
         i=-1
@@ -211,12 +216,13 @@ class GUI( gui.GUI ):
             elif qidx not in self.queue:
                 i+=1
                 self.queue.append(qidx)
-                self.lstQueue.Append([program['title']])
+                self.lstQueue.Append([program['title'],time.strftime(self.display_dateformat,program['date'])])
                 self.lstQueue.SetItemData(i,qidx)
                 
             idx = self.lstPrograms.GetNextSelected(idx)
 
         self.lstQueue.SetColumnWidth(0, wx.LIST_AUTOSIZE) 
+        self.lstQueue.SetColumnWidth(1, wx.LIST_AUTOSIZE) 
         self.btnClearQueue.Enable( True ) 
         self.btnDownload.Enable( True )
         self._ShowTab(self.idxQueue)
@@ -277,7 +283,7 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( False )
         self.mitDownload.Enable( False )
         self._downloading=True
-        self.ThreadedDownloader=ThreadedDownloader(self,self.config.get('Settings','server'),self.config.get('Settings','port'),programs,self.Play,self.Stop)
+        self.ThreadedDownloader=ThreadedDownloader(self,self.device,self.ip,self.port,programs,self.Play,self.Stop)
 
     def _DownloadComplete(self,index,stopped):
 
@@ -309,18 +315,56 @@ class GUI( gui.GUI ):
                 self.btnDownload.Enable( True )
                 self.lstQueue.Enable( True )
                 
+    def _Discover(self):
+        self._Log('Searching for Wizzes.')
+        cmd=[wizexe,'--discover']
+        cmd=subprocess.list2cmdline(cmd)
+        proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        stdout,stderr=proc.communicate()
+        exit_code=proc.wait()
+        stdout=stdout.strip()
+        if stdout:
+            self.cbxDevice.Clear()
+            self.cbxDevice.SetValue('')
+            for wiz in stdout.split('\n'):
+                wiz=wiz.strip().split()
+                if wiz and len(wiz)>1:
+                    wizname=' '.join(wiz[1:])
+                    self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
+                    self.cbxDevice.Append(wizname)
+                    if not self.cbxDevice.GetValue():self.cbxDevice.SetValue(wizname)
+                    self.config.set('Settings','device',wizname)
+        else:
+            self._Log('Unable to discover any Wizzes.')
+            self._ShowTab(self.idxLog)
+        
     def _Connect(self):
-        self.btnConnect.Enable( False )
+        self.device=self.cbxDevice.GetValue().strip()
+        self.ip,self.port=None,None
+        if not self.device:
+            self._Discover()
+            return
+        else:
+            self.config.set('Settings','device',self.device)
+            ipport=re.match(self._regexipport,self.device)
+            iponly=re.match(self._regexip,self.device)
+        if ipport:
+            self.ip,self.port=self.device.split(':')
+            self.device=None
+        elif iponly:
+            self.ip,self.port=self.device,'49152'
+            self.device=None
 
+        self.btnConnect.Enable( False )
         self.lblProgressText.SetLabelText('Connecting...')
-        self._Log('Connecting to %s:%s...'%(self.config.get('Settings','server'),self.config.get('Settings','port')))
+        self._Log('Connecting to %s...'%self.config.get('Settings','device'))
 
         self.gaugeProgressBar.Show()
         self.gaugeProgressBar.Pulse()
         self._Reset()
 
         #Connect to the Wiz etc...
-        self.ThreadedConnector=ThreadedConnector(self,self.config.get('Settings','server'),self.config.get('Settings','port'))
+        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port)
 
     def _Connected(self,event):
         self.lblProgressText.SetLabelText('')
@@ -410,6 +454,7 @@ class GUI( gui.GUI ):
         self.queue=[]
         self.lstQueue.ClearAll()
         self.lstQueue.InsertColumn( 0, u"" )
+        self.lstQueue.InsertColumn( 1, u"" )
         self.btnClearQueue.Enable( False ) 
         self.btnDownload.Enable( False )
 
@@ -433,7 +478,6 @@ class GUI( gui.GUI ):
         except:pass
         event.Skip()
         sys.exit(0)
-        
 
     def btnConnect_OnClick( self, event ):
         self._Connect()
@@ -467,6 +511,13 @@ class GUI( gui.GUI ):
 
     def btnStop_OnClick( self, event ):
         self.Stop.set()
+        event.Skip()
+
+    def cbxDevice_OnKillFocus( self, event ):
+        self.config.set('Settings','device',self.cbxDevice.GetValue())
+        
+    def cbxDevice_OnTextEnter( self, event ):
+        self._Connect()
         event.Skip()
         
     def lstPrograms_OnColClick( self, event ):
@@ -532,14 +583,6 @@ class GUI( gui.GUI ):
         self._DownloadQueue()
         event.Skip()
 
-    def txtServer_OnKillFocus( self, event ):
-        self.config.set('Settings','server',self.txtServer.GetValue())
-        event.Skip()
-    
-    def txtPort_OnKillFocus( self, event ):
-        self.config.set('Settings','port',self.txtPort.GetValue())
-        event.Skip()
-
     def onLog( self, event ):
         self._Log(event.message)
         event.Skip()
@@ -556,31 +599,35 @@ class GUI( gui.GUI ):
 #Helper classes
 #######################################################################
 class ThreadedConnector( threading.Thread ):
-    def __init__( self, parent, server, port):#, fnAddProgram, fnComplete):
+    def __init__( self, parent, device, ip, port):#, fnAddProgram, fnComplete):
         threading.Thread.__init__( self )
-        self.server=server
+        self.device=device
+        self.ip=ip
         self.port=port
         self.parent=parent
         self.start()
     def run(self):
-        if iswin: 
-            cmd=['ping','-n','1',self.server]
-        else:
-            cmd=['ping','-c','1',self.server]
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        stdout,stderr=proc.communicate()
-        exit_code=proc.wait()
+##        if iswin: 
+##            cmd=['ping','-n','1',self.server]
+##        else:
+##            cmd=['ping','-c','1',self.server]
+##        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+##        stdout,stderr=proc.communicate()
+##        exit_code=proc.wait()
+##
+##        if exit_code > 0 or 'destination host unreachable' in stdout.lower():
+##            evt = Connected(wizEVT_CONNECTED, -1,'Unable to connect to the WizPnP server')
+##            try:wx.PostEvent(self.parent, evt)
+##            except:pass #we're probably exiting
+##            return
+##        else:
+##            evt = evt = Log(wizEVT_LOG, -1,'The WizPnP server is online')
+##            wx.PostEvent(self.parent, evt)
 
-        if exit_code > 0 or 'destination host unreachable' in stdout.lower():
-            evt = Connected(wizEVT_CONNECTED, -1,'Unable to connect to the WizPnP server')
-            try:wx.PostEvent(self.parent, evt)
-            except:pass #we're probably exiting
-            return
+        if self.device:
+            cmd=[wizexe,'--device',self.device,'-l','-v','--index']
         else:
-            evt = evt = Log(wizEVT_LOG, -1,'The WizPnP server is online')
-            wx.PostEvent(self.parent, evt)
-    
-        cmd=[wizexe,'-H',self.server,'-p',self.port,'-l','-v','--index']
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'-l','-v','--index']
         proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
@@ -652,7 +699,10 @@ class ThreadedConnector( threading.Thread ):
         return program
 
     def _getinfo(self,indexname,indexnum): 
-        cmd=[wizexe,'-H',self.server,'-p',self.port,'-vv','-l','--BWName',indexname]
+        if self.device:
+            cmd=[wizexe,'--device',self.device,'-vv','-l','--BWName',indexname]
+        else:
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'-vv','-l','--BWName',indexname]
         cmd=subprocess.list2cmdline(cmd)
         #This fails for some reason (on Win32) if a wx.FileDialog is open (i.e.) a download is started. Workaround is to set shell=True
         #proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
@@ -677,10 +727,11 @@ class ThreadedConnector( threading.Thread ):
         except:pass
         
 class ThreadedDownloader( threading.Thread ):
-    def __init__(self, parent, server, port, programs, evtPlay, evtStop):
+    def __init__(self, parent, device, ip, port, programs, evtPlay, evtStop):
         threading.Thread.__init__( self )
 
         self.parent=parent
+        self.device=device
         self.server=server
         self.port=port
         self.programs=programs
@@ -709,7 +760,10 @@ class ThreadedDownloader( threading.Thread ):
         self._log('Downloading %s...'%program['title'])
         d=os.path.dirname(program['filename'])
         f=os.path.splitext(os.path.basename(program['filename']))[0]
-        cmd=[wizexe,'-H',self.server,'-p',self.port,'-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
+        if self.device:
+            cmd=[wizexe,'--device',self.device,'-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
+        else:
+            cmd=[wizexe,'-H',self.server,'-p',self.port,'-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
 
         try:
             self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)

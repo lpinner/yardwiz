@@ -22,42 +22,31 @@ class GUI ( wx.Frame ):
 		self.SetSizeHintsSz( wx.Size( 300,300 ), wx.DefaultSize )
 		self.SetFont( wx.Font( 12, 70, 90, 90, False, wx.EmptyString ) )
 		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
-		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
+		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_APPWORKSPACE ) )
 		
 		bSizer4 = wx.BoxSizer( wx.VERTICAL )
 		
-		fgSizer1 = wx.FlexGridSizer( 1, 6, 0, 0 )
+		fgSizer1 = wx.FlexGridSizer( 1, 4, 0, 0 )
 		fgSizer1.SetFlexibleDirection( wx.BOTH )
 		fgSizer1.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 		
 		fgSizer1.SetMinSize( wx.Size( -1,25 ) ) 
-		self.lblServer = wx.StaticText( self, wx.ID_ANY, u"Wiz address:", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
-		self.lblServer.Wrap( -1 )
-		self.lblServer.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.lblServer.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
+		self.lblServerCombo = wx.StaticText( self, wx.ID_ANY, u"Wiz server:", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.lblServerCombo.Wrap( -1 )
+		self.lblServerCombo.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
+		self.lblServerCombo.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
 		
-		fgSizer1.Add( self.lblServer, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
+		fgSizer1.Add( self.lblServerCombo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
-		self.txtServer = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.txtServer.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
-		self.txtServer.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
-		self.txtServer.SetMinSize( wx.Size( 150,-1 ) )
+		cbxDeviceChoices = []
+		self.cbxDevice = wx.ComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, cbxDeviceChoices, 0 )
+		self.cbxDevice.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave this field blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
+		self.cbxDevice.SetMinSize( wx.Size( 250,-1 ) )
 		
-		fgSizer1.Add( self.txtServer, 2, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.BOTTOM|wx.RIGHT|wx.TOP, 5 )
+		fgSizer1.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
-		self.lblPort = wx.StaticText( self, wx.ID_ANY, u"Port:", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
-		self.lblPort.Wrap( -1 )
-		self.lblPort.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.lblPort.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
 		
-		fgSizer1.Add( self.lblPort, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
-		
-		self.txtPort = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
-		self.txtPort.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
-		self.txtPort.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
-		self.txtPort.SetMinSize( wx.Size( 150,-1 ) )
-		
-		fgSizer1.Add( self.txtPort, 2, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.BOTTOM|wx.RIGHT|wx.TOP, 5 )
+		fgSizer1.AddSpacer( ( 16, 0), 1, 0, 5 )
 		
 		self.btnConnect = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnConnect.SetToolTipString( u"Connect to the WizPnp server\nand get recording information" )
@@ -65,9 +54,6 @@ class GUI ( wx.Frame ):
 		self.btnConnect.SetToolTipString( u"Connect to the WizPnp server\nand get recording information" )
 		
 		fgSizer1.Add( self.btnConnect, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
-		
-		
-		fgSizer1.AddSpacer( ( 16, 0), 1, 0, 5 )
 		
 		bSizer4.Add( fgSizer1, 0, wx.EXPAND, 5 )
 		
@@ -94,7 +80,6 @@ class GUI ( wx.Frame ):
 		
 		self.nbtabLog = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.nbtabLog.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.nbtabLog.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
 		self.nbtabLog.SetMinSize( wx.Size( -1,250 ) )
 		
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
@@ -112,7 +97,6 @@ class GUI ( wx.Frame ):
 		self.nbTabArea.AddPage( self.nbtabLog, u"Log", True )
 		self.nbtabInfo = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		self.nbtabInfo.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.nbtabInfo.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
 		self.nbtabInfo.SetMinSize( wx.Size( -1,500 ) )
 		
 		bSizer8 = wx.BoxSizer( wx.VERTICAL )
@@ -130,7 +114,6 @@ class GUI ( wx.Frame ):
 		self.nbTabArea.AddPage( self.nbtabInfo, u"Info", False )
 		self.nbtabQueue = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.STATIC_BORDER|wx.TAB_TRAVERSAL )
 		self.nbtabQueue.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.nbtabQueue.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
 		
 		bSizer5 = wx.BoxSizer( wx.VERTICAL )
 		
@@ -226,7 +209,6 @@ class GUI ( wx.Frame ):
 		self.lblProgressText = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
 		self.lblProgressText.Wrap( -1 )
 		self.lblProgressText.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.lblProgressText.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
 		self.lblProgressText.SetMinSize( wx.Size( 50,-1 ) )
 		
 		gSizer3.Add( self.lblProgressText, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.TOP|wx.LEFT, 10 )
@@ -256,8 +238,8 @@ class GUI ( wx.Frame ):
 		# Connect Events
 		self.Bind( wx.EVT_ACTIVATE, self.onActivateApp )
 		self.Bind( wx.EVT_CLOSE, self.onCloseApp )
-		self.txtServer.Bind( wx.EVT_KILL_FOCUS, self.txtServer_OnKillFocus )
-		self.txtPort.Bind( wx.EVT_KILL_FOCUS, self.txtPort_OnKillFocus )
+		self.cbxDevice.Bind( wx.EVT_KILL_FOCUS, self.cbxDevice_OnKillFocus )
+		self.cbxDevice.Bind( wx.EVT_TEXT_ENTER, self.cbxDevice_OnTextEnter )
 		self.btnConnect.Bind( wx.EVT_BUTTON, self.btnConnect_OnClick )
 		self.lstPrograms.Bind( wx.EVT_LEFT_DCLICK, self.lstPrograms_OnDoubleClick )
 		self.lstPrograms.Bind( wx.EVT_LIST_COL_CLICK, self.lstPrograms_OnColClick )
@@ -283,8 +265,8 @@ class GUI ( wx.Frame ):
 		# Disconnect Events
 		self.Unbind( wx.EVT_ACTIVATE )
 		self.Unbind( wx.EVT_CLOSE )
-		self.txtServer.Unbind( wx.EVT_KILL_FOCUS, None )
-		self.txtPort.Unbind( wx.EVT_KILL_FOCUS, None )
+		self.cbxDevice.Unbind( wx.EVT_KILL_FOCUS, None )
+		self.cbxDevice.Unbind( wx.EVT_TEXT_ENTER, None )
 		self.btnConnect.Unbind( wx.EVT_BUTTON, None )
 		self.lstPrograms.Unbind( wx.EVT_LEFT_DCLICK, None )
 		self.lstPrograms.Unbind( wx.EVT_LIST_COL_CLICK, None )
@@ -314,10 +296,10 @@ class GUI ( wx.Frame ):
 	def onCloseApp( self, event ):
 		event.Skip()
 	
-	def txtServer_OnKillFocus( self, event ):
+	def cbxDevice_OnKillFocus( self, event ):
 		event.Skip()
 	
-	def txtPort_OnKillFocus( self, event ):
+	def cbxDevice_OnTextEnter( self, event ):
 		event.Skip()
 	
 	def btnConnect_OnClick( self, event ):

@@ -151,7 +151,7 @@
       !insertmacro MULTIUSER_UNINIT
     FunctionEnd
 
-    Function UninstallPrevious
+    Function UninstallPrevious 
         ; Check for uninstaller.
         ReadRegStr $R0 ${REG_ROOT} "${UNINSTALL_PATH}" "UninstallString"
         ${If} $R0 != ""
@@ -162,8 +162,6 @@
                 GetTempFileName $ConfigFile
                 ;CreateDirectory $ConfigFile
                 CopyFiles /SILENT $1\${APP_NAME}\config.ini $ConfigFile
-                Goto rununinstaller
-                
             rununinstaller:
                 ; Run the uninstaller silently.
                 DetailPrint "Removing previous installation."
