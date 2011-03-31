@@ -3,9 +3,9 @@ from distutils.core import setup
 import sys,ConfigParser
 
 config=ConfigParser.ConfigParser()
-config.read('build.ini')
-version=config.get('Build','VERSION')                 #N.N.N.N format version number
-display_version=config.get('Build','DISPLAY_VERSION') #Version text string
+config.read('version')
+version=config.get('Version','VERSION')                 #N.N.N.N format version number
+display_version=config.get('Version','DISPLAY_VERSION') #Version text string
 short_version=version[:-2]
 
 setupargs={'name':'YARDWiz',
@@ -87,6 +87,6 @@ elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
                 if os.path.isdir(f):shutil.rmtree(f)
                 else:os.unlink(f)
 
-else:        
+else:
     setup(**setupargs)
 

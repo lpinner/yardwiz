@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 17 2010)
+## Python code generated with wxFormBuilder (version Nov 18 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -21,8 +21,6 @@ class GUI ( wx.Frame ):
 		
 		self.SetSizeHintsSz( wx.Size( 300,300 ), wx.DefaultSize )
 		self.SetFont( wx.Font( 12, 70, 90, 90, False, wx.EmptyString ) )
-		self.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
-		self.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_APPWORKSPACE ) )
 		
 		bSizer4 = wx.BoxSizer( wx.VERTICAL )
 		
