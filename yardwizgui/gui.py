@@ -81,16 +81,12 @@ class GUI ( wx.Frame ):
 		self.nbTabArea.SetMaxSize( wx.Size( -1,250 ) )
 		
 		self.nbtabLog = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.nbtabLog.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
 		self.nbtabLog.SetMinSize( wx.Size( -1,250 ) )
 		
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
 		bSizer7.SetMinSize( wx.Size( -1,250 ) ) 
 		self.txtLog = wx.TextCtrl( self.nbtabLog, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
-		self.txtLog.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
-		self.txtLog.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
-		
 		bSizer7.Add( self.txtLog, 1, wx.EXPAND, 0 )
 		
 		self.nbtabLog.SetSizer( bSizer7 )
@@ -98,25 +94,16 @@ class GUI ( wx.Frame ):
 		bSizer7.Fit( self.nbtabLog )
 		self.nbTabArea.AddPage( self.nbtabLog, u"Log", True )
 		self.nbtabInfo = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.nbtabInfo.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
 		self.nbtabInfo.SetMinSize( wx.Size( -1,500 ) )
 		
 		bSizer8 = wx.BoxSizer( wx.VERTICAL )
 		
 		bSizer8.SetMinSize( wx.Size( -1,500 ) ) 
-		self.txtInfo = wx.TextCtrl( self.nbtabInfo, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
-		self.txtInfo.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
-		self.txtInfo.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
-		
-		bSizer8.Add( self.txtInfo, 1, wx.EXPAND, 0 )
-		
 		self.nbtabInfo.SetSizer( bSizer8 )
 		self.nbtabInfo.Layout()
 		bSizer8.Fit( self.nbtabInfo )
 		self.nbTabArea.AddPage( self.nbtabInfo, u"Info", False )
 		self.nbtabQueue = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.STATIC_BORDER|wx.TAB_TRAVERSAL )
-		self.nbtabQueue.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		
 		bSizer5 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.lstQueue = wx.ListCtrl( self.nbtabQueue, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT|wx.NO_BORDER )
@@ -137,6 +124,9 @@ class GUI ( wx.Frame ):
 		
 		
 		bSizer5.Add( self.lstQueue, 1, wx.EXPAND, 5 )
+		
+		self.txtInfo = wx.TextCtrl( self.nbtabQueue, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
+		bSizer5.Add( self.txtInfo, 1, wx.EXPAND, 0 )
 		
 		self.nbtabQueue.SetSizer( bSizer5 )
 		self.nbtabQueue.Layout()
