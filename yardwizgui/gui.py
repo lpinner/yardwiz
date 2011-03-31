@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 17 2010)
+## Python code generated with wxFormBuilder (version Nov 18 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -68,6 +68,11 @@ class GUI ( wx.Frame ):
 		
 		self.mitDownload = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Download now", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuPrograms.AppendItem( self.mitDownload )
+		
+		self.mnuPrograms.AppendSeparator()
+		
+		self.mitDelete = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Delete...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuPrograms.AppendItem( self.mitDelete )
 		
 		
 		bSizer4.Add( self.lstPrograms, 2, wx.ALL|wx.EXPAND, 5 )
@@ -360,6 +365,72 @@ class GUI ( wx.Frame ):
 		event.Skip()
 	
 	def btnExit_onClick( self, event ):
+		event.Skip()
+	
+
+###########################################################################
+## Class ConfirmDelete
+###########################################################################
+
+class ConfirmDelete ( wx.Dialog ):
+	
+	def __init__( self, parent ):
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Confirm Delete?", pos = wx.DefaultPosition, size = wx.Size( -1,-1 ), style = wx.DEFAULT_DIALOG_STYLE )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		
+		gSizer4 = wx.GridSizer( 4, 1, 0, 0 )
+		
+		fgSizer2 = wx.FlexGridSizer( 2, 2, 0, 0 )
+		fgSizer2.SetFlexibleDirection( wx.BOTH )
+		fgSizer2.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		
+		self.bmpIcon = wx.StaticBitmap( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 32,32 ), 0 )
+		fgSizer2.Add( self.bmpIcon, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
+		
+		self.lblQuestion = wx.StaticText( self, wx.ID_ANY, u"Do you really want to delete %s?", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
+		self.lblQuestion.Wrap( -1 )
+		fgSizer2.Add( self.lblQuestion, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5 )
+		
+		gSizer4.Add( fgSizer2, 1, wx.EXPAND, 5 )
+		
+		self.chkShowAgain = wx.CheckBox( self, wx.ID_ANY, u"Do not ask next time", wx.DefaultPosition, wx.DefaultSize, 0 )
+		gSizer4.Add( self.chkShowAgain, 0, wx.ALIGN_TOP|wx.LEFT, 5 )
+		
+		DialogButtons = wx.StdDialogButtonSizer()
+		self.DialogButtonsYes = wx.Button( self, wx.ID_YES )
+		DialogButtons.AddButton( self.DialogButtonsYes )
+		self.DialogButtonsNo = wx.Button( self, wx.ID_NO )
+		DialogButtons.AddButton( self.DialogButtonsNo )
+		DialogButtons.Realize();
+		gSizer4.Add( DialogButtons, 1, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_LEFT|wx.EXPAND|wx.ALL, 5 )
+		
+		self.SetSizer( gSizer4 )
+		self.Layout()
+		gSizer4.Fit( self )
+		
+		self.Centre( wx.BOTH )
+		
+		# Connect Events
+		self.chkShowAgain.Bind( wx.EVT_CHECKBOX, self.chkShowAgainOnCheckBox )
+		self.DialogButtonsNo.Bind( wx.EVT_BUTTON, self.DialogButtonsOnNoButtonClick )
+		self.DialogButtonsYes.Bind( wx.EVT_BUTTON, self.DialogButtonsOnYesButtonClick )
+	
+	def __del__( self ):
+		# Disconnect Events
+		self.chkShowAgain.Unbind( wx.EVT_CHECKBOX, None )
+		self.DialogButtonsNo.Unbind( wx.EVT_BUTTON, None )
+		self.DialogButtonsYes.Unbind( wx.EVT_BUTTON, None )
+	
+	
+	# Virtual event handlers, overide them in your derived class
+	def chkShowAgainOnCheckBox( self, event ):
+		event.Skip()
+	
+	def DialogButtonsOnNoButtonClick( self, event ):
+		event.Skip()
+	
+	def DialogButtonsOnYesButtonClick( self, event ):
 		event.Skip()
 	
 

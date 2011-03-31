@@ -22,7 +22,7 @@
 
 import os,sys,threading,thread,time,ConfigParser,signal,ctypes
 import locale,subprocess,re
-import ordereddict 
+import ordereddict
 import wx
 import gui
 
@@ -32,7 +32,7 @@ APPNAME='YARDWiz'
 iswin=sys.platform[0:3] == "win"
 if iswin:
     wizexe='getWizPnP.exe'
-    CTRL_C_EVENT = 0             
+    CTRL_C_EVENT = 0
     CREATE_NEW_PROCESS_GROUP=0x00000200 #getwizpnp kicks off child processes which the subprocess module doesn't kill unless a new process group is created.
     creationflags=CREATE_NEW_PROCESS_GROUP
     startupinfo=subprocess.STARTUPINFO()#Windows starts up a console when a subprocess is run from a non-concole app like pythonw
@@ -48,14 +48,14 @@ locale.setlocale(locale.LC_ALL,'')
 decsep=locale.localeconv()['mon_decimal_point']
 
 class GUI( gui.GUI ):
-    
+
     #tab indices
     idxLog=0
     idxInfo=1
     idxQueue=2
 
     mincolwidth=60
-    
+
     def __init__( self):
         gui.GUI.__init__( self, parent=None )
 
@@ -75,10 +75,10 @@ class GUI( gui.GUI ):
         self.btnPause.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"pause_disabled.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnStop.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"stop.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-        
+
         self._ReadConfig()
         self._ApplyConfig()
-        
+
         self._downloading=False
         self.ThreadedConnector=None
         self.ThreadedDownloader=None
@@ -183,7 +183,7 @@ class GUI( gui.GUI ):
         self.display_dateformat=self.config.get('Settings','dateformat')
         self.lstPrograms.datetimeformat=self.display_dateformat
         self.lstPrograms.timeformat=self.getwizpnp_timeformat #Program length
-        
+
     def _WriteConfig(self):
         #Write self.config back
         if not os.path.exists(os.path.dirname(self.userconfig)):
@@ -205,7 +205,7 @@ class GUI( gui.GUI ):
             self.lstQueue.ClearAll()
             self.lstQueue.InsertColumn( 0, u"" )
             self.lstQueue.InsertColumn( 1, u"" )
-        
+
         idx = self.lstPrograms.GetFirstSelected()
         i=-1
         while idx != -1:
@@ -218,19 +218,19 @@ class GUI( gui.GUI ):
                 self.queue.append(qidx)
                 self.lstQueue.Append([program['title'],time.strftime(self.display_dateformat,program['date'])])
                 self.lstQueue.SetItemData(i,qidx)
-                
+
             idx = self.lstPrograms.GetNextSelected(idx)
 
-        self.lstQueue.SetColumnWidth(0, wx.LIST_AUTOSIZE) 
-        self.lstQueue.SetColumnWidth(1, wx.LIST_AUTOSIZE) 
-        self.btnClearQueue.Enable( True ) 
+        self.lstQueue.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        self.lstQueue.SetColumnWidth(1, wx.LIST_AUTOSIZE)
+        self.btnClearQueue.Enable( True )
         self.btnDownload.Enable( True )
         self._ShowTab(self.idxQueue)
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):
             return self._ClearQueue()
-        
+
         idx = self.lstQueue.GetFirstSelected()
         lst=[]
         while idx != -1:
@@ -241,7 +241,7 @@ class GUI( gui.GUI ):
         for idx in lst:
             del self.queue[idx]
             self.lstQueue.DeleteItem(idx)
-        
+
     def _DownloadQueue(self):
         if self._downloading:return
         programs=[]
@@ -257,7 +257,7 @@ class GUI( gui.GUI ):
                     f=dlg.Filename
                     d=dlg.Directory
                     if d[-1]==':':d+=os.path.sep
-                    if not f[-3:].lower()=='.ts':f+='.ts' 
+                    if not f[-3:].lower()=='.ts':f+='.ts'
                     self.config.set('Settings','lastdir',d)
                     filename=os.path.join(d,f)
                 else:return #Stop showing file dialogs if queue download is cancelled
@@ -267,15 +267,15 @@ class GUI( gui.GUI ):
 
         self._ShowTab(self.idxLog)
         if not programs:return
-        
-        self.btnPlay.Enable( False ) 
-        self.btnPause.Enable( True ) 
-        self.btnStop.Enable( True ) 
+
+        self.btnPlay.Enable( False )
+        self.btnPause.Enable( True )
+        self.btnStop.Enable( True )
         self.gaugeProgressBar.Show()
         #self.btnPlay.Show() #This produces 'unexpected results' on ubuntu 10.04 & 10.10
         #self.btnPause.Show()
         #self.btnStop.Show()
-        self.btnClearQueue.Enable( False ) 
+        self.btnClearQueue.Enable( False )
         self.btnDownload.Enable( False )
         self.btnConnect.Enable( False )
         self.btnExit.Enable( False )
@@ -299,22 +299,22 @@ class GUI( gui.GUI ):
             self.gaugeProgressBar.Hide()
             self.StatusBar.SetFields(['','',''])
             self.lblProgressText.SetLabelText('')
-            self.btnPlay.Enable( False ) 
-            self.btnPause.Enable( False ) 
-            self.btnStop.Enable( False ) 
+            self.btnPlay.Enable( False )
+            self.btnPause.Enable( False )
+            self.btnStop.Enable( False )
             self.btnConnect.Enable( True )
             self.btnExit.Enable( True )
             self.mitQueue.Enable(  )
             self.mitDownload.Enable( True )
             if len(self.queue)==0:
-                self.btnClearQueue.Enable( False ) 
+                self.btnClearQueue.Enable( False )
                 self.btnDownload.Enable( False )
                 self.lstQueue.Enable( False )
             else:
-                self.btnClearQueue.Enable( True ) 
+                self.btnClearQueue.Enable( True )
                 self.btnDownload.Enable( True )
                 self.lstQueue.Enable( True )
-                
+
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
@@ -337,7 +337,7 @@ class GUI( gui.GUI ):
         else:
             self._Log('Unable to discover any Wizzes.')
             self._ShowTab(self.idxLog)
-        
+
     def _Connect(self):
         self.device=self.cbxDevice.GetValue().strip()
         self.ip,self.port=None,None
@@ -384,10 +384,10 @@ class GUI( gui.GUI ):
             self.txtInfo.Clear()
             idx = self.lstPrograms.GetItem(idx).Data
             info=self.programs[idx].get('info','No program information available')
-            self.txtInfo.WriteText(info+'\n') 
+            self.txtInfo.WriteText(info+'\n')
             self.txtInfo.ShowPosition(0)
             self._ShowTab(self.idxInfo)
-        
+
     def _ShowTab(self,tabindex):
         self.nbTabArea.ChangeSelection(tabindex)
 
@@ -445,7 +445,7 @@ class GUI( gui.GUI ):
         self.lstPrograms.InsertColumn( 4, u"Size (MB)" )
         self.lstPrograms.InsertColumn( 5, u"Length" )
         self.lstPrograms.SetSecondarySortColumn(3)
-        
+
         for j in range(self.lstPrograms.GetColumnCount()):
             self.lstPrograms.HeaderWidths.append(self.lstPrograms.GetColumnWidth(j))
         self.lstPrograms.resizeLastColumn(self.mincolwidth)
@@ -455,18 +455,18 @@ class GUI( gui.GUI ):
         self.lstQueue.ClearAll()
         self.lstQueue.InsertColumn( 0, u"" )
         self.lstQueue.InsertColumn( 1, u"" )
-        self.btnClearQueue.Enable( False ) 
+        self.btnClearQueue.Enable( False )
         self.btnDownload.Enable( False )
 
     def _Reset(self):
         self._ClearQueue()
         self._ClearPrograms()
-        
+
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']
         for char in chars:
             filename = filename.replace(char, '')
-        return filename        
+        return filename
     #######################################################################
     #Event handlers
     #######################################################################
@@ -482,7 +482,7 @@ class GUI( gui.GUI ):
     def btnConnect_OnClick( self, event ):
         self._Connect()
         event.Skip()
-    
+
     def btnDownload_OnClick( self, event ):
         self._DownloadQueue()
         event.Skip()
@@ -494,18 +494,18 @@ class GUI( gui.GUI ):
     def btnClearQueue_OnClick( self, event ):
         self._ClearQueue()
         event.Skip()
-    
+
     def btnPlay_OnClick( self, event ):#hiding and showing play etc... buttons isn't working on ubuntu 10.04
-        self.btnPlay.Enable( False ) 
-        self.btnPause.Enable( True ) 
-        self.btnStop.Enable( True ) 
+        self.btnPlay.Enable( False )
+        self.btnPause.Enable( True )
+        self.btnStop.Enable( True )
         self.Play.set()
         event.Skip()
 
     def btnPause_OnClick( self, event ):
-        self.btnPlay.Enable( True ) 
-        self.btnPause.Enable( False ) 
-        self.btnStop.Enable( False ) 
+        self.btnPlay.Enable( True )
+        self.btnPause.Enable( False )
+        self.btnStop.Enable( False )
         self.Play.clear()
         event.Skip()
 
@@ -515,14 +515,14 @@ class GUI( gui.GUI ):
 
     def cbxDevice_OnKillFocus( self, event ):
         self.config.set('Settings','device',self.cbxDevice.GetValue())
-        
+
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()
         event.Skip()
-        
+
     def lstPrograms_OnColClick( self, event ):
         event.Skip()
-    
+
     def lstProgramsOnContextMenu( self, event ):
         item, result = self.lstPrograms.HitTest(event.GetPosition())
         if result == wx.NOT_FOUND:
@@ -536,11 +536,11 @@ class GUI( gui.GUI ):
 
     def lstPrograms_OnDeselect( self, event ):
         event.Skip()
-       
+
     def lstPrograms_OnDoubleClick( self, event ):
         self._Queue()
         event.Skip()
-    
+
     def lstPrograms_OnRightClick( self, event ):
         self.lstPrograms.PopupMenu(self.mnuPrograms)
         event.Skip()
@@ -548,7 +548,7 @@ class GUI( gui.GUI ):
     def lstPrograms_OnSelect( self, event, showinfo=True ):
         if showinfo:self._ShowInfo()
         event.Skip()
-        
+
     def lstQueueOnContextMenu( self, event ):
         self.mitRemove.Enable( False )
         self.lstQueue.PopupMenu(self.mnuQueue)
@@ -561,24 +561,24 @@ class GUI( gui.GUI ):
     def lstQueue_OnMiddleClick( self, event ):
         self.mitRemove_OnSelect(event)
         event.Skip()
-    
+
     def mitQueue_onSelect( self, event ):
         self._Queue()
         event.Skip()
-    
+
     def mitDownload_onSelect( self, event ):
         self._Queue(clear=True)
         self._DownloadQueue()
         event.Skip()
-    
+
     def mitRemove_OnSelect( self, event ):
         self._DeleteFromQueue()
         event.Skip()
-        
+
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
         event.Skip()
-    
+
     def mitDownloadAll_OnSelect( self, event ):
         self._DownloadQueue()
         event.Skip()
@@ -594,10 +594,49 @@ class GUI( gui.GUI ):
     def onDownloadComplete( self, event ):
         self._DownloadComplete(event.index,event.stopped)
         event.Skip()
-    
+
 #######################################################################
 #Helper classes
 #######################################################################
+class ConfirmDelete( yardwizgui.gui.ConfirmDelete ):
+    def __init__( self, filename):
+        yardwizgui.gui.ConfirmDelete.__init__( self, None)
+
+        self.delete=False
+
+        bmp = wx.EmptyBitmap(32, 32)
+        bmp = wx.ArtProvider_GetBitmap(wx.ART_QUESTION,wx.ART_MESSAGE_BOX, (32, 32))
+        self.bmpIcon.SetBitmap(bmp)
+
+        self._labelquestion =self.lblQuestion.GetLabelText()
+        self._labelshowagain=self.chkShowAgain.GetLabelText()
+        try:self.lblQuestion.SetLabelText(self._labelquestion%filename)
+        except:
+            self.lblQuestion.SetLabelText=self.lblQuestion.SetLabel
+            self.chkShowAgain.SetLabelText=self.chkShowAgain.SetLabel
+            self.lblQuestion.SetLabelText(self._labelquestion%filename)
+
+        self.checked=self.chkShowAgain.IsChecked()
+        self.Fit()
+        self.ShowModal()
+
+    # Handlers for ConfirmDelete events.
+    def DialogButtonsOnNoButtonClick( self, event ):
+        self.delete=False
+        self.EndModal(False)
+
+    def DialogButtonsOnYesButtonClick( self, event ):
+        self.delete=True
+        self.EndModal(True)
+
+    def chkShowAgainOnCheckBox( self, event ):
+        self.checked=event.IsChecked()
+        if self.checked:
+            self.chkShowAgain.SetLabelText(self._labelshowagain+'\nYou can re-enable this confirmation in your config file.')
+            self.Fit()
+        else:
+            self.chkShowAgain.SetLabelText(self._labelshowagain)
+            self.Fit()
 class ThreadedConnector( threading.Thread ):
     def __init__( self, parent, device, ip, port):#, fnAddProgram, fnComplete):
         threading.Thread.__init__( self )
@@ -607,7 +646,7 @@ class ThreadedConnector( threading.Thread ):
         self.parent=parent
         self.start()
     def run(self):
-##        if iswin: 
+##        if iswin:
 ##            cmd=['ping','-n','1',self.server]
 ##        else:
 ##            cmd=['ping','-c','1',self.server]
@@ -647,7 +686,7 @@ class ThreadedConnector( threading.Thread ):
                     proglines.append(line)
 
         exit_code=proc.wait()
-        
+
         if exit_code > 0:
             evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%proc.stderr.read())
             try:wx.PostEvent(self.parent, evt)
@@ -655,8 +694,8 @@ class ThreadedConnector( threading.Thread ):
         else:
             evt = Connected(wizEVT_CONNECTED, -1,'Finished listing programs on the WizPnP server')
             try:wx.PostEvent(self.parent, evt)
-            except:pass 
-        
+            except:pass
+
     def _parseprogram(self,proglines,index):
         recording=''
         prog=proglines[0].replace('*AC3','')
@@ -687,7 +726,7 @@ class ThreadedConnector( threading.Thread ):
                 line=line.split()
                 program['length']=line[1]
                 program['size']=float(line[4])
-            elif 'autoDelete' in line: 
+            elif 'autoDelete' in line:
                 pass
             else:
                 date=line
@@ -698,7 +737,7 @@ class ThreadedConnector( threading.Thread ):
         program['title']+=recording
         return program
 
-    def _getinfo(self,indexname,indexnum): 
+    def _getinfo(self,indexname,indexnum):
         if self.device:
             cmd=[wizexe,'--device',self.device,'-vv','-l','--BWName',indexname]
         else:
@@ -709,7 +748,7 @@ class ThreadedConnector( threading.Thread ):
         proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         stdout,stderr=proc.communicate()
         exit_code=proc.wait()
-        
+
         if exit_code==0:
             info=[]
             for line in stdout.split('\n'):
@@ -725,7 +764,7 @@ class ThreadedConnector( threading.Thread ):
             self.proc.kill()
             del self.proc
         except:pass
-        
+
 class ThreadedDownloader( threading.Thread ):
     def __init__(self, parent, device, ip, port, programs, evtPlay, evtStop):
         threading.Thread.__init__( self )
@@ -741,7 +780,7 @@ class ThreadedDownloader( threading.Thread ):
         self.Stop.clear()
         self.proc=None
 
-        self.total=0        
+        self.total=0
         for program in self.programs:
             self.total+=program['size']
 
@@ -892,7 +931,7 @@ class ThreadedDownloader( threading.Thread ):
             self.proc.kill()
             del self.proc
         except:pass
-        
+
 #######################################################################
 #Utility helper functions
 #######################################################################
@@ -920,7 +959,7 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
     # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     # THE SOFTWARE.
     ''' Search PATH for executable files with the given name.
-    
+
         On newer versions of MS-Windows, the PATHEXT environment variable will be
         set to the list of file extensions for files considered executable. This
         will normally include things like ".EXE". This fuction will also find files
@@ -928,7 +967,7 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
 
         On MS-Windows the only flag that has any meaning is os.F_OK. Any other
         flags will be ignored.
-        
+
         Derived mostly from U{http://code.google.com/p/waf/issues/detail?id=531} with
         additions from Brian Curtins patch - U{http://bugs.python.org/issue444582}
 
@@ -940,7 +979,7 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
         @param flags: Arguments to U{os.access<http://docs.python.org/library/os.html#os.access>}.
 
         @rtype: C{str}/C{list}
-        @return: Full path to the first matching file found or a list of the full paths to all files found, 
+        @return: Full path to the first matching file found or a list of the full paths to all files found,
                  in the order in which they were found.
     '''
     result = []
