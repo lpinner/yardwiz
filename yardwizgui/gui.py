@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 18 2010)
+## Python code generated with wxFormBuilder (version Nov 17 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -34,7 +34,6 @@ class GUI ( wx.Frame ):
 		self.lblServerCombo = wx.StaticText( self, wx.ID_ANY, u"Wiz server:", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.lblServerCombo.Wrap( -1 )
 		self.lblServerCombo.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.lblServerCombo.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
 		
 		fgSizer1.Add( self.lblServerCombo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
@@ -254,6 +253,7 @@ class GUI ( wx.Frame ):
 		self.lstPrograms.Bind( wx.EVT_LIST_ITEM_SELECTED, self.lstPrograms_OnSelect )
 		self.Bind( wx.EVT_MENU, self.mitQueue_onSelect, id = self.mitQueue.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitDownload_onSelect, id = self.mitDownload.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitDelete_OnSelect, id = self.mitDelete.GetId() )
 		self.lstQueue.Bind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, self.lstQueue_OnMiddleClick )
 		self.lstQueue.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.lstQueue_OnRightClick )
 		self.Bind( wx.EVT_MENU, self.mitRemove_OnSelect, id = self.mitRemove.GetId() )
@@ -281,6 +281,7 @@ class GUI ( wx.Frame ):
 		self.lstPrograms.Unbind( wx.EVT_LIST_ITEM_SELECTED, None )
 		self.Unbind( wx.EVT_MENU, id = self.mitQueue.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitDownload.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitDelete.GetId() )
 		self.lstQueue.Unbind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, None )
 		self.lstQueue.Unbind( wx.EVT_LIST_ITEM_RIGHT_CLICK, None )
 		self.Unbind( wx.EVT_MENU, id = self.mitRemove.GetId() )
@@ -334,6 +335,9 @@ class GUI ( wx.Frame ):
 	def mitDownload_onSelect( self, event ):
 		event.Skip()
 	
+	def mitDelete_OnSelect( self, event ):
+		event.Skip()
+	
 	def lstQueue_OnMiddleClick( self, event ):
 		event.Skip()
 	
@@ -375,27 +379,33 @@ class GUI ( wx.Frame ):
 class ConfirmDelete ( wx.Dialog ):
 	
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Confirm Delete?", pos = wx.DefaultPosition, size = wx.Size( -1,-1 ), style = wx.DEFAULT_DIALOG_STYLE )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Confirm Delete?", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
-		gSizer4 = wx.GridSizer( 4, 1, 0, 0 )
+		fgSizer4 = wx.FlexGridSizer( 4, 1, 0, 0 )
+		fgSizer4.SetFlexibleDirection( wx.BOTH )
+		fgSizer4.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 		
-		fgSizer2 = wx.FlexGridSizer( 2, 2, 0, 0 )
+		fgSizer2 = wx.FlexGridSizer( 1, 2, 0, 0 )
 		fgSizer2.SetFlexibleDirection( wx.BOTH )
 		fgSizer2.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
 		
 		self.bmpIcon = wx.StaticBitmap( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 32,32 ), 0 )
 		fgSizer2.Add( self.bmpIcon, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		
-		self.lblQuestion = wx.StaticText( self, wx.ID_ANY, u"Do you really want to delete %s?", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
+		self.lblQuestion = wx.StaticText( self, wx.ID_ANY, u"Do you really want to delete The following program/s?\n%s", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
 		self.lblQuestion.Wrap( -1 )
 		fgSizer2.Add( self.lblQuestion, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5 )
 		
-		gSizer4.Add( fgSizer2, 1, wx.EXPAND, 5 )
+		fgSizer4.Add( fgSizer2, 1, wx.EXPAND, 5 )
 		
 		self.chkShowAgain = wx.CheckBox( self, wx.ID_ANY, u"Do not ask next time", wx.DefaultPosition, wx.DefaultSize, 0 )
-		gSizer4.Add( self.chkShowAgain, 0, wx.ALIGN_TOP|wx.LEFT, 5 )
+		fgSizer4.Add( self.chkShowAgain, 0, wx.ALIGN_TOP|wx.EXPAND|wx.TOP|wx.RIGHT|wx.LEFT, 5 )
+		
+		self.lblReEnable = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.lblReEnable.Wrap( -1 )
+		fgSizer4.Add( self.lblReEnable, 0, wx.EXPAND|wx.BOTTOM|wx.RIGHT|wx.LEFT, 5 )
 		
 		DialogButtons = wx.StdDialogButtonSizer()
 		self.DialogButtonsYes = wx.Button( self, wx.ID_YES )
@@ -403,11 +413,11 @@ class ConfirmDelete ( wx.Dialog ):
 		self.DialogButtonsNo = wx.Button( self, wx.ID_NO )
 		DialogButtons.AddButton( self.DialogButtonsNo )
 		DialogButtons.Realize();
-		gSizer4.Add( DialogButtons, 1, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_LEFT|wx.EXPAND|wx.ALL, 5 )
+		fgSizer4.Add( DialogButtons, 1, wx.ALIGN_RIGHT|wx.EXPAND|wx.ALL, 5 )
 		
-		self.SetSizer( gSizer4 )
+		self.SetSizer( fgSizer4 )
 		self.Layout()
-		gSizer4.Fit( self )
+		fgSizer4.Fit( self )
 		
 		self.Centre( wx.BOTH )
 		

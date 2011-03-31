@@ -80,6 +80,8 @@ class GUI( gui.GUI ):
         self._ApplyConfig()
 
         self._downloading=False
+        self.deletions={}
+
         self.ThreadedConnector=None
         self.ThreadedDownloader=None
         self.Play=threading.Event()
@@ -109,7 +111,7 @@ class GUI( gui.GUI ):
             self.progress_timer = wx.Timer(self)
 
         self.gaugeProgressBar.Hide()
-
+        
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires %s to communicate with your Beyonwiz.\n\nPlease install %s from: http://www.openwiz.org/wiki/GetWizPnP_Release'''%(wizexe,wizexe)
         ok=which(wizexe)
@@ -153,6 +155,10 @@ class GUI( gui.GUI ):
         self.userconfig=os.path.join(configdir,'config.ini')
         self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
         self.config.read([defaultconfig,self.userconfig])
+
+        #Bit of cleanup from 0.1.2+ - we no longer use server:port, so remove them from the config
+        self.config.remove_option('Settings', 'server') 
+        self.config.remove_option('Settings', 'port') 
 
     def _ApplyConfig(self):
         #write stuff to various controls, eg server & port
@@ -241,6 +247,49 @@ class GUI( gui.GUI ):
         for idx in lst:
             del self.queue[idx]
             self.lstQueue.DeleteItem(idx)
+
+    def _DeleteFromWiz(self):
+        idx = self.lstPrograms.GetFirstSelected()
+        i=-1
+        while idx != -1:
+            qidx = self.lstPrograms.GetItem(idx).Data
+            program = self.programs[qidx]
+            progname=program['title']
+            progdate=time.strftime(self.filename_dateformat,program['date'])
+            if '*RECORDING' in progname:
+                self._Log('Unable to delete %s (%s) as it is currently recording.'%(progname,progdate))
+            elif '*LOCKED' in program['title']:
+                self._Log('Unable to delete %s (%s) as it is LOCKED.'%(progname,progdate))
+            else:self.deletions[qidx]='%s (%s)'%(progname,progdate)
+
+            idx = self.lstPrograms.GetNextSelected(idx)
+
+        confirm=self.config.getint('Settings','confirmdelete')
+        if confirm:
+            confirm=ConfirmDelete('\n'+'\n'.join(self.deletions.values()))
+            if confirm.checked:#i.e do not show this dialog again...
+                self.config.setint('Settings','confirmdelete',0)
+            delete=confirm.delete
+        else:
+            delete=True
+        if delete:
+            for qidx in self.deletions:
+                program = self.programs[qidx]
+                self._Log('Deleting %s from the Wiz.'%self.deletions[qidx])
+                if self.device:
+                    cmd=[wizexe,'--device',self.device,'--dryrun','--delete',program['index']]
+                else:
+                    cmd=[wizexe,'-H',self.server,'-p',self.port,'--dryrun','--delete',program['index']]
+                try:
+                    proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                except Exception,err:
+                    self._Log('Error, unable to delete  %s.'%self.deletions[qidx])
+                    self._Log(str(err))
+                    continue
+
+                exit_code=proc.wait()
+                stdout,stder=proc.communicate()
+                print exit_code,stdout,stder
 
     def _DownloadQueue(self):
         if self._downloading:return
@@ -332,17 +381,29 @@ class GUI( gui.GUI ):
                     wizname=' '.join(wiz[1:])
                     self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
                     self.cbxDevice.Append(wizname)
-                    if not self.cbxDevice.GetValue():self.cbxDevice.SetValue(wizname)
+                    #if not self.cbxDevice.GetValue():self.cbxDevice.SetValue(wizname)
                     self.config.set('Settings','device',wizname)
+
+            self.cbxDevice.Append('Test')
+            if self.cbxDevice.GetCount()>0:self.cbxDevice.SetSelection(0)
+            #self.cbxDevice.SelectAll()
         else:
             self._Log('Unable to discover any Wizzes.')
             self._ShowTab(self.idxLog)
 
     def _Connect(self):
+        self._Reset()
+        self.btnConnect.Enable( False )
+        self.mitDelete.Enable( False )
+        self.lblProgressText.SetLabelText('Connecting...')
+        self.gaugeProgressBar.Show()
+        self.gaugeProgressBar.Pulse()
+
         self.device=self.cbxDevice.GetValue().strip()
         self.ip,self.port=None,None
         if not self.device:
             self._Discover()
+            self._Connected(False)
             return
         else:
             self.config.set('Settings','device',self.device)
@@ -355,24 +416,19 @@ class GUI( gui.GUI ):
             self.ip,self.port=self.device,'49152'
             self.device=None
 
-        self.btnConnect.Enable( False )
-        self.lblProgressText.SetLabelText('Connecting...')
         self._Log('Connecting to %s...'%self.config.get('Settings','device'))
-
-        self.gaugeProgressBar.Show()
-        self.gaugeProgressBar.Pulse()
-        self._Reset()
 
         #Connect to the Wiz etc...
         self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port)
 
-    def _Connected(self,event):
+    def _Connected(self,event=None):
         self.lblProgressText.SetLabelText('')
         self.gaugeProgressBar.Hide()
 
-        if event.message:
+        if event and event.message:
             self._Log(event.message)
         self.btnConnect.Enable( True )
+        self.mitDelete.Enable( True )
 
     def _Log(self,msg):
         self.txtLog.WriteText(msg+'\n')
@@ -399,7 +455,6 @@ class GUI( gui.GUI ):
         #Date format
         program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
         display_date=time.strftime(self.display_dateformat,program['date'])
-        #program['length']=float(program['length'].replace(':',decsep))
         program['length']=program['length'].replace(':',decsep)
 
         self.lstPrograms.Append([program['channel'],program['title'],display_date,program['size'],program['length']])
@@ -481,15 +536,12 @@ class GUI( gui.GUI ):
 
     def btnConnect_OnClick( self, event ):
         self._Connect()
-        event.Skip()
 
     def btnDownload_OnClick( self, event ):
         self._DownloadQueue()
-        event.Skip()
 
     def btnExit_onClick( self, event):
         self.Close(True)
-        event.Skip()
 
     def btnClearQueue_OnClick( self, event ):
         self._ClearQueue()
@@ -518,7 +570,7 @@ class GUI( gui.GUI ):
 
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()
-        event.Skip()
+        #event.Skip()
 
     def lstPrograms_OnColClick( self, event ):
         event.Skip()
@@ -566,17 +618,21 @@ class GUI( gui.GUI ):
         self._Queue()
         event.Skip()
 
-    def mitDownload_onSelect( self, event ):
-        self._Queue(clear=True)
-        self._DownloadQueue()
-        event.Skip()
-
     def mitRemove_OnSelect( self, event ):
         self._DeleteFromQueue()
         event.Skip()
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
+        event.Skip()
+
+    def mitDelete_OnSelect( self, event ):
+        self._DeleteFromWiz()
+        event.Skip()
+
+    def mitDownload_onSelect( self, event ):
+        self._Queue(clear=True)
+        self._DownloadQueue()
         event.Skip()
 
     def mitDownloadAll_OnSelect( self, event ):
@@ -598,9 +654,9 @@ class GUI( gui.GUI ):
 #######################################################################
 #Helper classes
 #######################################################################
-class ConfirmDelete( yardwizgui.gui.ConfirmDelete ):
+class ConfirmDelete( gui.ConfirmDelete ):
     def __init__( self, filename):
-        yardwizgui.gui.ConfirmDelete.__init__( self, None)
+        gui.ConfirmDelete.__init__( self, None)
 
         self.delete=False
 
@@ -608,11 +664,12 @@ class ConfirmDelete( yardwizgui.gui.ConfirmDelete ):
         bmp = wx.ArtProvider_GetBitmap(wx.ART_QUESTION,wx.ART_MESSAGE_BOX, (32, 32))
         self.bmpIcon.SetBitmap(bmp)
 
-        self._labelquestion =self.lblQuestion.GetLabelText()
+        self._labelquestion=self.lblQuestion.GetLabelText()
         self._labelshowagain=self.chkShowAgain.GetLabelText()
         try:self.lblQuestion.SetLabelText(self._labelquestion%filename)
         except:
             self.lblQuestion.SetLabelText=self.lblQuestion.SetLabel
+            self.lblReEnable.SetLabelText=self.lblReEnable.SetLabel
             self.chkShowAgain.SetLabelText=self.chkShowAgain.SetLabel
             self.lblQuestion.SetLabelText(self._labelquestion%filename)
 
@@ -623,7 +680,7 @@ class ConfirmDelete( yardwizgui.gui.ConfirmDelete ):
     # Handlers for ConfirmDelete events.
     def DialogButtonsOnNoButtonClick( self, event ):
         self.delete=False
-        self.EndModal(False)
+        self.EndModal(True)
 
     def DialogButtonsOnYesButtonClick( self, event ):
         self.delete=True
@@ -632,11 +689,16 @@ class ConfirmDelete( yardwizgui.gui.ConfirmDelete ):
     def chkShowAgainOnCheckBox( self, event ):
         self.checked=event.IsChecked()
         if self.checked:
-            self.chkShowAgain.SetLabelText(self._labelshowagain+'\nYou can re-enable this confirmation in your config file.')
+            self.lblReEnable.SetLabelText('You can re-enable this confirmation in your config file.')
+            self.DialogButtonsNo.Enable(False)
+            self.chkShowAgain.Fit()
             self.Fit()
         else:
-            self.chkShowAgain.SetLabelText(self._labelshowagain)
+            self.lblReEnable.SetLabelText('')
+            self.DialogButtonsNo.Enable(True)
+            self.chkShowAgain.Fit()
             self.Fit()
+            
 class ThreadedConnector( threading.Thread ):
     def __init__( self, parent, device, ip, port):#, fnAddProgram, fnComplete):
         threading.Thread.__init__( self )
@@ -646,22 +708,6 @@ class ThreadedConnector( threading.Thread ):
         self.parent=parent
         self.start()
     def run(self):
-##        if iswin:
-##            cmd=['ping','-n','1',self.server]
-##        else:
-##            cmd=['ping','-c','1',self.server]
-##        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-##        stdout,stderr=proc.communicate()
-##        exit_code=proc.wait()
-##
-##        if exit_code > 0 or 'destination host unreachable' in stdout.lower():
-##            evt = Connected(wizEVT_CONNECTED, -1,'Unable to connect to the WizPnP server')
-##            try:wx.PostEvent(self.parent, evt)
-##            except:pass #we're probably exiting
-##            return
-##        else:
-##            evt = evt = Log(wizEVT_LOG, -1,'The WizPnP server is online')
-##            wx.PostEvent(self.parent, evt)
 
         if self.device:
             cmd=[wizexe,'--device',self.device,'-l','-v','--index']
@@ -803,7 +849,6 @@ class ThreadedDownloader( threading.Thread ):
             cmd=[wizexe,'--device',self.device,'-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
         else:
             cmd=[wizexe,'-H',self.server,'-p',self.port,'-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
-
         try:
             self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         except Exception,err:
@@ -817,21 +862,16 @@ class ThreadedDownloader( threading.Thread ):
         start=time.time()
         if os.path.exists(f):prevsize=os.stat(f).st_size
         else:prevsize=0.0
-        failcount=0
         while self.proc.poll() is None:
             if self.Stop.isSet(): #Stop button pressed
                 self.Play.clear()
                 self._downloadcomplete(index=program['index'],stopped=True)
-                #self._updateprogress(0)
                 try:
                     self._stopdownload()
                     os.unlink(program['filename'])
                 except Exception,err:
                     self._log('Unable to stop download or delete %s.'%program['filename'])
                     self._log(str(err))
-##                    stdout,stderr=self.proc.communicate()
-##                    self._log(stdout)
-##                    self._log(stderr)
                 else:
                     self._log('Download cancelled.')
                 return
