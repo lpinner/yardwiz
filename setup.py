@@ -3,7 +3,7 @@ from distutils.core import setup
 import sys,ConfigParser
 
 config=ConfigParser.ConfigParser()
-config.read('version')
+config.read('VERSION')
 version=config.get('Version','VERSION')                 #N.N.N.N format version number
 display_version=config.get('Version','DISPLAY_VERSION') #Version text string
 short_version=version[:-2]
@@ -61,6 +61,8 @@ elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
                              ('',['README']),
                              ('',['LICENSE']),
                              ('',['TODO']),
+                             ('',['RELEASE']),
+                             ('',['VERSION']),
                              ('config', ['yardwizgui/config/defaults.ini']),
                              ('icons', glob.glob('yardwizgui/icons/*.*'))]
 

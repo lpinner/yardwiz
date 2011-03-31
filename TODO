@@ -1,4 +1,2 @@
 * Keep [Exit] button enabled. If downloading and program is exited, pop up a confirmation to exit and cancel and delete unfinished download
 * Keep Stop button enabled after Pause is clicked
-* Get wiz server discovery working
-* Implement delete (on the Wiz). Definitely in recording list context menu, maybe auto delete option after download complete...?
