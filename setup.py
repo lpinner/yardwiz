@@ -48,6 +48,7 @@ if len(sys.argv)>1 and sys.argv[1]=='uninstall':
         f='/usr/local/bin/yardwiz'
     print 'Removing '+f
     os.unlink(f)
+
     print 'Uninstall successfull'
 
 elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
@@ -62,8 +63,6 @@ elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
                              ('',['TODO']),
                              ('config', ['yardwizgui/config/defaults.ini']),
                              ('icons', glob.glob('yardwizgui/icons/*.*'))]
-    #setupargs['options'] = {'py2exe': {'bundle_files': 1}}
-    #setupargs['zipfile'] = None
 
     setup(**setupargs)
 
