@@ -38,7 +38,7 @@ class GUI ( wx.Frame ):
 		fgSizer1.Add( self.lblServerCombo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
 		cbxDeviceChoices = []
-		self.cbxDevice = wx.ComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, cbxDeviceChoices, 0 )
+		self.cbxDevice = wx.ComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, cbxDeviceChoices, wx.TE_PROCESS_ENTER )
 		self.cbxDevice.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave this field blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
 		self.cbxDevice.SetMinSize( wx.Size( 250,-1 ) )
 		
