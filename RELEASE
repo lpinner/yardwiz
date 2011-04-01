@@ -1,10 +1,21 @@
 =Release notes=
 
-==New in 0.2.0==
+==0.2.0==
+===_New in 0.2.0_===
   * Added Wiz device discovery
   * Added ability to delete recordings on the Wiz
-==Fixed in 0.2.0==
+===_Fixed in 0.2.0_===
   * Fixed setup.py for installing from source
   * Worked around issue with program list where typing jumps to matching value in channel column rather than title column, by moving title to first column
   * Modified application colours
 
+==0.1.2==
+===_New in 0.1.2_===
+  * Included a NSIS compiled Windows installer.
+
+==0.1.1==
+===_New in 0.1.1_===
+  * Included a PY2EXE compiled Windows executable.
+
+==0.1.0==
+Initial release

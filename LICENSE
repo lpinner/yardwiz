@@ -30,3 +30,7 @@ http://creativecommons.org/licenses/by-sa/3.0/us/
 The python module "ordereddict" is copyright (c) 2009 Raymond Hettinger (http://pypi.python.org/pypi/ordereddict)
 and is licensed under the MIT license.
 http://www.opensource.org/licenses/mit-license.php
+
+[getwizpnp]
+The Windows version of YARDWiz includes a compiled copy of GetWizPnP 0.4.3a which is copyright (c) 2010 prl (http://www.openwiz.org/wiki/GetWizPnP_Release)
+
