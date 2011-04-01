@@ -300,15 +300,15 @@ class GUI( gui.GUI ):
             for pidx,progname in zip(deletions,prognames):
                 self._Log('Deleting %s from the Wiz.'%progname)
                 if self.device:
-                    cmddel=[wizexe,'--device',self.device,'--delete','--all','--BWName',pidx]
-                    cmdchk=[wizexe,'--device',self.device,'--list','--all','--BWName',pidx]
+                    cmddel=subprocess.list2cmdline([wizexe,'--device',self.device,'--delete','--all','--BWName',pidx])
+                    cmdchk=subprocess.list2cmdline([wizexe,'--device',self.device,'--list','--all','--BWName',pidx])
                 else:
-                    cmddel=[wizexe,'-H',self.ip,'-p',self.port,'--delete','--all','--BWName',pidx]
-                    cmdchk=[wizexe,'-H',self.ip,'-p',self.port,'--list','--all','--BWName',pidx]
+                    cmddel=subprocess.list2cmdline([wizexe,'-H',self.ip,'-p',self.port,'--delete','--all','--BWName',pidx])
+                    cmdchk=subprocess.list2cmdline([wizexe,'-H',self.ip,'-p',self.port,'--list','--all','--BWName',pidx])
                 try:
-                    proc=subprocess.Popen(cmddel, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                    proc=subprocess.Popen(cmddel, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
                     exit_code=proc.wait()
-                    proc=subprocess.Popen(cmdchk, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                    proc=subprocess.Popen(cmdchk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
                     exit_code=proc.wait()
                     stdout,stderr=proc.communicate()
                     if not stdout.strip():
@@ -769,17 +769,19 @@ class ThreadedConnector( threading.Thread ):
             except:pass
 
     def _parseprogram(self,proglines):
-        recording=''
+        flaglist=['*LOCKED','*RECORDING NOW']
+        flags=[]
         prog=proglines[0].replace('*AC3','')
-        prog=prog.replace('*LOCKED','')
+        for flag in flaglist:
+            if flag in prog:
+                flags.append(flag)
+                prog=prog.replace(flag,'')
+        flags=' '.join(flags)
         prog=prog.split(':')
         channel=prog[0].strip()
         info=':'.join(prog[1:]) #in case there are more ':''s in the program title
-        if '*RECORDING' in info:
-            recording=' *RECORDING'
-            info=info.replace('*RECORDING','')
         info=info.split('/')
-        title=info[0].strip()
+        title=' '.join([info[0].strip(),flags])
 
         program={'title':title.strip('*'),'channel':channel}
         if len(info) > 0:
@@ -808,7 +810,7 @@ class ThreadedConnector( threading.Thread ):
                 program['date']=line.split('-')[0].strip()
         if info:
             program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,date,playtime)
-        program['title']+=recording
+        program['title']
         return program
 
     def _getinfo(self,indexname,indexnum):
