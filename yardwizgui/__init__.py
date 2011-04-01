@@ -188,12 +188,12 @@ class GUI( gui.GUI ):
         self.lstPrograms.HeaderWidths=[]
         self.lstPrograms.ClearAll()
         self.txtInfo.Clear()
-        self.lstPrograms.InsertColumn( 1, u"Title" )
-        self.lstPrograms.InsertColumn( 2, u"Channel" )
-        self.lstPrograms.InsertColumn( 3, u"Date" )
-        self.lstPrograms.InsertColumn( 4, u"Size (MB)" )
-        self.lstPrograms.InsertColumn( 5, u"Length" )
-        self.lstPrograms.SetSecondarySortColumn(3)
+        self.lstPrograms.InsertColumn( 0, u"Title" )
+        self.lstPrograms.InsertColumn( 1, u"Channel" )
+        self.lstPrograms.InsertColumn( 2, u"Date" )
+        self.lstPrograms.InsertColumn( 3, u"Size (MB)" )
+        self.lstPrograms.InsertColumn( 4, u"Length" )
+        self.lstPrograms.SetSecondarySortColumn(2)
 
         for j in range(self.lstPrograms.GetColumnCount()):
             self.lstPrograms.HeaderWidths.append(self.lstPrograms.GetColumnWidth(j))
@@ -274,15 +274,19 @@ class GUI( gui.GUI ):
 
             progname='%s - %s'%(program['title'],time.strftime(self.filename_dateformat,program['date']))
             if '*RECORDING' in progname:
-                self._Log('Unable to delete %s (%s) as it is currently recording.'%(progname,progdate))
+                self._Log('Unable to delete %s as it is currently recording.'%(progname))
+                self._ShowTab(self.idxLog)
             elif '*LOCKED' in program['title']:
-                self._Log('Unable to delete %s (%s) as it is LOCKED.'%(progname,progdate))
+                self._Log('Unable to delete %s as it is LOCKED.'%(progname))
+                self._ShowTab(self.idxLog)
             else:
                 deletions.append(pidx)
                 prognames.append(progname)
 
             idx = self.lstPrograms.GetNextSelected(idx)
 
+        if not prognames:return
+        
         confirm=self.config.getint('Settings','confirmdelete')
         if confirm:
             confirm=ConfirmDelete('\n'+'\n'.join(prognames))
@@ -296,16 +300,18 @@ class GUI( gui.GUI ):
             for pidx,progname in zip(deletions,prognames):
                 self._Log('Deleting %s from the Wiz.'%progname)
                 if self.device:
-                    #cmd=[wizexe,'--device',self.device,'--dryrun','--delete',pidx]
-                    cmd=[wizexe,'--device',self.device,'--delete','--BWName',pidx]
+                    cmddel=[wizexe,'--device',self.device,'--delete','--all','--BWName',pidx]
+                    cmdchk=[wizexe,'--device',self.device,'--list','--all','--BWName',pidx]
                 else:
-                    #cmd=[wizexe,'-H',self.ip,'-p',self.port,'--dryrun','--delete',pidx]
-                    cmd=[wizexe,'-H',self.ip,'-p',self.port,'--delete','--BWName',pidx]
+                    cmddel=[wizexe,'-H',self.ip,'-p',self.port,'--delete','--all','--BWName',pidx]
+                    cmdchk=[wizexe,'-H',self.ip,'-p',self.port,'--list','--all','--BWName',pidx]
                 try:
-                    proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                    proc=subprocess.Popen(cmddel, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                    exit_code=proc.wait()
+                    proc=subprocess.Popen(cmdchk, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
                     exit_code=proc.wait()
                     stdout,stderr=proc.communicate()
-                    if exit_code>0:
+                    if not stdout.strip():
                         self.deleted.append(pidx)
                         self._Log('Deleted %s.'%progname)
                     else:raise Exception,stderr
@@ -583,17 +589,12 @@ class GUI( gui.GUI ):
 
     def btnStop_OnClick( self, event ):
         self.Stop.set()
-        event.Skip()
 
     def cbxDevice_OnKillFocus( self, event ):
         self.config.set('Settings','device',self.cbxDevice.GetValue())
 
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()
-        #event.Skip()
-
-    def lstPrograms_OnColClick( self, event ):
-        event.Skip()
 
     def lstProgramsOnContextMenu( self, event ):
         item, result = self.lstPrograms.HitTest(event.GetPosition())
@@ -844,7 +845,7 @@ class ThreadedDownloader( threading.Thread ):
 
         self.parent=parent
         self.device=device
-        self.ip=server
+        self.ip=ip
         self.port=port
         self.programs=programs
         self.Play=evtPlay

@@ -227,7 +227,6 @@ class GUI ( wx.Frame ):
 		self.cbxDevice.Bind( wx.EVT_TEXT_ENTER, self.cbxDevice_OnTextEnter )
 		self.btnConnect.Bind( wx.EVT_BUTTON, self.btnConnect_OnClick )
 		self.lstPrograms.Bind( wx.EVT_LEFT_DCLICK, self.lstPrograms_OnDoubleClick )
-		self.lstPrograms.Bind( wx.EVT_LIST_COL_CLICK, self.lstPrograms_OnColClick )
 		self.lstPrograms.Bind( wx.EVT_LIST_ITEM_DESELECTED, self.lstPrograms_OnDeselect )
 		self.lstPrograms.Bind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, self.lstPrograms_OnMiddleClick )
 		self.lstPrograms.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.lstPrograms_OnRightClick )
@@ -255,7 +254,6 @@ class GUI ( wx.Frame ):
 		self.cbxDevice.Unbind( wx.EVT_TEXT_ENTER, None )
 		self.btnConnect.Unbind( wx.EVT_BUTTON, None )
 		self.lstPrograms.Unbind( wx.EVT_LEFT_DCLICK, None )
-		self.lstPrograms.Unbind( wx.EVT_LIST_COL_CLICK, None )
 		self.lstPrograms.Unbind( wx.EVT_LIST_ITEM_DESELECTED, None )
 		self.lstPrograms.Unbind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, None )
 		self.lstPrograms.Unbind( wx.EVT_LIST_ITEM_RIGHT_CLICK, None )
@@ -293,9 +291,6 @@ class GUI ( wx.Frame ):
 		event.Skip()
 	
 	def lstPrograms_OnDoubleClick( self, event ):
-		event.Skip()
-	
-	def lstPrograms_OnColClick( self, event ):
 		event.Skip()
 	
 	def lstPrograms_OnDeselect( self, event ):

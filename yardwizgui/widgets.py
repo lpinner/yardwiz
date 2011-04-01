@@ -25,25 +25,33 @@ from wx.lib.mixins.listctrl import ColumnSorterMixin,ListCtrlAutoWidthMixin
 
 class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     """A sortable wx.ListCtrl"""
-    def __init__(self, *args, **kwargs):
-        wx.ListCtrl.__init__(self,*args,**kwargs)
-        ListCtrlAutoWidthMixin.__init__(self)
-        self.itemDataMap = {}
 
-        #Some default values, can be overridden
-        self.dateformat='%x'     #Locale's appropriate date time format code.
-        self.timeformat='%X'     #Locale's appropriate date time format code.
-        self.datetimeformat='%c' #Locale's appropriate date time format code.
+    #Some default values, can be overridden
+    dateformat='%x'     #Locale's appropriate date time format code.
+    timeformat='%X'     #Locale's appropriate date time format code.
+    datetimeformat='%c' #Locale's appropriate date time format code.
+
+    #So the user can set the secondary sort column (to break ties)
+    SecondarySortColumn=-1
+
+    def __init__(self, *args, **kwargs):
+        self._args=args
+        self._kwargs=kwargs
+        wx.ListCtrl.__init__(self,*args,**kwargs)
+        self.itemDataMap = {}
+        ListCtrlAutoWidthMixin.__init__(self)
+        ColumnSorterMixin.__init__(self, 0)
 
         #As we override the default ColumnSorter
         self.DefaultSorter=ColumnSorterMixin.GetColumnSorter(self)
 
-        #So the user can set the secondary sort column (to break ties)
-        self.SecondarySortColumn=-1
-
+    def ClearAll(self,*args,**kwargs):
+        wx.ListCtrl.ClearAll(self)
+        self.itemDataMap = {}
+        
     def InsertColumn(self,*args,**kwargs):
         wx.ListCtrl.InsertColumn(self,*args,**kwargs)
-        ColumnSorterMixin.__init__(self, self.GetColumnCount())
+        self.SetColumnCount(self.GetColumnCount())
         
     def GetListCtrl(self):
         return self
@@ -56,7 +64,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
         return self.CustomSorter
 
     def SetSecondarySortColumn(self, col):
-        self.SecondarySortColumn=col-1
+        self.SecondarySortColumn=col
 
     def GetSecondarySortValues(self, col, key1, key2) :
         #Default is to return orig keys

@@ -117,7 +117,7 @@
                     <property name="border">5</property>
                     <property name="flag">wxEXPAND</property>
                     <property name="proportion">0</property>
-                    <object class="wxFlexGridSizer" expanded="1">
+                    <object class="wxFlexGridSizer" expanded="0">
                         <property name="cols">4</property>
                         <property name="flexible_direction">wxBOTH</property>
                         <property name="growablecols"></property>
@@ -213,11 +213,11 @@
                                 <event name="OnUpdateUI"></event>
                             </object>
                         </object>
-                        <object class="sizeritem" expanded="1">
+                        <object class="sizeritem" expanded="0">
                             <property name="border">5</property>
                             <property name="flag">wxALIGN_CENTER|wxALL</property>
                             <property name="proportion">0</property>
-                            <object class="wxBitmapComboBox" expanded="1">
+                            <object class="wxBitmapComboBox" expanded="0">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
                                 <property name="RightDockable">1</property>
@@ -474,7 +474,7 @@
                         <event name="OnListBeginRDrag"></event>
                         <event name="OnListCacheHint"></event>
                         <event name="OnListColBeginDrag"></event>
-                        <event name="OnListColClick">lstPrograms_OnColClick</event>
+                        <event name="OnListColClick"></event>
                         <event name="OnListColDragging"></event>
                         <event name="OnListColEndDrag"></event>
                         <event name="OnListColRightClick"></event>

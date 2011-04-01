@@ -1,5 +1,13 @@
 =Release notes=
 
+==0.2.2==
+===_New in 0.2.2_===
+  * Added recursive folders listing
+===_Fixed in 0.2.2_===
+  * Fixed the Wiz server box not responding to keyboard inputs after connect button clicked
+  * Fixed the failure to delete if IP:port or IP address is used to connect
+  * Fixed the sorting program list after deletion
+
 ==0.2.1==
 ===_Fixed in 0.2.1_===
   * Fixed the accidental moving of the Log control to the Queue tab
