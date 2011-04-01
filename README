@@ -51,6 +51,7 @@ To uninstall (assuming you still have a copy of the source :):
   * Linux - sudo python setupy.py uninstall
         
 ==Known issues==
+ * If you modify the default getwizpnp.conf (Windows) or .getwizpnp (Linux/Mac) you may break YARDWiz. In particular, GetWizPnP's date format is hardcoded into YARDWiz.
  * On Windows when running from pythonw.exe, the getwizpnp.exe subprocess has proven troublesome to kill (i.e if you want to pause or stop a download). I've had to fallback to using the taskkill.exe program that is included in most recent versions of Windows (XP and later). Taskkill.exe is _not_ included in Windows XP Home edition and I don't know if it is included in Windows Vista/7 basic/home/starter editions. If this is an issue, an alternative is to download PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 and extract PsKill.exe to somewhere on your PATH. YARDWiz will then attempt to use pskill instead.
  * After discovering Wizzes, the Wiz device ComboBox does not respond to keyboard input again until an item is selected from the dropdown list.
  * The app really should use a lawnmower icon...

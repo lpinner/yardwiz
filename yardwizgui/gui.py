@@ -209,9 +209,6 @@ class GUI ( wx.Frame ):
 		gSizer3.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
 		self.btnExit = wx.Button( self, wx.ID_ANY, u"Exit", wx.DefaultPosition, wx.DefaultSize, wx.BU_EXACTFIT )
-		self.btnExit.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
-		self.btnExit.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_BTNFACE ) )
-		
 		gSizer3.Add( self.btnExit, 2, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
 		gSizer21.Add( gSizer3, 1, wx.EXPAND, 5 )
