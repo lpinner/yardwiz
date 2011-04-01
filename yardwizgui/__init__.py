@@ -19,13 +19,11 @@
 # THE SOFTWARE.
 
 '''Subclass of gui.GUI'''
-
 import os,sys,threading,thread,time,ConfigParser,signal,ctypes
 import locale,subprocess,re
 import ordereddict
 import wx
 import gui
-
 APPNAME='YARDWiz'
 
 #Workarounds for crossplatform issues
@@ -301,15 +299,13 @@ class GUI( gui.GUI ):
                     #cmd=[wizexe,'--device',self.device,'--dryrun','--delete',pidx]
                     cmd=[wizexe,'--device',self.device,'--delete','--BWName',pidx]
                 else:
-                    #cmd=[wizexe,'-H',self.server,'-p',self.port,'--dryrun','--delete',pidx]
-                    cmd=[wizexe,'-H',self.server,'-p',self.port,'--delete','--BWName',pidx]
+                    #cmd=[wizexe,'-H',self.ip,'-p',self.port,'--dryrun','--delete',pidx]
+                    cmd=[wizexe,'-H',self.ip,'-p',self.port,'--delete','--BWName',pidx]
                 try:
                     proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
                     exit_code=proc.wait()
-                    stdout,stder=proc.communicate()
-                    print exit_code,stdout,stder
-                    print subprocess.list2cmdline(cmd)
-                    if not exit_code:
+                    stdout,stderr=proc.communicate()
+                    if exit_code>0:
                         self.deleted.append(pidx)
                         self._Log('Deleted %s.'%progname)
                     else:raise Exception,stderr
@@ -340,13 +336,12 @@ class GUI( gui.GUI ):
                     wizname=' '.join(wiz[1:])
                     self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
                     self.cbxDevice.Append(wizname)
-                    #if not self.cbxDevice.GetValue():self.cbxDevice.SetValue(wizname)
                     self.config.set('Settings','device',wizname)
 
-            self.cbxDevice.Append('Test')
             if self.cbxDevice.GetCount()>0:self.cbxDevice.SetSelection(0)
-            #self.cbxDevice.SelectAll()
         else:
+            self.cbxDevice.Clear()
+            self.cbxDevice.SetValue('')
             self._Log('Unable to discover any Wizzes.')
             self._ShowTab(self.idxLog)
 
@@ -545,7 +540,7 @@ class GUI( gui.GUI ):
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']
         for char in chars:
-            filename = filename.replace(char, '')
+            filename = filename.replace(char, '_')
         return filename
     #######################################################################
     #Event handlers
@@ -736,9 +731,9 @@ class ThreadedConnector( threading.Thread ):
     def run(self):
 
         if self.device:
-            cmd=[wizexe,'--device',self.device,'-l','-v','--index']
+            cmd=[wizexe,'--device',self.device,'--all','-l','-v','--index']
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'-l','-v','--index']
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-l','-v','--index']
         proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
@@ -763,7 +758,6 @@ class ThreadedConnector( threading.Thread ):
                     proglines.append(line)
 
         exit_code=proc.wait()
-
         if exit_code > 0:
             evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%proc.stderr.read())
             try:wx.PostEvent(self.parent, evt)
@@ -798,6 +792,9 @@ class ThreadedConnector( threading.Thread ):
         for line in proglines[1:]:
             if 'Index name' in line:
                 program['index']=line.split(':')[1].strip()
+                dirs=program['index'].split('/')
+                if len(dirs)>2:
+                    program['title']='%s/%s'%('/'.join(dirs[1:-1]),program['title'])
             elif 'playtime' in line:
                 playtime=line
                 line=line.split()
@@ -815,9 +812,9 @@ class ThreadedConnector( threading.Thread ):
 
     def _getinfo(self,indexname,indexnum):
         if self.device:
-            cmd=[wizexe,'--device',self.device,'-vv','-l','--BWName',indexname]
+            cmd=[wizexe,'--device',self.device,'-vv','--all','-l','--BWName',indexname]
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'-vv','-l','--BWName',indexname]
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'-vv','--all','-l','--BWName',indexname]
         cmd=subprocess.list2cmdline(cmd)
         #This fails for some reason (on Win32) if a wx.FileDialog is open (i.e.) a download is started. Workaround is to set shell=True
         #proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
@@ -847,7 +844,7 @@ class ThreadedDownloader( threading.Thread ):
 
         self.parent=parent
         self.device=device
-        self.server=server
+        self.ip=server
         self.port=port
         self.programs=programs
         self.Play=evtPlay
@@ -876,9 +873,9 @@ class ThreadedDownloader( threading.Thread ):
         d=os.path.dirname(program['filename'])
         f=os.path.splitext(os.path.basename(program['filename']))[0]
         if self.device:
-            cmd=[wizexe,'--device',self.device,'-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
+            cmd=[wizexe,'--device',self.device,'--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
         else:
-            cmd=[wizexe,'-H',self.server,'-p',self.port,'-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
         try:
             self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         except Exception,err:

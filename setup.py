@@ -78,7 +78,7 @@ elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
     else:
         print stdout
         print 'Zipping files'
-        fout='dist/YARDWiz-%s-win32setup.zip'%short_version
+        fout='dist/YARDWiz-%s-wx%s-win32setup.zip'%(short_version,wx.version()[0:3])
         zout=zipfile.ZipFile(fout,'w',zipfile.ZIP_DEFLATED)
         zout.write('dist/setup.exe','setup.exe')
         zout.close()

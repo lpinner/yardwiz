@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 18 2010)
+## Python code generated with wxFormBuilder (version Nov 17 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -9,6 +9,7 @@
 
 from widgets import SortableListCtrl
 import wx
+import wx.combo
 
 ###########################################################################
 ## Class GUI
@@ -35,8 +36,7 @@ class GUI ( wx.Frame ):
 		
 		fgSizer1.Add( self.lblServerCombo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
-		cbxDeviceChoices = []
-		self.cbxDevice = wx.ComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, cbxDeviceChoices, wx.TE_PROCESS_ENTER )
+		self.cbxDevice = wx.combo.BitmapComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, "", wx.TE_PROCESS_ENTER ) 
 		self.cbxDevice.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave this field blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
 		self.cbxDevice.SetMinSize( wx.Size( 250,-1 ) )
 		
@@ -191,7 +191,6 @@ class GUI ( wx.Frame ):
 		gSizer3 = wx.GridSizer( 1, 4, 0, 0 )
 		
 		self.gaugeProgressBar = wx.Gauge( self, wx.ID_ANY, 150, wx.DefaultPosition, wx.DefaultSize, wx.GA_HORIZONTAL )
-		self.gaugeProgressBar.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
 		self.gaugeProgressBar.SetMinSize( wx.Size( 100,-1 ) )
 		
 		gSizer3.Add( self.gaugeProgressBar, 2, wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.BOTTOM|wx.EXPAND|wx.LEFT|wx.TOP, 5 )
