@@ -1,5 +1,9 @@
 =Release notes=
 
+==0.2.1==
+===_Fixed in 0.2.1_===
+  * Fixed the accidental moving of the Log control to the Queue tab
+
 ==0.2.0==
 ===_New in 0.2.0_===
   * Added Wiz device discovery
