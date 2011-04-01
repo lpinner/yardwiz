@@ -62,30 +62,28 @@ class GUI ( wx.Frame ):
 		self.mnuPrograms = wx.Menu()
 		self.mitQueue = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Queue for download", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuPrograms.AppendItem( self.mitQueue )
+		self.mitQueue.Enable( False )
 		
 		self.mitDownload = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Download now", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuPrograms.AppendItem( self.mitDownload )
+		self.mitDownload.Enable( False )
 		
 		self.mnuPrograms.AppendSeparator()
 		
 		self.mitDelete = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Delete...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuPrograms.AppendItem( self.mitDelete )
+		self.mitDelete.Enable( False )
 		
 		
 		bSizer4.Add( self.lstPrograms, 2, wx.ALL|wx.EXPAND, 5 )
 		
 		self.nbTabArea = wx.Notebook( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, 0|wx.TAB_TRAVERSAL )
-		self.nbTabArea.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
-		self.nbTabArea.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWFRAME ) )
 		self.nbTabArea.SetMinSize( wx.Size( -1,100 ) )
 		self.nbTabArea.SetMaxSize( wx.Size( -1,250 ) )
 		
 		self.nbtabLog = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.nbtabLog.SetMinSize( wx.Size( -1,250 ) )
-		
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
-		bSizer7.SetMinSize( wx.Size( -1,250 ) ) 
 		self.txtLog = wx.TextCtrl( self.nbtabLog, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
 		bSizer7.Add( self.txtLog, 1, wx.EXPAND, 0 )
 		
@@ -94,16 +92,16 @@ class GUI ( wx.Frame ):
 		bSizer7.Fit( self.nbtabLog )
 		self.nbTabArea.AddPage( self.nbtabLog, u"Log", True )
 		self.nbtabInfo = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		self.nbtabInfo.SetMinSize( wx.Size( -1,500 ) )
-		
 		bSizer8 = wx.BoxSizer( wx.VERTICAL )
 		
-		bSizer8.SetMinSize( wx.Size( -1,500 ) ) 
+		self.txtInfo = wx.TextCtrl( self.nbtabInfo, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
+		bSizer8.Add( self.txtInfo, 1, wx.EXPAND, 0 )
+		
 		self.nbtabInfo.SetSizer( bSizer8 )
 		self.nbtabInfo.Layout()
 		bSizer8.Fit( self.nbtabInfo )
 		self.nbTabArea.AddPage( self.nbtabInfo, u"Info", False )
-		self.nbtabQueue = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.STATIC_BORDER|wx.TAB_TRAVERSAL )
+		self.nbtabQueue = wx.Panel( self.nbTabArea, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer5 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.lstQueue = wx.ListCtrl( self.nbtabQueue, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT|wx.NO_BORDER )
@@ -113,20 +111,20 @@ class GUI ( wx.Frame ):
 		self.mnuQueue = wx.Menu()
 		self.mitRemove = wx.MenuItem( self.mnuQueue, wx.ID_ANY, u"Remove from queue", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuQueue.AppendItem( self.mitRemove )
+		self.mitRemove.Enable( False )
 		
 		self.mnuQueue.AppendSeparator()
 		
 		self.mitClearQueue = wx.MenuItem( self.mnuQueue, wx.ID_ANY, u"Clear queue", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuQueue.AppendItem( self.mitClearQueue )
+		self.mitClearQueue.Enable( False )
 		
 		self.mitDownloadAll = wx.MenuItem( self.mnuQueue, wx.ID_ANY, u"Download queue", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuQueue.AppendItem( self.mitDownloadAll )
+		self.mitDownloadAll.Enable( False )
 		
 		
 		bSizer5.Add( self.lstQueue, 1, wx.EXPAND, 5 )
-		
-		self.txtInfo = wx.TextCtrl( self.nbtabQueue, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
-		bSizer5.Add( self.txtInfo, 1, wx.EXPAND, 0 )
 		
 		self.nbtabQueue.SetSizer( bSizer5 )
 		self.nbtabQueue.Layout()
@@ -200,7 +198,6 @@ class GUI ( wx.Frame ):
 		
 		self.lblProgressText = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
 		self.lblProgressText.Wrap( -1 )
-		self.lblProgressText.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
 		self.lblProgressText.SetMinSize( wx.Size( 50,-1 ) )
 		
 		gSizer3.Add( self.lblProgressText, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.TOP|wx.LEFT, 10 )

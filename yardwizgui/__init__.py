@@ -111,7 +111,7 @@ class GUI( gui.GUI ):
             self.progress_timer = wx.Timer(self)
 
         self.gaugeProgressBar.Hide()
-        
+
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires %s to communicate with your Beyonwiz.\n\nPlease install %s from: http://www.openwiz.org/wiki/GetWizPnP_Release'''%(wizexe,wizexe)
         ok=which(wizexe)
@@ -127,38 +127,33 @@ class GUI( gui.GUI ):
     #######################################################################
     #Methods
     #######################################################################
+    def _AddProgram(self,evt=None,program=None):
 
-    def _Pulse(self,*args,**kwargs):
-        self.gaugeProgressBar._Pulse()
-        self.progress_timer.Start(100,True)
+        try:#This will fail when the program is added manually, not via the AddProgram event
+            program=evt.program
+            program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
+        except:pass
 
-    def _Hide(self,*args,**kwargs):
-        self.progress_timer.Stop()
-        self.gaugeProgressBar.SetRange(100)
-        self.gaugeProgressBar.SetValue(0)
-        self.gaugeProgressBar._Hide()
+        display_date=time.strftime(self.display_dateformat,program['date'])
+        program['length']=program['length'].replace(':',decsep)
 
-    def _ReadConfig(self):
-        #read from a config file
-        if 'APPDATA' in os.environ:
-            configdir = os.path.join(os.environ['APPDATA'], APPNAME.lower())
-        elif 'XDG_CONFIG_HOME' in os.environ:
-            configdir = os.path.join(os.environ['XDG_CONFIG_HOME'], APPNAME.lower())
-        else:
-            confighome = os.path.join(os.environ['HOME'], '.config')
-            if os.path.exists(confighome) and os.path.isdir(confighome):
-                configdir = os.path.join(confighome, APPNAME.lower())
-            else:
-                configdir = os.path.join(os.environ['HOME'], '.'+APPNAME.lower())
+        iidx=len(self.programs)
+        self.programs.append(program)
 
-        defaultconfig=os.path.join(data_path(),'config','defaults.ini')
-        self.userconfig=os.path.join(configdir,'config.ini')
-        self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
-        self.config.read([defaultconfig,self.userconfig])
+        self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
+        self.lstPrograms.SetItemData(iidx,iidx)
 
-        #Bit of cleanup from 0.1.2+ - we no longer use server:port, so remove them from the config
-        self.config.remove_option('Settings', 'server') 
-        self.config.remove_option('Settings', 'port') 
+        for j in range(self.lstPrograms.GetColumnCount()):
+            self.lstPrograms.SetColumnWidth(j, autosize)
+            if not iswin:
+                c=self.lstPrograms.GetColumnWidth(j)
+                h=self.lstPrograms.HeaderWidths[j]
+                if h>c:self.lstPrograms.SetColumnWidth(j,h)
+        self.lstPrograms.resizeLastColumn(self.mincolwidth)
+
+        if evt:self._Log('Added %s - %s'%(program['title'],display_date))
+        self.mitDownload.Enable( True )
+        self.mitQueue.Enable( True )
 
     def _ApplyConfig(self):
         #write stuff to various controls, eg server & port
@@ -190,48 +185,68 @@ class GUI( gui.GUI ):
         self.lstPrograms.datetimeformat=self.display_dateformat
         self.lstPrograms.timeformat=self.getwizpnp_timeformat #Program length
 
-    def _WriteConfig(self):
-        #Write self.config back
-        if not os.path.exists(os.path.dirname(self.userconfig)):
-            os.mkdir(os.path.dirname(self.userconfig))
-        xsize,ysize=self.Size.x,self.Size.y
-        xmin,ymin=self.GetScreenPositionTuple()
-        self.config.set('Settings', 'xsize', str(xsize))
-        self.config.set('Settings', 'ysize', str(ysize))
-        self.config.set('Settings', 'xmin', str(xmin))
-        self.config.set('Settings', 'ymin', str(ymin))
-        self.config.write(open(self.userconfig,'w'))
-        device=self.config.get('Settings','device')
+    def _ClearPrograms(self):
+        self.programs=[]
+        self.lstPrograms.HeaderWidths=[]
+        self.lstPrograms.ClearAll()
+        self.txtInfo.Clear()
+        self.lstPrograms.InsertColumn( 1, u"Title" )
+        self.lstPrograms.InsertColumn( 2, u"Channel" )
+        self.lstPrograms.InsertColumn( 3, u"Date" )
+        self.lstPrograms.InsertColumn( 4, u"Size (MB)" )
+        self.lstPrograms.InsertColumn( 5, u"Length" )
+        self.lstPrograms.SetSecondarySortColumn(3)
 
-    def _Queue(self,clear=False):
-        if self._downloading:return
+        for j in range(self.lstPrograms.GetColumnCount()):
+            self.lstPrograms.HeaderWidths.append(self.lstPrograms.GetColumnWidth(j))
+        self.lstPrograms.resizeLastColumn(self.mincolwidth)
 
-        if clear:
-            self.queue=[]
-            self.lstQueue.ClearAll()
-            self.lstQueue.InsertColumn( 0, u"" )
-            self.lstQueue.InsertColumn( 1, u"" )
+    def _ClearQueue(self):
+        self.queue=[]
+        self.lstQueue.ClearAll()
+        self.lstQueue.InsertColumn( 0, u"" )
+        self.lstQueue.InsertColumn( 1, u"" )
+        self.btnClearQueue.Enable( False )
+        self.btnDownload.Enable( False )
 
-        idx = self.lstPrograms.GetFirstSelected()
-        i=-1
-        while idx != -1:
-            qidx = self.lstPrograms.GetItem(idx).Data
-            program = self.programs[qidx]
-            if '*RECORDING' in program['title']:
-                self._Log('Unable to download %s as it is currently recording.'%program['title'])
-            elif qidx not in self.queue:
-                i+=1
-                self.queue.append(qidx)
-                self.lstQueue.Append([program['title'],time.strftime(self.display_dateformat,program['date'])])
-                self.lstQueue.SetItemData(i,qidx)
+    def _Connect(self):
+        self._Reset()
+        self.btnConnect.Enable( False )
+        self.mitDelete.Enable( False )
+        self.lblProgressText.SetLabelText('Connecting...')
+        self.gaugeProgressBar.Show()
+        self.gaugeProgressBar.Pulse()
 
-            idx = self.lstPrograms.GetNextSelected(idx)
+        self.device=self.cbxDevice.GetValue().strip()
+        self.ip,self.port=None,None
+        if not self.device:
+            self._Discover()
+            self._Connected(False)
+            return
+        else:
+            self.config.set('Settings','device',self.device)
+            ipport=re.match(self._regexipport,self.device)
+            iponly=re.match(self._regexip,self.device)
+        if ipport:
+            self.ip,self.port=self.device.split(':')
+            self.device=None
+        elif iponly:
+            self.ip,self.port=self.device,'49152'
+            self.device=None
 
-        self.lstQueue.SetColumnWidth(0, wx.LIST_AUTOSIZE)
-        self.lstQueue.SetColumnWidth(1, wx.LIST_AUTOSIZE)
-        self.btnClearQueue.Enable( True )
-        self.btnDownload.Enable( True )
-        self._ShowTab(self.idxQueue)
+        self._Log('Connecting to %s...'%self.config.get('Settings','device'))
+
+        #Connect to the Wiz etc...
+        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted)
+
+    def _Connected(self,event=None):
+        self.lblProgressText.SetLabelText('')
+        self.gaugeProgressBar.Hide()
+
+        if event and event.message:
+            self._Log(event.message)
+        self.btnConnect.Enable( True )
+        self.mitDelete.Enable( True )
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):
@@ -258,7 +273,7 @@ class GUI( gui.GUI ):
             idx = self.lstPrograms.GetItem(idx).Data
             program = self.programs[idx]
             pidx=program['index']
-            
+
             progname='%s - %s'%(program['title'],time.strftime(self.filename_dateformat,program['date']))
             if '*RECORDING' in progname:
                 self._Log('Unable to delete %s (%s) as it is currently recording.'%(progname,progdate))
@@ -302,12 +317,39 @@ class GUI( gui.GUI ):
                     self._Log('Error, unable to delete  %s.'%progname)
                     self._Log(str(err))
                     continue
-                
+
             self._ClearPrograms()
             for program in programs:
                 if not program['index'] in deletions:
                     self._AddProgram(program=program)
-            
+
+    def _Discover(self):
+        self._Log('Searching for Wizzes.')
+        cmd=[wizexe,'--discover']
+        cmd=subprocess.list2cmdline(cmd)
+        proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        stdout,stderr=proc.communicate()
+        exit_code=proc.wait()
+        stdout=stdout.strip()
+        if stdout:
+            self.cbxDevice.Clear()
+            self.cbxDevice.SetValue('')
+            for wiz in stdout.split('\n'):
+                wiz=wiz.strip().split()
+                if wiz and len(wiz)>1:
+                    wizname=' '.join(wiz[1:])
+                    self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
+                    self.cbxDevice.Append(wizname)
+                    #if not self.cbxDevice.GetValue():self.cbxDevice.SetValue(wizname)
+                    self.config.set('Settings','device',wizname)
+
+            self.cbxDevice.Append('Test')
+            if self.cbxDevice.GetCount()>0:self.cbxDevice.SetSelection(0)
+            #self.cbxDevice.SelectAll()
+        else:
+            self._Log('Unable to discover any Wizzes.')
+            self._ShowTab(self.idxLog)
+
     def _DownloadQueue(self):
         if self._downloading:return
         programs=[]
@@ -381,75 +423,78 @@ class GUI( gui.GUI ):
                 self.btnDownload.Enable( True )
                 self.lstQueue.Enable( True )
 
-    def _Discover(self):
-        self._Log('Searching for Wizzes.')
-        cmd=[wizexe,'--discover']
-        cmd=subprocess.list2cmdline(cmd)
-        proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        stdout,stderr=proc.communicate()
-        exit_code=proc.wait()
-        stdout=stdout.strip()
-        if stdout:
-            self.cbxDevice.Clear()
-            self.cbxDevice.SetValue('')
-            for wiz in stdout.split('\n'):
-                wiz=wiz.strip().split()
-                if wiz and len(wiz)>1:
-                    wizname=' '.join(wiz[1:])
-                    self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
-                    self.cbxDevice.Append(wizname)
-                    #if not self.cbxDevice.GetValue():self.cbxDevice.SetValue(wizname)
-                    self.config.set('Settings','device',wizname)
-
-            self.cbxDevice.Append('Test')
-            if self.cbxDevice.GetCount()>0:self.cbxDevice.SetSelection(0)
-            #self.cbxDevice.SelectAll()
-        else:
-            self._Log('Unable to discover any Wizzes.')
-            self._ShowTab(self.idxLog)
-
-    def _Connect(self):
-        self._Reset()
-        self.btnConnect.Enable( False )
-        self.mitDelete.Enable( False )
-        self.lblProgressText.SetLabelText('Connecting...')
-        self.gaugeProgressBar.Show()
-        self.gaugeProgressBar.Pulse()
-
-        self.device=self.cbxDevice.GetValue().strip()
-        self.ip,self.port=None,None
-        if not self.device:
-            self._Discover()
-            self._Connected(False)
-            return
-        else:
-            self.config.set('Settings','device',self.device)
-            ipport=re.match(self._regexipport,self.device)
-            iponly=re.match(self._regexip,self.device)
-        if ipport:
-            self.ip,self.port=self.device.split(':')
-            self.device=None
-        elif iponly:
-            self.ip,self.port=self.device,'49152'
-            self.device=None
-
-        self._Log('Connecting to %s...'%self.config.get('Settings','device'))
-
-        #Connect to the Wiz etc...
-        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted)
-
-    def _Connected(self,event=None):
-        self.lblProgressText.SetLabelText('')
-        self.gaugeProgressBar.Hide()
-
-        if event and event.message:
-            self._Log(event.message)
-        self.btnConnect.Enable( True )
-        self.mitDelete.Enable( True )
+    def _Hide(self,*args,**kwargs):
+        self.progress_timer.Stop()
+        self.gaugeProgressBar.SetRange(100)
+        self.gaugeProgressBar.SetValue(0)
+        self.gaugeProgressBar._Hide()
 
     def _Log(self,msg):
         self.txtLog.WriteText(msg+'\n')
         self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
+
+    def _Pulse(self,*args,**kwargs):
+        self.gaugeProgressBar._Pulse()
+        self.progress_timer.Start(100,True)
+
+    def _Queue(self,clear=False):
+        if self._downloading:return
+
+        if clear:
+            self.queue=[]
+            self.lstQueue.ClearAll()
+            self.lstQueue.InsertColumn( 0, u"" )
+            self.lstQueue.InsertColumn( 1, u"" )
+
+        idx = self.lstPrograms.GetFirstSelected()
+        i=-1
+        while idx != -1:
+            qidx = self.lstPrograms.GetItem(idx).Data
+            program = self.programs[qidx]
+            if '*RECORDING' in program['title']:
+                self._Log('Unable to download %s as it is currently recording.'%program['title'])
+            elif qidx not in self.queue:
+                i+=1
+                self.queue.append(qidx)
+                self.lstQueue.Append([program['title'],time.strftime(self.display_dateformat,program['date'])])
+                self.lstQueue.SetItemData(i,qidx)
+
+            idx = self.lstPrograms.GetNextSelected(idx)
+
+        self.lstQueue.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+        self.lstQueue.SetColumnWidth(1, wx.LIST_AUTOSIZE)
+        self.btnClearQueue.Enable( True )
+        self.btnDownload.Enable( True )
+        self.mitRemove.Enable( True )
+        self.mitClearQueue.Enable( True )
+        self.mitDownloadAll.Enable( True )
+        self._ShowTab(self.idxQueue)
+
+    def _ReadConfig(self):
+        #read from a config file
+        if 'APPDATA' in os.environ:
+            configdir = os.path.join(os.environ['APPDATA'], APPNAME.lower())
+        elif 'XDG_CONFIG_HOME' in os.environ:
+            configdir = os.path.join(os.environ['XDG_CONFIG_HOME'], APPNAME.lower())
+        else:
+            confighome = os.path.join(os.environ['HOME'], '.config')
+            if os.path.exists(confighome) and os.path.isdir(confighome):
+                configdir = os.path.join(confighome, APPNAME.lower())
+            else:
+                configdir = os.path.join(os.environ['HOME'], '.'+APPNAME.lower())
+
+        defaultconfig=os.path.join(data_path(),'config','defaults.ini')
+        self.userconfig=os.path.join(configdir,'config.ini')
+        self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
+        self.config.read([defaultconfig,self.userconfig])
+
+        #Bit of cleanup from 0.1.2+ - we no longer use server:port, so remove them from the config
+        self.config.remove_option('Settings', 'server')
+        self.config.remove_option('Settings', 'port')
+
+    def _Reset(self):
+        self._ClearQueue()
+        self._ClearPrograms()
 
     def _ShowInfo(self):
         idx = self.lstPrograms.GetFocusedItem()
@@ -463,32 +508,6 @@ class GUI( gui.GUI ):
 
     def _ShowTab(self,tabindex):
         self.nbTabArea.ChangeSelection(tabindex)
-
-    def _AddProgram(self,evt=None,program=None):
-
-        try:#This will fail when the program is added manually, not via the AddProgram event
-            program=evt.program
-            program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
-        except:pass
-
-        display_date=time.strftime(self.display_dateformat,program['date'])
-        program['length']=program['length'].replace(':',decsep)
-        
-        iidx=len(self.programs)
-        self.programs.append(program)
-
-        self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
-        self.lstPrograms.SetItemData(iidx,iidx)
-
-        for j in range(self.lstPrograms.GetColumnCount()):
-            self.lstPrograms.SetColumnWidth(j, autosize)
-            if not iswin:
-                c=self.lstPrograms.GetColumnWidth(j)
-                h=self.lstPrograms.HeaderWidths[j]
-                if h>c:self.lstPrograms.SetColumnWidth(j,h)
-        self.lstPrograms.resizeLastColumn(self.mincolwidth)
-
-        if evt:self._Log('Added %s - %s'%(program['title'],display_date))
 
     def _UpdateProgram(self,evt):
         index=evt.index
@@ -510,33 +529,18 @@ class GUI( gui.GUI ):
             self.gaugeProgressBar.SetValue(0)
             self.StatusBar.SetFields(['','',''])
 
-    def _ClearPrograms(self):
-        self.programs=[]
-        self.lstPrograms.HeaderWidths=[]
-        self.lstPrograms.ClearAll()
-        self.txtInfo.Clear()
-        self.lstPrograms.InsertColumn( 1, u"Title" )
-        self.lstPrograms.InsertColumn( 2, u"Channel" )
-        self.lstPrograms.InsertColumn( 3, u"Date" )
-        self.lstPrograms.InsertColumn( 4, u"Size (MB)" )
-        self.lstPrograms.InsertColumn( 5, u"Length" )
-        self.lstPrograms.SetSecondarySortColumn(3)
-
-        for j in range(self.lstPrograms.GetColumnCount()):
-            self.lstPrograms.HeaderWidths.append(self.lstPrograms.GetColumnWidth(j))
-        self.lstPrograms.resizeLastColumn(self.mincolwidth)
-
-    def _ClearQueue(self):
-        self.queue=[]
-        self.lstQueue.ClearAll()
-        self.lstQueue.InsertColumn( 0, u"" )
-        self.lstQueue.InsertColumn( 1, u"" )
-        self.btnClearQueue.Enable( False )
-        self.btnDownload.Enable( False )
-
-    def _Reset(self):
-        self._ClearQueue()
-        self._ClearPrograms()
+    def _WriteConfig(self):
+        #Write self.config back
+        if not os.path.exists(os.path.dirname(self.userconfig)):
+            os.mkdir(os.path.dirname(self.userconfig))
+        xsize,ysize=self.Size.x,self.Size.y
+        xmin,ymin=self.GetScreenPositionTuple()
+        self.config.set('Settings', 'xsize', str(xsize))
+        self.config.set('Settings', 'ysize', str(ysize))
+        self.config.set('Settings', 'xmin', str(xmin))
+        self.config.set('Settings', 'ymin', str(ymin))
+        self.config.write(open(self.userconfig,'w'))
+        device=self.config.get('Settings','device')
 
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']
@@ -719,7 +723,7 @@ class ConfirmDelete( gui.ConfirmDelete ):
             self.DialogButtonsNo.Enable(True)
             self.chkShowAgain.Fit()
             self.Fit()
-            
+
 class ThreadedConnector( threading.Thread ):
     def __init__( self, parent, device, ip, port, deleted=[]):
         threading.Thread.__init__( self )
