@@ -704,7 +704,8 @@ class Stderr(object):
     softspace = 0
     _file = None
     _error = None
-    fname=os.path.join(os.environ['TEMP'], os.path.basename(sys.executable) + '.log')
+    tmp=os.environ.get('TEMP',os.environ.get('TMP','.'))
+    fname=os.path.join(tmp, 'yardwiz.log')
     def errordialog(self,message, caption):
         import wx
         wxapp = wx.PySimpleApp(0)
