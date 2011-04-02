@@ -455,6 +455,7 @@ class GUI( gui.GUI ):
             program = self.programs[qidx]
             if '*RECORDING' in program['title']:
                 self._Log('Unable to download %s as it is currently recording.'%program['title'])
+                self._ShowTab(self.idxLog)
             elif qidx not in self.queue:
                 i+=1
                 self.queue.append(qidx)
@@ -462,15 +463,15 @@ class GUI( gui.GUI ):
                 self.lstQueue.SetItemData(i,qidx)
 
             idx = self.lstPrograms.GetNextSelected(idx)
-
-        self.lstQueue.SetColumnWidth(0, wx.LIST_AUTOSIZE)
-        self.lstQueue.SetColumnWidth(1, wx.LIST_AUTOSIZE)
-        self.btnClearQueue.Enable( True )
-        self.btnDownload.Enable( True )
-        self.mitRemove.Enable( True )
-        self.mitClearQueue.Enable( True )
-        self.mitDownloadAll.Enable( True )
-        self._ShowTab(self.idxQueue)
+        if self.queue:
+            self.lstQueue.SetColumnWidth(0, wx.LIST_AUTOSIZE)
+            self.lstQueue.SetColumnWidth(1, wx.LIST_AUTOSIZE)
+            self.btnClearQueue.Enable( True )
+            self.btnDownload.Enable( True )
+            self.mitRemove.Enable( True )
+            self.mitClearQueue.Enable( True )
+            self.mitDownloadAll.Enable( True )
+            self._ShowTab(self.idxQueue)
 
     def _ReadConfig(self):
         #read from a config file
