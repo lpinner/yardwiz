@@ -37,6 +37,7 @@ if iswin:
     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     Popen_kwargs={'creationflags':creationflags,'startupinfo':startupinfo}
     autosize=wx.LIST_AUTOSIZE_USEHEADER #for ListCtrls
+
 else:
     wizexe='getWizPnP.pl'
     Popen_kwargs={}
@@ -675,6 +676,63 @@ class GUI( gui.GUI ):
 #######################################################################
 #Helper classes
 #######################################################################
+class Stderr(object):
+    #This is modified from py2exe class Stderr
+    ##Copyright (c) 2000-2008 Thomas Heller, Mark Hammond, Jimmy Retzlaff
+    ##
+    ##Permission is hereby granted, free of charge, to any person obtaining
+    ##a copy of this software and associated documentation files (the
+    ##"Software"), to deal in the Software without restriction, including
+    ##without limitation the rights to use, copy, modify, merge, publish,
+    ##distribute, sublicense, and/or sell copies of the Software, and to
+    ##permit persons to whom the Software is furnished to do so, subject to
+    ##the following conditions:
+    ##
+    ##The above copyright notice and this permission notice shall be
+    ##included in all copies or substantial portions of the Software.
+    ##
+    ##THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    ##EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    ##MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    ##NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+    ##LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+    ##OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    ##WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    
+    softspace = 0
+    _file = None
+    _error = None
+    fname=os.path.join(os.environ['TEMP'], os.path.basename(sys.executable) + '.log')
+    def errordialog(self,message, caption):
+        import wx
+        wxapp = wx.PySimpleApp(0)
+        dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
+        dlg.ShowModal()
+        dlg.Destroy()
+
+    def write(self, text,*args,**kwargs):
+        if self._file is None and self._error is None:
+            try:
+                self._file = open(self.fname, 'a')
+            except Exception, details:
+                self._error = details
+                import atexit
+                atexit.register(self.errordialog,
+                                "The logfile '%s' could not be opened:\n %s" % \
+                                (self.fname, details),
+                                "Errors occurred")
+            else:
+                import atexit
+                atexit.register(self.errordialog,
+                                "See the logfile '%s' for details" % self.fname,
+                                "Errors occurred")
+        if self._file is not None:
+            self._file.write(text)
+            self._file.flush()
+    def flush(self):
+        if self._file is not None:
+            self._file.flush()
+
 class ConfirmDelete( gui.ConfirmDelete ):
     def __init__( self, filename):
         gui.ConfirmDelete.__init__( self, None)
@@ -1069,6 +1127,10 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
                 else:result.append(pext)
     return result
 
+def errordialog(message, caption):
+    dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
+    dlg.ShowModal()
+    dlg.Destroy()
 def frozen():
     return hasattr(sys, "frozen")
 def data_path():
@@ -1132,3 +1194,10 @@ class DownloadComplete(wx.PyCommandEvent):
         wx.PyCommandEvent.__init__(self, etype, eid)
         self.index=index
         self.stopped=stopped
+
+#######################################################################
+#Workarounds for py2exe
+#######################################################################
+if iswin and frozen():
+    sys.stderr = Stderr()
+    del Stderr
