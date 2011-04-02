@@ -221,6 +221,7 @@ class GUI( gui.GUI ):
         if not self.device:
             self._Discover()
             self._Connected(False)
+            if self.cbxDevice.GetCount()>0:self._Connect()
             return
         else:
             self.config.set('Settings','device',self.device)
