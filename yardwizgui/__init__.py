@@ -32,9 +32,10 @@ if iswin:
     wizexe='getWizPnP.exe'
     CTRL_C_EVENT = 0
     CREATE_NEW_PROCESS_GROUP=0x00000200 #getwizpnp kicks off child processes which the subprocess module doesn't kill unless a new process group is created.
+    STARTF_USESHOWWINDOW=1 #subprocess.STARTF_USESHOWWINDOW raises 
     creationflags=CREATE_NEW_PROCESS_GROUP
     startupinfo=subprocess.STARTUPINFO()#Windows starts up a console when a subprocess is run from a non-concole app like pythonw
-    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    startupinfo.dwFlags |= STARTF_USESHOWWINDOW #subprocess.STARTF_USESHOWWINDOW
     Popen_kwargs={'creationflags':creationflags,'startupinfo':startupinfo}
     autosize=wx.LIST_AUTOSIZE_USEHEADER #for ListCtrls
 
