@@ -553,7 +553,7 @@ class SettingsDialog ( wx.Dialog ):
 	def __init__( self, parent ):
 		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Settings", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
 		
-		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		self.SetSizeHintsSz( wx.Size( 350,300 ), wx.DefaultSize )
 		
 		bSizer6 = wx.BoxSizer( wx.VERTICAL )
 		
@@ -566,7 +566,7 @@ class SettingsDialog ( wx.Dialog ):
 		self.btnCancel = wx.Button( self, wx.ID_CANCEL )
 		btn.AddButton( self.btnCancel )
 		btn.Realize();
-		bSizer6.Add( btn, 0, wx.EXPAND, 5 )
+		bSizer6.Add( btn, 0, wx.EXPAND|wx.ALL, 5 )
 		
 		self.SetSizer( bSizer6 )
 		self.Layout()

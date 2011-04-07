@@ -818,7 +818,6 @@ class SettingsDialog ( gui.SettingsDialog ):
         for section in sections:
             options = self.config.options(section)
             for option in options:
-                print section, option, self.config.get(section, option)
                 self.origconfig.set(section, option, self.config.get(section, option))
         
         self.EndModal(True)
