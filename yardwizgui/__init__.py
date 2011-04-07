@@ -553,18 +553,23 @@ class GUI( gui.GUI ):
             self.gaugeProgressBar.SetValue(0)
             self.StatusBar.SetFields(['','',''])
 
+    def _UpdateSize(self):
+        try:
+            xsize,ysize=self.Size.x,self.Size.y
+            xmin,ymin=self.GetScreenPositionTuple()
+            self.config.set('Window', 'xsize', str(xsize))
+            self.config.set('Window', 'ysize', str(ysize))
+            self.config.set('Window', 'xmin', str(xmin))
+            self.config.set('Window', 'ymin', str(ymin))
+        except:pass
+        
     def _WriteConfig(self):
         #Write self.config back
+        self._UpdateSize()
         if not os.path.exists(os.path.dirname(self.userconfig)):
             os.mkdir(os.path.dirname(self.userconfig))
-        xsize,ysize=self.Size.x,self.Size.y
-        xmin,ymin=self.GetScreenPositionTuple()
-        self.config.set('Window', 'xsize', str(xsize))
-        self.config.set('Window', 'ysize', str(ysize))
-        self.config.set('Window', 'xmin', str(xmin))
-        self.config.set('Window', 'ymin', str(ymin))
         self.config.write(open(self.userconfig,'w'))
-        device=self.config.get('Settings','device')
+        #device=self.config.get('Settings','device')
 
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']
@@ -693,6 +698,14 @@ class GUI( gui.GUI ):
 
     def onUpdateProgress( self, event ):
         self._UpdateProgress(event.progress,event.message)
+        event.Skip()
+
+    def OnSize( self, event ):
+        self._UpdateSize()
+        event.Skip()
+
+    def onActivate( self, event ):
+        self._UpdateSize()
         event.Skip()
 
     def onDownloadComplete( self, event ):

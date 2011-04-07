@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 18 2010)
+## Python code generated with wxFormBuilder (version Nov 17 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -237,8 +237,11 @@ class GUI ( wx.Frame ):
 		self.Centre( wx.BOTH )
 		
 		# Connect Events
-		self.Bind( wx.EVT_ACTIVATE, self.onActivateApp )
+		self.Bind( wx.EVT_ACTIVATE, self.onActivate )
+		self.Bind( wx.EVT_ACTIVATE_APP, self.onActivateApp )
 		self.Bind( wx.EVT_CLOSE, self.onCloseApp )
+		self.Bind( wx.EVT_SIZE, self.OnSize )
+		self.Bind( wx.EVT_UPDATE_UI, self.OnUpdateUI )
 		self.cbxDevice.Bind( wx.EVT_KILL_FOCUS, self.cbxDevice_OnKillFocus )
 		self.cbxDevice.Bind( wx.EVT_TEXT_ENTER, self.cbxDevice_OnTextEnter )
 		self.btnConnect.Bind( wx.EVT_BUTTON, self.btnConnect_OnClick )
@@ -267,7 +270,10 @@ class GUI ( wx.Frame ):
 	def __del__( self ):
 		# Disconnect Events
 		self.Unbind( wx.EVT_ACTIVATE )
+		self.Unbind( wx.EVT_ACTIVATE_APP )
 		self.Unbind( wx.EVT_CLOSE )
+		self.Unbind( wx.EVT_SIZE )
+		self.Unbind( wx.EVT_UPDATE_UI )
 		self.cbxDevice.Unbind( wx.EVT_KILL_FOCUS, None )
 		self.cbxDevice.Unbind( wx.EVT_TEXT_ENTER, None )
 		self.btnConnect.Unbind( wx.EVT_BUTTON, None )
@@ -295,10 +301,19 @@ class GUI ( wx.Frame ):
 	
 	
 	# Virtual event handlers, overide them in your derived class
+	def onActivate( self, event ):
+		event.Skip()
+	
 	def onActivateApp( self, event ):
 		event.Skip()
 	
 	def onCloseApp( self, event ):
+		event.Skip()
+	
+	def OnSize( self, event ):
+		event.Skip()
+	
+	def OnUpdateUI( self, event ):
 		event.Skip()
 	
 	def cbxDevice_OnKillFocus( self, event ):
