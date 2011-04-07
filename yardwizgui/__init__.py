@@ -78,6 +78,7 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
+        self.SetTitle('%s (%s)'%(self.GetTitle(),self.version))
 
         self._downloading=False
         self.deleted=[]
@@ -156,8 +157,6 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( True )
 
     def _ApplyConfig(self):
-
-        self.SetTitle('%s (%s)'%(self.GetTitle(),self.version))
 
         #write stuff to various controls, eg server & port
         device=self.config.get('Settings','device')
