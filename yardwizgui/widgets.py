@@ -151,6 +151,8 @@ class PropertyTreeList( TreeListCtrl):
         self.Bind(wx.EVT_SIZE, self.OnSize)
         self.Bind( wx.EVT_TREE_END_LABEL_EDIT, self.OnTreeEndLabelEdit )
         self.Bind( wx.EVT_TREE_BEGIN_LABEL_EDIT, self.OnTreeBeginLabelEdit )
+        self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
+        self.Bind( wx.EVT_TREE_BEGIN_LABEL_EDIT, self.OnTreeBeginLabelEdit )
 
     def SetConfig(self,config):
         self.config=config
@@ -174,15 +176,26 @@ class PropertyTreeList( TreeListCtrl):
             self.Refresh()
         if event:event.Skip()
 
-    def OnTreeSelChanged(self, event):
-        item=event.GetItem()
+    def OnLeftUp( self, event ):
+       #Col 1 doesn't like firing OnTreeSelChanged, so
+       #trap clicks and force it so the column becomes editable
+        x,y = event.GetPosition()
+        minx=min(x,self.GetColumnWidth(1)/2)
+        item = self.HitTest((minx,y))[0]
+        if item.IsOk():
+            self.OnTreeSelChanged(item=item)
+        event.Skip()
+
+    def OnTreeSelChanged(self, event=None, item=None):
+        if event:item=event.GetItem()
+        if not item:return
         if self.HasChildren(item):
             self.SetColumnEditable(1,False)
             pass
         else:
             self.SetColumnEditable(1,True)
             self.EditLabel(item, 1)
-        event.Skip()
+        if event:event.Skip()
 
     def OnTreeBeginLabelEdit( self, event ):
         event.Skip()
