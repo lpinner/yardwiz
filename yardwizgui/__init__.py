@@ -679,7 +679,7 @@ class GUI( gui.GUI ):
         self.cbxDevice_OnKillFocus(None)     #Clicking a menu item doesn't move focus off a control,
         settings=SettingsDialog(self.config) #so make sure the device name get's updated.
         self._ApplyConfig()
-        event.Skip()
+        #event.Skip()
 
     def mitQueue_onSelect( self, event ):
         self._Queue()
@@ -822,7 +822,7 @@ class SettingsDialog ( gui.SettingsDialog ):
         self.EndModal(True)
 
     def OnSize(self, event):
-        self.btnSave.SetFocus()
+        self.btnSave.SetFocus() #Get focus off treelistctrl
         event.Skip()
 
 class ConfirmDelete( gui.ConfirmDelete ):
