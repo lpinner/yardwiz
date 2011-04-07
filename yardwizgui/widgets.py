@@ -20,9 +20,11 @@
 
 '''Custom widgets'''
 
-import wx,time,locale
+import wx,time,locale,ordereddict,sys
 from wx.lib.mixins.listctrl import ColumnSorterMixin,ListCtrlAutoWidthMixin
+from wx.gizmos import TreeListCtrl
 
+iswin=sys.platform[0:3] == "win"
 class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     """A sortable wx.ListCtrl"""
 
@@ -140,4 +142,59 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             try:return sorter(key1, key2)
             except: pass
         return self.DefaultSorter(key1, key2)
-    
+
+class PropertyTreeList( TreeListCtrl):
+    def __init__(self,*args,**kwargs):
+        TreeListCtrl.__init__(self,*args,**kwargs)
+        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelChanged)
+        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnTreeSelChanged)
+        self.Bind(wx.EVT_SIZE, self.OnSize)
+        self.Bind( wx.EVT_TREE_END_LABEL_EDIT, self.OnTreeEndLabelEdit )
+        self.Bind( wx.EVT_TREE_BEGIN_LABEL_EDIT, self.OnTreeBeginLabelEdit )
+
+    def SetConfig(self,config):
+        self.config=config
+        self.AddColumn('Property')
+        self.AddColumn('Value')
+        self.root = self.AddRoot("root")
+        sections = config.sections()
+        for section in sections:
+            sec=self.AppendItem(self.root, section)
+            options = config.options(section)
+            for option in options:
+                opt=self.AppendItem(sec, option)
+                self.SetItemText(opt, config.get(section, option), 1)
+        self.OnSize()
+
+    def OnSize(self, event=None):
+        if self.GetColumnCount() > 0:
+            width=self.GetSizeTuple()[0] / 2.0
+            for col in [0,1]:
+                self.GetColumn(col).SetWidth(width)
+            self.Refresh()
+        if event:event.Skip()
+
+    def OnTreeSelChanged(self, event):
+        item=event.GetItem()
+        if self.HasChildren(item):
+            self.SetColumnEditable(1,False)
+            pass
+        else:
+            self.SetColumnEditable(1,True)
+            self.EditLabel(item, 1)
+        event.Skip()
+
+    def OnTreeBeginLabelEdit( self, event ):
+        event.Skip()
+
+    def OnTreeEndLabelEdit( self, event ):
+        #Don't know why, but column 0 was getting updated instead of column 1
+        #The code below works around that
+        item=event.GetItem()
+        section=self.GetItemText(self.GetItemParent(item),0)
+        option=self.GetItemText(item, 0)
+        value=event.Label
+        self.SetItemText(item, option, 0) #Reset column 0
+        self.SetItemText(item, value, 1) #Explicitly set column 1
+        self.config.set(section, option, value)
+        event.Veto() #Cancel the edit as we've already written the new value to column 1

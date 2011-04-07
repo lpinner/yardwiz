@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 17 2010)
+## Python code generated with wxFormBuilder (version Nov 18 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
 ###########################################################################
 
 from widgets import SortableListCtrl
+from widgets import PropertyTreeList
 import wx
 import wx.combo
 
@@ -217,6 +218,21 @@ class GUI ( wx.Frame ):
 		self.StatusBar = self.CreateStatusBar( 3, wx.ST_SIZEGRIP, wx.ID_ANY )
 		self.StatusBar.SetFont( wx.Font( 8, 70, 90, 90, False, wx.EmptyString ) )
 		
+		self.mbrMenu = wx.MenuBar( 0 )
+		self.mnuSettings = wx.Menu()
+		self.mitPreferences = wx.MenuItem( self.mnuSettings, wx.ID_ANY, u"Preferences...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuSettings.AppendItem( self.mitPreferences )
+		
+		self.mbrMenu.Append( self.mnuSettings, u"Settings" ) 
+		
+		self.mnuHelp = wx.Menu()
+		self.mitAbout = wx.MenuItem( self.mnuHelp, wx.ID_ANY, u"About...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuHelp.AppendItem( self.mitAbout )
+		
+		self.mbrMenu.Append( self.mnuHelp, u"Help" ) 
+		
+		self.SetMenuBar( self.mbrMenu )
+		
 		
 		self.Centre( wx.BOTH )
 		
@@ -245,6 +261,8 @@ class GUI ( wx.Frame ):
 		self.btnPause.Bind( wx.EVT_BUTTON, self.btnPause_OnClick )
 		self.btnStop.Bind( wx.EVT_BUTTON, self.btnStop_OnClick )
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
+		self.Bind( wx.EVT_MENU, self.mitPreferences_OnSelect, id = self.mitPreferences.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitAbout_OnSelect, id = self.mitAbout.GetId() )
 	
 	def __del__( self ):
 		# Disconnect Events
@@ -272,6 +290,8 @@ class GUI ( wx.Frame ):
 		self.btnPause.Unbind( wx.EVT_BUTTON, None )
 		self.btnStop.Unbind( wx.EVT_BUTTON, None )
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
+		self.Unbind( wx.EVT_MENU, id = self.mitPreferences.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitAbout.GetId() )
 	
 	
 	# Virtual event handlers, overide them in your derived class
@@ -347,6 +367,12 @@ class GUI ( wx.Frame ):
 	def btnExit_onClick( self, event ):
 		event.Skip()
 	
+	def mitPreferences_OnSelect( self, event ):
+		event.Skip()
+	
+	def mitAbout_OnSelect( self, event ):
+		event.Skip()
+	
 
 ###########################################################################
 ## Class ConfirmDelete
@@ -417,6 +443,157 @@ class ConfirmDelete ( wx.Dialog ):
 		event.Skip()
 	
 	def DialogButtonsOnYesButtonClick( self, event ):
+		event.Skip()
+	
+
+###########################################################################
+## Class AboutDialog
+###########################################################################
+
+class AboutDialog ( wx.Dialog ):
+	
+	def __init__( self, parent ):
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About YARDWiz", pos = wx.DefaultPosition, size = wx.Size( 400,250 ), style = wx.DEFAULT_DIALOG_STYLE )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		
+		bSizer5 = wx.BoxSizer( wx.VERTICAL )
+		
+		fgSizer4 = wx.FlexGridSizer( 1, 2, 0, 0 )
+		fgSizer4.SetFlexibleDirection( wx.HORIZONTAL )
+		fgSizer4.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		
+		self.bmpIcon = wx.StaticBitmap( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 32,32 ), 0 )
+		fgSizer4.Add( self.bmpIcon, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+		
+		self.lblTitle = wx.StaticText( self, wx.ID_ANY, u"YARDWIZ\nYet Another Recording Downloader for the Wiz", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.lblTitle.Wrap( 300 )
+		self.lblTitle.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
+		
+		fgSizer4.Add( self.lblTitle, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+		
+		bSizer5.Add( fgSizer4, 0, wx.EXPAND, 5 )
+		
+		self.lblVersion = wx.StaticText( self, wx.ID_ANY, u"Version", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.lblVersion.Wrap( -1 )
+		bSizer5.Add( self.lblVersion, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.lblCopyright = wx.StaticText( self, wx.ID_ANY, u"Copyright", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.lblCopyright.Wrap( -1 )
+		self.lblCopyright.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 93, 91, False, wx.EmptyString ) )
+		
+		bSizer5.Add( self.lblCopyright, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.lblDescription = wx.StaticText( self, wx.ID_ANY, u"YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP program. ", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.lblDescription.Wrap( 250 )
+		bSizer5.Add( self.lblDescription, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.urlWebpage = wx.HyperlinkCtrl( self, wx.ID_ANY, u"YARDWiz Website", u"http://code.google.com/p/yardwiz", wx.DefaultPosition, wx.DefaultSize, wx.HL_ALIGN_CENTRE|wx.HL_DEFAULT_STYLE )
+		bSizer5.Add( self.urlWebpage, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.btnLicense = wx.Button( self, wx.ID_ANY, u"License...", wx.DefaultPosition, wx.DefaultSize, wx.NO_BORDER|wx.NO_BORDER )
+		bSizer5.Add( self.btnLicense, 0, wx.ALL|wx.EXPAND, 5 )
+		
+		self.SetSizer( bSizer5 )
+		self.Layout()
+		
+		self.Centre( wx.BOTH )
+		
+		# Connect Events
+		self.btnLicense.Bind( wx.EVT_BUTTON, self.btnLicense_OnClick )
+	
+	def __del__( self ):
+		# Disconnect Events
+		self.btnLicense.Unbind( wx.EVT_BUTTON, None )
+	
+	
+	# Virtual event handlers, overide them in your derived class
+	def btnLicense_OnClick( self, event ):
+		event.Skip()
+	
+
+###########################################################################
+## Class LicenseDialog
+###########################################################################
+
+class LicenseDialog ( wx.Dialog ):
+	
+	def __init__( self, parent ):
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"License", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		
+		bSizer6 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.txtLicense = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 450,300 ), wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH|wx.TE_WORDWRAP|wx.VSCROLL )
+		bSizer6.Add( self.txtLicense, 0, wx.ALL|wx.EXPAND, 5 )
+		
+		m_sdbSizer2 = wx.StdDialogButtonSizer()
+		self.m_sdbSizer2OK = wx.Button( self, wx.ID_OK )
+		m_sdbSizer2.AddButton( self.m_sdbSizer2OK )
+		m_sdbSizer2.Realize();
+		bSizer6.Add( m_sdbSizer2, 1, wx.ALIGN_RIGHT|wx.EXPAND, 5 )
+		
+		self.SetSizer( bSizer6 )
+		self.Layout()
+		bSizer6.Fit( self )
+		
+		self.Centre( wx.BOTH )
+	
+	def __del__( self ):
+		pass
+	
+
+###########################################################################
+## Class SettingsDialog
+###########################################################################
+
+class SettingsDialog ( wx.Dialog ):
+	
+	def __init__( self, parent ):
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Settings", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
+		
+		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		
+		bSizer6 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.PropertySheet = PropertyTreeList( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT )
+		bSizer6.Add( self.PropertySheet, 1, wx.ALL|wx.EXPAND, 5 )
+		
+		btn = wx.StdDialogButtonSizer()
+		self.btnSave = wx.Button( self, wx.ID_SAVE )
+		btn.AddButton( self.btnSave )
+		self.btnCancel = wx.Button( self, wx.ID_CANCEL )
+		btn.AddButton( self.btnCancel )
+		btn.Realize();
+		bSizer6.Add( btn, 0, wx.EXPAND, 5 )
+		
+		self.SetSizer( bSizer6 )
+		self.Layout()
+		bSizer6.Fit( self )
+		
+		self.Centre( wx.BOTH )
+		
+		# Connect Events
+		self.Bind( wx.EVT_SIZE, self.OnSize )
+		self.btnCancel.Bind( wx.EVT_BUTTON, self.OnCancel )
+		self.btnSave.Bind( wx.EVT_BUTTON, self.OnSave )
+	
+	def __del__( self ):
+		# Disconnect Events
+		self.Unbind( wx.EVT_SIZE )
+		self.btnCancel.Unbind( wx.EVT_BUTTON, None )
+		self.btnSave.Unbind( wx.EVT_BUTTON, None )
+	
+	
+	# Virtual event handlers, overide them in your derived class
+	def OnSize( self, event ):
+		event.Skip()
+	
+	def OnCancel( self, event ):
+		event.Skip()
+	
+	def OnSave( self, event ):
 		event.Skip()
 	
 

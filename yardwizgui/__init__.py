@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 '''Subclass of gui.GUI'''
-import os,sys,threading,thread,time,ConfigParser,signal,ctypes
+import os,sys,threading,thread,time,ConfigParser,signal,ctypes,copy
 import locale,subprocess,re
 import ordereddict
 import wx
@@ -156,14 +156,17 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( True )
 
     def _ApplyConfig(self):
+
+        self.SetTitle('%s (%s)'%(self.GetTitle(),self.version))
+
         #write stuff to various controls, eg server & port
         device=self.config.get('Settings','device')
         self.cbxDevice.Clear()
         self.cbxDevice.SetValue(device)
-        xsize=self.config.getint('Settings','xsize')
-        ysize=self.config.getint('Settings','ysize')
-        xmin=self.config.getint('Settings','xmin')
-        ymin=self.config.getint('Settings','ymin')
+        xsize=self.config.getint('Window','xsize')
+        ysize=self.config.getint('Window','ysize')
+        xmin=self.config.getint('Window','xmin')
+        ymin=self.config.getint('Window','ymin')
         if [xsize,ysize,xmin,ymin]==[-1,-1,-1,-1]:
             #Set basic sizing
             xres,yres=wx.GetClientDisplayRect()[2:]
@@ -493,9 +496,26 @@ class GUI( gui.GUI ):
         self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
         self.config.read([defaultconfig,self.userconfig])
 
-        #Bit of cleanup from 0.1.2+ - we no longer use server:port, so remove them from the config
-        self.config.remove_option('Settings', 'server')
-        self.config.remove_option('Settings', 'port')
+        try:
+            #Bit of cleanup from 0.1.2+ - we no longer use server:port, so remove them from the config
+            self.config.remove_option('Settings', 'server')
+            self.config.remove_option('Settings', 'port')
+            #Bit of cleanup from 0.2.2+ - xmin etc. now in [Windows]
+            self.config.set('Window', 'xsize', self.config.get('Settings','xsize'))
+            self.config.set('Window', 'ysize', self.config.get('Settings','ysize'))
+            self.config.set('Window', 'xmin', self.config.get('Settings','xmin'))
+            self.config.set('Window', 'ymin', self.config.get('Settings','ymin'))
+            self.config.remove_option('Settings', 'xsize')
+            self.config.remove_option('Settings', 'xmin')
+            self.config.remove_option('Settings', 'ymin')
+            self.config.remove_option('Settings', 'ysize')
+        except ConfigParser.NoOptionError:
+            pass
+
+        version=ConfigParser.ConfigParser()
+        version.read('VERSION')
+        self.version = version.get('Version','DISPLAY_VERSION')
+        del version
 
     def _Reset(self):
         self._ClearQueue()
@@ -540,10 +560,10 @@ class GUI( gui.GUI ):
             os.mkdir(os.path.dirname(self.userconfig))
         xsize,ysize=self.Size.x,self.Size.y
         xmin,ymin=self.GetScreenPositionTuple()
-        self.config.set('Settings', 'xsize', str(xsize))
-        self.config.set('Settings', 'ysize', str(ysize))
-        self.config.set('Settings', 'xmin', str(xmin))
-        self.config.set('Settings', 'ymin', str(ymin))
+        self.config.set('Window', 'xsize', str(xsize))
+        self.config.set('Window', 'ysize', str(ysize))
+        self.config.set('Window', 'xmin', str(xmin))
+        self.config.set('Window', 'ymin', str(ymin))
         self.config.write(open(self.userconfig,'w'))
         device=self.config.get('Settings','device')
 
@@ -637,23 +657,15 @@ class GUI( gui.GUI ):
 
     def lstQueue_OnMiddleClick( self, event ):
         self.mitRemove_OnSelect(event)
-        event.Skip()
 
-    def mitQueue_onSelect( self, event ):
-        self._Queue()
-        event.Skip()
-
-    def mitRemove_OnSelect( self, event ):
-        self._DeleteFromQueue()
-        event.Skip()
+    def mitAbout_OnSelect( self, event ):
+        dlg=AboutDialog()
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
-        event.Skip()
 
     def mitDelete_OnSelect( self, event ):
         self._DeleteFromWiz()
-        event.Skip()
 
     def mitDownload_onSelect( self, event ):
         self._Queue(clear=True)
@@ -663,6 +675,18 @@ class GUI( gui.GUI ):
     def mitDownloadAll_OnSelect( self, event ):
         self._DownloadQueue()
         event.Skip()
+
+    def mitPreferences_OnSelect( self, event ):
+        self.cbxDevice_OnKillFocus(None)     #Clicking a menu item doesn't move focus off a control,
+        settings=SettingsDialog(self.config) #so make sure the device name get's updated.
+        self._ApplyConfig()
+        event.Skip()
+
+    def mitQueue_onSelect( self, event ):
+        self._Queue()
+
+    def mitRemove_OnSelect( self, event ):
+        self._DeleteFromQueue()
 
     def onLog( self, event ):
         self._Log(event.message)
@@ -737,6 +761,67 @@ class Stderr(object):
         if self._file is not None:
             self._file.flush()
 
+class AboutDialog( gui.AboutDialog ):
+    def __init__( self ):
+        gui.AboutDialog.__init__( self, None )
+        #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
+        path=data_path()
+        icons=os.path.join(path,u'icons')
+        license=os.path.join(path,'LICENSE')
+        if os.path.exists(license):
+            version=os.path.join(path,'VERSION')
+        else:
+            license=os.path.abspath(os.path.join(path,'..','LICENSE'))
+            version=os.path.abspath(os.path.join(path,'..','VERSION'))
+        
+        ico = wx.Icon( os.path.join(icons, u"icon.png"), wx.BITMAP_TYPE_ANY )
+        self.SetIcon(ico)
+        self.bmpIcon.SetBitmap( wx.Bitmap( os.path.join(icons, u"icon.png"), wx.BITMAP_TYPE_ANY ) )
+        self.license=open(license).read()
+        self.LicenseDialog=gui.LicenseDialog(None)
+        self.LicenseDialog.txtLicense.SetValue(self.license)
+        self.version=ConfigParser.ConfigParser()
+        self.version.read(version)
+        self.version = self.version.get('Version','DISPLAY_VERSION')
+        self.lblVersion.SetLabel('Version: '+self.version)
+        self.lblCopyright.SetLabel(self.license.split('\n')[0].strip())
+
+        self.Centre( wx.BOTH )
+        self.ShowModal()
+
+    def btnLicense_OnClick( self, event ):
+        self.LicenseDialog.ShowModal()
+
+
+class SettingsDialog ( gui.SettingsDialog ):
+
+    def __init__( self, config ):
+        gui.SettingsDialog.__init__( self, None )
+        self.origconfig=config
+        self.config=copy.deepcopy(config) #So we don't update the original until Save is clicked.
+        self.PropertySheet.SetConfig(self.config)
+        self.PropertySheet.ExpandAll(self.PropertySheet.root) 
+
+        self.Centre( wx.BOTH )
+        self.ShowModal()
+
+    def OnCancel( self, event ):
+        self.EndModal(True)
+
+    def OnSave( self, event ):
+        sections = self.config.sections()
+        for section in sections:
+            options = self.config.options(section)
+            for option in options:
+                print section, option, self.config.get(section, option)
+                self.origconfig.set(section, option, self.config.get(section, option))
+        
+        self.EndModal(True)
+
+    def OnSize(self, event):
+        self.btnSave.SetFocus()
+        event.Skip()
+
 class ConfirmDelete( gui.ConfirmDelete ):
     def __init__( self, filename):
         gui.ConfirmDelete.__init__( self, None)
@@ -758,6 +843,7 @@ class ConfirmDelete( gui.ConfirmDelete ):
 
         self.checked=self.chkShowAgain.IsChecked()
         self.Fit()
+        self.Centre( wx.BOTH )
         self.ShowModal()
 
     # Handlers for ConfirmDelete events.
@@ -1140,6 +1226,7 @@ def frozen():
 def data_path():
     if frozen():return os.path.dirname(sys.executable)
     return os.path.dirname(__file__)
+
 #######################################################################
 #Custom WX Events
 #######################################################################
