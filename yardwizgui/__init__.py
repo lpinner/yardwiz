@@ -761,6 +761,11 @@ class Stderr(object):
         if self._file is not None:
             self._file.flush()
 
+class LicenseDialog( gui.LicenseDialog ):
+    def __init__( self ):
+        gui.LicenseDialog.__init__(self,None)
+        self.Centre( wx.BOTH )
+
 class AboutDialog( gui.AboutDialog ):
     def __init__( self ):
         gui.AboutDialog.__init__( self, None )
@@ -778,7 +783,7 @@ class AboutDialog( gui.AboutDialog ):
         self.SetIcon(ico)
         self.bmpIcon.SetBitmap( wx.Bitmap( os.path.join(icons, u"icon.png"), wx.BITMAP_TYPE_ANY ) )
         self.license=open(license).read()
-        self.LicenseDialog=gui.LicenseDialog(None)
+        self.LicenseDialog=LicenseDialog()
         self.LicenseDialog.txtLicense.SetValue(self.license)
         self.version=ConfigParser.ConfigParser()
         self.version.read(version)
