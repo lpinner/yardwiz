@@ -63,6 +63,8 @@ elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
                              ('',['TODO']),
                              ('',['RELEASE']),
                              ('',['VERSION']),
+                             ('',['Microsoft.VC90.CRT.manifest']),
+                             ('',glob.glob('msvc*90.dll')),
                              ('config', ['yardwizgui/config/defaults.ini']),
                              ('icons', glob.glob('yardwizgui/icons/*.*'))]
 
