@@ -663,7 +663,7 @@ class GUI( gui.GUI ):
         self.mitRemove_OnSelect(event)
 
     def mitAbout_OnSelect( self, event ):
-        dlg=AboutDialog()
+        dlg=AboutDialog(self)
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
@@ -682,7 +682,7 @@ class GUI( gui.GUI ):
 
     def mitPreferences_OnSelect( self, event ):
         self.cbxDevice_OnKillFocus(None)     #Clicking a menu item doesn't move focus off a control,
-        settings=SettingsDialog(self.config) #so make sure the device name get's updated.
+        settings=SettingsDialog(self,self.config) #so make sure the device name get's updated.
         self._ApplyConfig()
         #event.Skip()
 
@@ -774,12 +774,14 @@ class Stderr(object):
             self._file.flush()
 
 class LicenseDialog( gui.LicenseDialog ):
-    def __init__( self ):
+    def __init__( self, parent ):
         gui.LicenseDialog.__init__(self,None)
-        self.Centre( wx.BOTH )
+        sxmin,symin=centrepos(self,parent)
+        self.SetPosition((sxmin,symin))
+        #self.Centre( wx.BOTH )
 
 class AboutDialog( gui.AboutDialog ):
-    def __init__( self ):
+    def __init__( self, parent ):
         gui.AboutDialog.__init__( self, None )
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         path=data_path()
@@ -791,11 +793,16 @@ class AboutDialog( gui.AboutDialog ):
             license=os.path.abspath(os.path.join(path,'..','LICENSE'))
             version=os.path.abspath(os.path.join(path,'..','VERSION'))
         
-        ico = wx.Icon( os.path.join(icons, u"icon.png"), wx.BITMAP_TYPE_ANY )
-        self.SetIcon(ico)
-        self.bmpIcon.SetBitmap( wx.Bitmap( os.path.join(icons, u"icon.png"), wx.BITMAP_TYPE_ANY ) )
+        ico =os.path.join(icons, u"icon.png")
+        self.SetIcon( wx.Icon( ico, wx.BITMAP_TYPE_ANY ) )
+        self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
+
+        sxmin,symin=centrepos(self,parent)
+        self.SetPosition((sxmin,symin))
+        #self.Centre( wx.BOTH )
+
         self.license=open(license).read()
-        self.LicenseDialog=LicenseDialog()
+        self.LicenseDialog=LicenseDialog(self)
         self.LicenseDialog.txtLicense.SetValue(self.license)
         self.version=ConfigParser.ConfigParser()
         self.version.read(version)
@@ -803,7 +810,6 @@ class AboutDialog( gui.AboutDialog ):
         self.lblVersion.SetLabel('Version: '+self.version)
         self.lblCopyright.SetLabel(self.license.split('\n')[0].strip())
 
-        self.Centre( wx.BOTH )
         self.ShowModal()
 
     def btnLicense_OnClick( self, event ):
@@ -812,14 +818,17 @@ class AboutDialog( gui.AboutDialog ):
 
 class SettingsDialog ( gui.SettingsDialog ):
 
-    def __init__( self, config ):
+    def __init__( self, parent, config ):
         gui.SettingsDialog.__init__( self, None )
         self.origconfig=config
         self.config=copy.deepcopy(config) #So we don't update the original until Save is clicked.
         self.PropertySheet.SetConfig(self.config)
         self.PropertySheet.ExpandAll(self.PropertySheet.root) 
 
-        self.Centre( wx.BOTH )
+        sxmin,symin=centrepos(self,parent)
+        self.SetPosition((sxmin,symin))
+        #self.Centre( wx.BOTH )
+
         self.ShowModal()
 
     def OnCancel( self, event ):
@@ -1242,6 +1251,16 @@ def frozen():
 def data_path():
     if frozen():return os.path.dirname(sys.executable)
     return os.path.dirname(__file__)
+
+def centrepos(self,parent):
+    pxsize,pysize=parent.GetSizeTuple()
+    pxmin,pymin=parent.GetPositionTuple()
+    sxsize,sysize=self.GetSizeTuple()
+    pxcen=pxmin+pxsize/2.0
+    pycen=pymin+pysize/2.0
+    sxmin=pxcen-sxsize/2.0
+    symin=pycen-sysize/2.0
+    return sxmin,symin
 
 #######################################################################
 #Custom WX Events
