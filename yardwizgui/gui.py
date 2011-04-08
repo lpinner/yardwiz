@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 18 2010)
+## Python code generated with wxFormBuilder (version Nov 17 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -468,7 +468,7 @@ class ConfirmDelete ( wx.Dialog ):
 class AboutDialog ( wx.Dialog ):
 	
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About YARDWiz", pos = wx.DefaultPosition, size = wx.Size( -1,-1 ), style = wx.DEFAULT_DIALOG_STYLE )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About YARDWiz", pos = wx.DefaultPosition, size = wx.Size( 400,250 ), style = wx.DEFAULT_DIALOG_STYLE )
 		
 		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
 		
@@ -505,7 +505,6 @@ class AboutDialog ( wx.Dialog ):
 		
 		self.SetSizer( bSizer5 )
 		self.Layout()
-		bSizer5.Fit( self )
 		
 		self.Centre( wx.BOTH )
 		
@@ -585,18 +584,23 @@ class SettingsDialog ( wx.Dialog ):
 		self.Centre( wx.BOTH )
 		
 		# Connect Events
+		self.Bind( wx.EVT_CLOSE, self.OnClose )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.btnCancel.Bind( wx.EVT_BUTTON, self.OnCancel )
 		self.btnSave.Bind( wx.EVT_BUTTON, self.OnSave )
 	
 	def __del__( self ):
 		# Disconnect Events
+		self.Unbind( wx.EVT_CLOSE )
 		self.Unbind( wx.EVT_SIZE )
 		self.btnCancel.Unbind( wx.EVT_BUTTON, None )
 		self.btnSave.Unbind( wx.EVT_BUTTON, None )
 	
 	
 	# Virtual event handlers, overide them in your derived class
+	def OnClose( self, event ):
+		event.Skip()
+	
 	def OnSize( self, event ):
 		event.Skip()
 	

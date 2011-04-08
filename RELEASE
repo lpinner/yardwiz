@@ -1,5 +1,12 @@
 =Release notes=
 
+==0.2.3==
+===_New in 0.2.3_===
+  * Added About and Preferences dialogs
+===_Fixed in 0.2.3_===
+  * Resolved Issue 4
+  * Minor tweaks and bugfixes
+
 ==0.2.2==
 ===_New in 0.2.2_===
   * Added recursive folders listing

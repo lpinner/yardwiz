@@ -144,6 +144,11 @@ class GUI( gui.GUI ):
         self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
         self.lstPrograms.SetItemData(iidx,iidx)
 
+        total=0
+        for program in self.programs:
+            total+=program['size']
+        self.StatusBar.SetFields(['','','Total recordings %sMB'%total])
+
         for j in range(self.lstPrograms.GetColumnCount()):
             self.lstPrograms.SetColumnWidth(j, autosize)
             if not iswin:
@@ -681,10 +686,11 @@ class GUI( gui.GUI ):
         event.Skip()
 
     def mitPreferences_OnSelect( self, event ):
-        self.cbxDevice_OnKillFocus(None)     #Clicking a menu item doesn't move focus off a control,
+        self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
         settings=SettingsDialog(self,self.config) #so make sure the device name get's updated.
-        self._ApplyConfig()
-        #event.Skip()
+        if settings.saved:
+            self.config=settings.config
+            self._ApplyConfig()
 
     def mitQueue_onSelect( self, event ):
         self._Queue()
@@ -820,27 +826,28 @@ class SettingsDialog ( gui.SettingsDialog ):
 
     def __init__( self, parent, config ):
         gui.SettingsDialog.__init__( self, None )
-        self.origconfig=config
-        self.config=copy.deepcopy(config) #So we don't update the original until Save is clicked.
+        self._config=config
+        self.config=copy.deepcopy(config) #So we don't update the original
         self.PropertySheet.SetConfig(self.config)
         self.PropertySheet.ExpandAll(self.PropertySheet.root) 
 
         sxmin,symin=centrepos(self,parent)
         self.SetPosition((sxmin,symin))
-        #self.Centre( wx.BOTH )
+
+        self.saved=False
 
         self.ShowModal()
 
+    def OnClose( self, event ):
+        self.config=self._config
+        self.EndModal(True)
+
     def OnCancel( self, event ):
+        self.config=self._config
         self.EndModal(True)
 
     def OnSave( self, event ):
-        sections = self.config.sections()
-        for section in sections:
-            options = self.config.options(section)
-            for option in options:
-                self.origconfig.set(section, option, self.config.get(section, option))
-        
+        self.saved=True
         self.EndModal(True)
 
     def OnSize(self, event):

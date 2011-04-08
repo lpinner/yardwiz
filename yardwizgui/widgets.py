@@ -180,10 +180,11 @@ class PropertyTreeList( TreeListCtrl):
        #Col 1 doesn't like firing OnTreeSelChanged, so
        #trap clicks and force it so the column becomes editable
         x,y = event.GetPosition()
-        minx=min(x,self.GetColumnWidth(1)/2)
+        minx=min(x,50)#self.GetColumnWidth(1)/2)
         item = self.HitTest((minx,y))[0]
         if item.IsOk():
             self.OnTreeSelChanged(item=item)
+            self.SelectItem(item)
         event.Skip()
 
     def OnTreeSelChanged(self, event=None, item=None):
