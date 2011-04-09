@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 '''Subclass of gui.GUI'''
-import os,sys,threading,thread,time,ConfigParser,signal,ctypes,copy
+import os,sys,threading,thread,time,ConfigParser,signal,ctypes,copy,shlex
 import locale,subprocess,re
 import ordereddict
 import wx
@@ -191,6 +191,11 @@ class GUI( gui.GUI ):
         self.display_dateformat=self.config.get('Settings','dateformat')
         self.lstPrograms.datetimeformat=self.display_dateformat
         self.lstPrograms.timeformat=self.getwizpnp_timeformat #Program length
+
+        #post download processing
+        postcmd=self.config.get('Settings','postdownloadcommand')
+        postcmd=postcmd.replace('%f','%F')
+        self.postcmd=postcmd.replace('%d','%D')
 
     def _ClearPrograms(self):
         self.programs=[]
@@ -405,10 +410,27 @@ class GUI( gui.GUI ):
         self.ThreadedDownloader=ThreadedDownloader(self,self.device,self.ip,self.port,programs,self.Play,self.Stop)
 
     def _DownloadComplete(self,index,stopped):
-
+        idx=-1
         if len(self.queue)>0:
+            idx=self.queue[0]
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
+
+        cmd=shlex.split(self.postcmd,'#')
+        if not stopped and idx>-1 and cmd:
+            program=self.programs[idx]
+            cmd=self.postcmd.replace('%F', '"%s"'%program['filename'])
+            cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
+            try:cmd=str(cmd)
+            except:
+                self._Log('Can\'t convert %s from unicode'%program['filename'])
+            else:                
+                cmd=shlex.split(cmd,'#')
+                try:
+                    pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
+                except Exception,err:
+                    self._Log('Can\'t run post download command on %s'%program['filename'])
+                    self._Log(err)
 
         if len(self.queue)==0 or stopped:
             self._downloading=False
@@ -912,9 +934,9 @@ class ThreadedConnector( threading.Thread ):
     def run(self):
 
         if self.device:
-            cmd=[wizexe,'--device',self.device,'--all','-l','-v','--index']
+            cmd=[wizexe,'--device',self.device,'--all','-v','-l','--index'] #,'-q'
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-l','-v','--index']
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-v','-l','--index']
         proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
