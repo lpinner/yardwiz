@@ -200,7 +200,7 @@ class GUI( gui.GUI ):
         #postdownload sound
         self.playsounds=self.config.get('Sounds','playsounds')
         self.downloadcompletesound=self.config.get('Sounds','downloadcomplete')
-        if self.playsounds and not self.downloadcompletesound:
+        if not self.downloadcompletesound or self.downloadcompletesound.lower()=='<default>':
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
 
