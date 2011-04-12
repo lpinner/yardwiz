@@ -219,6 +219,12 @@ class GUI ( wx.Frame ):
 		self.StatusBar.SetFont( wx.Font( 8, 70, 90, 90, False, wx.EmptyString ) )
 		
 		self.mbrMenu = wx.MenuBar( 0 )
+		self.mnuFile = wx.Menu()
+		self.mitExit = wx.MenuItem( self.mnuFile, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuFile.AppendItem( self.mitExit )
+		
+		self.mbrMenu.Append( self.mnuFile, u"File" ) 
+		
 		self.mnuSettings = wx.Menu()
 		self.mitPreferences = wx.MenuItem( self.mnuSettings, wx.ID_ANY, u"Preferences...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuSettings.AppendItem( self.mitPreferences )
@@ -264,6 +270,7 @@ class GUI ( wx.Frame ):
 		self.btnPause.Bind( wx.EVT_BUTTON, self.btnPause_OnClick )
 		self.btnStop.Bind( wx.EVT_BUTTON, self.btnStop_OnClick )
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
+		self.Bind( wx.EVT_MENU, self.btnExit_onClick, id = self.mitExit.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitPreferences_OnSelect, id = self.mitPreferences.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitAbout_OnSelect, id = self.mitAbout.GetId() )
 	
@@ -296,6 +303,7 @@ class GUI ( wx.Frame ):
 		self.btnPause.Unbind( wx.EVT_BUTTON, None )
 		self.btnStop.Unbind( wx.EVT_BUTTON, None )
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
+		self.Unbind( wx.EVT_MENU, id = self.mitExit.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitPreferences.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitAbout.GetId() )
 	
@@ -381,6 +389,7 @@ class GUI ( wx.Frame ):
 	
 	def btnExit_onClick( self, event ):
 		event.Skip()
+	
 	
 	def mitPreferences_OnSelect( self, event ):
 		event.Skip()

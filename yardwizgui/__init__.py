@@ -433,6 +433,7 @@ class GUI( gui.GUI ):
         self.btnConnect.Enable( False )
         self.btnExit.Enable( False )
         self.lstQueue.Enable( False )
+        self.mitExit.Enable( False )
         self.mitQueue.Enable( False )
         self.mitDownload.Enable( False )
         self._downloading=True
@@ -475,7 +476,8 @@ class GUI( gui.GUI ):
             self.btnStop.Enable( False )
             self.btnConnect.Enable( True )
             self.btnExit.Enable( True )
-            self.mitQueue.Enable(  )
+            self.mitQueue.Enable(True)
+            self.mitExit.Enable( True )
             self.mitDownload.Enable( True )
             if len(self.queue)==0:
                 self.btnClearQueue.Enable( False )
