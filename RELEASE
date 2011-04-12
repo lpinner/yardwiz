@@ -3,6 +3,8 @@
 ==0.2.3==
 ===_New in 0.2.3_===
   * Added About and Preferences dialogs
+  * Added option to specify a command to be run after a download is complete
+  * Added option to play a sound after a download is complete
 ===_Fixed in 0.2.3_===
   * Resolved Issue 4
   * Minor tweaks and bugfixes
