@@ -76,9 +76,11 @@ class GUI( gui.GUI ):
         self.btnStop.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"stop.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
 
+        self.version,self.display_version=version()
+        
         self._ReadConfig()
         self._ApplyConfig()
-        self.SetTitle('%s (%s)'%(self.GetTitle(),self.version))
+        self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
 
         self._downloading=False
         self.deleted=[]
@@ -555,11 +557,6 @@ class GUI( gui.GUI ):
         self.config.read([defaultconfig,self.userconfig])
         self._CleanupConfig()
 
-        version=ConfigParser.ConfigParser()
-        version.read(os.path.join(top_path(),'VERSION'))
-        self.version = version.get('Version','DISPLAY_VERSION')
-        del version
-
         self.configspec={
             'Settings':{
                 'device':['Device', 'str'],
@@ -850,26 +847,22 @@ class AboutDialog( gui.AboutDialog ):
         gui.AboutDialog.__init__( self, None )
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         path=data_path()
-        top=top_path()
         icons=os.path.join(path,u'icons')
-        license=os.path.join(top,'LICENSE')
-        version=os.path.join(top,'VERSION')
-        ico =os.path.join(icons, u"icon.png")
+        ico=os.path.join(icons, u"icon.png")
         self.SetIcon( wx.Icon( ico, wx.BITMAP_TYPE_ANY ) )
         self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
+
+        txtlicense=license()
+        txtversion=version()[0]
 
         sxmin,symin=centrepos(self,parent)
         self.SetPosition((sxmin,symin))
         #self.Centre( wx.BOTH )
 
-        self.license=open(license).read()
         self.LicenseDialog=LicenseDialog(self)
-        self.LicenseDialog.txtLicense.SetValue(self.license)
-        self.version=ConfigParser.ConfigParser()
-        self.version.read(version)
-        self.version = self.version.get('Version','DISPLAY_VERSION')
-        self.lblVersion.SetLabel('Version: '+self.version)
-        self.lblCopyright.SetLabel(self.license.split('\n')[0].strip())
+        self.LicenseDialog.txtLicense.SetValue(txtlicense)
+        self.lblVersion.SetLabel('Version: '+txtversion)
+        self.lblCopyright.SetLabel(txtlicense.split('\n')[0].strip())
 
         self.ShowModal()
 
@@ -1301,9 +1294,27 @@ def errordialog(message, caption):
     dlg.Destroy()
 def frozen():
     return hasattr(sys, "frozen")
-def top_path():
-    if frozen():return os.path.dirname(sys.executable)
-    return os.path.dirname(sys.argv[0])
+
+def version():
+    try:
+        import __version__
+        version=__version__.version
+        display_version=__version__.display_version
+    except ImportError:
+        version=ConfigParser.ConfigParser()
+        version.read(os.path.join(os.path.dirname(sys.argv[0]),'VERSION'))
+        display_version= version.get('Version','DISPLAY_VERSION')
+        version = version.get('Version','VERSION')
+    return version,display_version
+
+def license():
+    try:
+        import __license__
+        license=__license__.license
+    except ImportError:
+        license=open(os.path.join(os.path.dirname(sys.argv[0]),'LICENSE')).read().strip()
+    return license
+
 def data_path():
     if frozen():return os.path.dirname(sys.executable)
     return os.path.dirname(__file__)
