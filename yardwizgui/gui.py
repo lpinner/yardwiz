@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 17 2010)
+## Python code generated with wxFormBuilder (version Nov 18 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -477,9 +477,9 @@ class ConfirmDelete ( wx.Dialog ):
 class AboutDialog ( wx.Dialog ):
 	
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About YARDWiz", pos = wx.DefaultPosition, size = wx.Size( 400,275 ), style = wx.DEFAULT_DIALOG_STYLE )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"About YARDWiz", pos = wx.DefaultPosition, size = wx.Size( -1,-1 ), style = wx.DEFAULT_DIALOG_STYLE )
 		
-		self.SetSizeHintsSz( wx.DefaultSize, wx.DefaultSize )
+		self.SetSizeHintsSz( wx.Size( 400,250 ), wx.DefaultSize )
 		
 		bSizer5 = wx.BoxSizer( wx.VERTICAL )
 		
@@ -487,12 +487,12 @@ class AboutDialog ( wx.Dialog ):
 		bSizer5.Add( self.bmpIcon, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 		
 		self.lblTitle = wx.StaticText( self, wx.ID_ANY, u"YARDWiz\nYet Another Recording Downloader for the Wiz", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
-		self.lblTitle.Wrap( 300 )
+		self.lblTitle.Wrap( 250 )
 		self.lblTitle.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
 		
-		bSizer5.Add( self.lblTitle, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+		bSizer5.Add( self.lblTitle, 0, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, 5 )
 		
-		self.lblVersion = wx.StaticText( self, wx.ID_ANY, u"Version", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.lblVersion = wx.StaticText( self, wx.ID_ANY, u"Version", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.lblVersion.Wrap( -1 )
 		bSizer5.Add( self.lblVersion, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
@@ -500,20 +500,21 @@ class AboutDialog ( wx.Dialog ):
 		self.lblCopyright.Wrap( -1 )
 		self.lblCopyright.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 93, 91, False, wx.EmptyString ) )
 		
-		bSizer5.Add( self.lblCopyright, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		bSizer5.Add( self.lblCopyright, 0, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, 5 )
 		
-		self.lblDescription = wx.StaticText( self, wx.ID_ANY, u"YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP program. ", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.lblDescription = wx.StaticText( self, wx.ID_ANY, u"YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP program. ", wx.DefaultPosition, wx.Size( 250,-1 ), wx.ALIGN_CENTRE )
 		self.lblDescription.Wrap( 250 )
 		bSizer5.Add( self.lblDescription, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.urlWebpage = wx.HyperlinkCtrl( self, wx.ID_ANY, u"YARDWiz Website", u"http://code.google.com/p/yardwiz", wx.DefaultPosition, wx.DefaultSize, wx.HL_ALIGN_CENTRE|wx.HL_DEFAULT_STYLE )
-		bSizer5.Add( self.urlWebpage, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		bSizer5.Add( self.urlWebpage, 0, wx.ALIGN_CENTER|wx.EXPAND|wx.LEFT|wx.RIGHT, 5 )
 		
 		self.btnLicense = wx.Button( self, wx.ID_ANY, u"License...", wx.DefaultPosition, wx.DefaultSize, wx.NO_BORDER|wx.NO_BORDER )
-		bSizer5.Add( self.btnLicense, 0, wx.ALL|wx.EXPAND, 5 )
+		bSizer5.Add( self.btnLicense, 0, wx.BOTTOM|wx.EXPAND|wx.TOP, 5 )
 		
 		self.SetSizer( bSizer5 )
 		self.Layout()
+		bSizer5.Fit( self )
 		
 		self.Centre( wx.BOTH )
 		

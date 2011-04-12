@@ -2731,7 +2731,7 @@
             <property name="maximize_button">0</property>
             <property name="maximum_size"></property>
             <property name="minimize_button">0</property>
-            <property name="minimum_size"></property>
+            <property name="minimum_size">400,250</property>
             <property name="moveable">1</property>
             <property name="name">AboutDialog</property>
             <property name="pane_border">1</property>
@@ -2743,7 +2743,7 @@
             <property name="resize">Resizable</property>
             <property name="row"></property>
             <property name="show">1</property>
-            <property name="size">400,275</property>
+            <property name="size">-1,-1</property>
             <property name="style">wxDEFAULT_DIALOG_STYLE</property>
             <property name="subclass"></property>
             <property name="title">About YARDWiz</property>
@@ -2875,7 +2875,7 @@
                 </object>
                 <object class="sizeritem" expanded="0">
                     <property name="border">5</property>
-                    <property name="flag">wxALIGN_CENTER|wxALIGN_CENTER_HORIZONTAL|wxALIGN_CENTER_VERTICAL|wxALL</property>
+                    <property name="flag">wxALIGN_CENTER|wxLEFT|wxRIGHT</property>
                     <property name="proportion">0</property>
                     <object class="wxStaticText" expanded="0">
                         <property name="BottomDockable">1</property>
@@ -2931,7 +2931,7 @@
                         <property name="window_extra_style"></property>
                         <property name="window_name"></property>
                         <property name="window_style"></property>
-                        <property name="wrap">300</property>
+                        <property name="wrap">250</property>
                         <event name="OnChar"></event>
                         <event name="OnEnterWindow"></event>
                         <event name="OnEraseBackground"></event>
@@ -3004,7 +3004,7 @@
                         <property name="row"></property>
                         <property name="show">1</property>
                         <property name="size"></property>
-                        <property name="style"></property>
+                        <property name="style">wxALIGN_CENTRE</property>
                         <property name="subclass"></property>
                         <property name="toolbar_pane">0</property>
                         <property name="tooltip"></property>
@@ -3043,7 +3043,7 @@
                 </object>
                 <object class="sizeritem" expanded="0">
                     <property name="border">5</property>
-                    <property name="flag">wxALIGN_CENTER|wxALL</property>
+                    <property name="flag">wxALIGN_CENTER|wxLEFT|wxRIGHT</property>
                     <property name="proportion">0</property>
                     <object class="wxStaticText" expanded="0">
                         <property name="BottomDockable">1</property>
@@ -3171,7 +3171,7 @@
                         <property name="resize">Resizable</property>
                         <property name="row"></property>
                         <property name="show">1</property>
-                        <property name="size"></property>
+                        <property name="size">250,-1</property>
                         <property name="style">wxALIGN_CENTRE</property>
                         <property name="subclass"></property>
                         <property name="toolbar_pane">0</property>
@@ -3211,7 +3211,7 @@
                 </object>
                 <object class="sizeritem" expanded="0">
                     <property name="border">5</property>
-                    <property name="flag">wxALIGN_CENTER|wxALL</property>
+                    <property name="flag">wxALIGN_CENTER|wxEXPAND|wxLEFT|wxRIGHT</property>
                     <property name="proportion">0</property>
                     <object class="wxHyperlinkCtrl" expanded="0">
                         <property name="BottomDockable">1</property>
@@ -3299,7 +3299,7 @@
                 </object>
                 <object class="sizeritem" expanded="0">
                     <property name="border">5</property>
-                    <property name="flag">wxALL|wxEXPAND</property>
+                    <property name="flag">wxBOTTOM|wxEXPAND|wxTOP</property>
                     <property name="proportion">0</property>
                     <object class="wxButton" expanded="0">
                         <property name="BottomDockable">1</property>
