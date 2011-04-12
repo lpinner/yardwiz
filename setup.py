@@ -29,7 +29,7 @@ setupargs={'name':'YARDWiz',
                    'Topic :: Multimedia :: Video'],
       'packages':['yardwizgui'],
       'scripts':['yardwiz'],
-      'package_data':{'yardwizgui': ['config/defaults.ini','icons/*.*']},
+      'package_data':{'yardwizgui': ['config/defaults.ini','icons/*.*','sounds/*']},
     }
 
 

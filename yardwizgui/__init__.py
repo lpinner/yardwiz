@@ -198,7 +198,7 @@ class GUI( gui.GUI ):
         self.postcmd=postcmd.replace('%d','%D')
 
         #postdownload sound
-        self.playsounds=self.config.get('Sounds','playsounds')
+        self.playsounds=self.config.getboolean('Sounds','playsounds')
         self.downloadcompletesound=self.config.get('Sounds','downloadcomplete')
         if not self.downloadcompletesound or self.downloadcompletesound.lower()=='<default>':
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
@@ -331,11 +331,11 @@ class GUI( gui.GUI ):
 
         if not prognames:return
 
-        confirm=self.config.getint('Settings','confirmdelete')
+        confirm=self.config.getboolean('Settings','confirmdelete')
         if confirm:
             confirm=ConfirmDelete('\n'+'\n'.join(prognames))
             if confirm.checked:#i.e do not show this dialog again...
-                self.config.setint('Settings','confirmdelete',0)
+                self.config.set('Settings','confirmdelete',0)
             delete=confirm.delete
         else:
             delete=True
@@ -456,9 +456,6 @@ class GUI( gui.GUI ):
             program=self.programs[idx]
             cmd=cmd.replace('%F', '"%s"'%program['filename'])
             cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
-            #cmd=shlex.split(cmd,'#') #Doesn't work on unicode strings
-            #regex from http://stackoverflow.com/questions/79968/split-a-string-by-spaces-preserving-quoted-substrings-in-python
-            cmd=[p for p in re.split("( |\\\".*?\\\"|'.*?')", cmd) if p.strip()]
             try:
                 pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
             except Exception,err:
@@ -751,6 +748,7 @@ class GUI( gui.GUI ):
         if settings.saved:
             self.config=settings.config
             self._ApplyConfig()
+            self._WriteConfig()
     def mitQueue_onSelect( self, event ):
         self._Queue()
 
@@ -932,7 +930,7 @@ class ConfirmDelete( gui.ConfirmDelete ):
     def chkShowAgainOnCheckBox( self, event ):
         self.checked=event.IsChecked()
         if self.checked:
-            self.lblReEnable.SetLabelText('You can re-enable this confirmation in your config file.')
+            self.lblReEnable.SetLabelText('You can re-enable this confirmation in Settings->Preferences.')
             self.DialogButtonsNo.Enable(False)
             self.chkShowAgain.Fit()
             self.Fit()
@@ -1009,7 +1007,7 @@ class ThreadedConnector( threading.Thread ):
         if len(info) > 0:
             info=('/').join(info[1:]).strip()
             if info and len(info)<50:
-                program['title']='%s - %s'%(title,info)
+                program['title']='%s - %s'%(title.strip(),info.strip())
                 info=None
         else:
             info=None
@@ -1032,7 +1030,6 @@ class ThreadedConnector( threading.Thread ):
                 program['date']=line.split('-')[0].strip()
         if info:
             program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,date,playtime)
-        program['title']
         return program
 
     def _getinfo(self,indexname,indexnum):
