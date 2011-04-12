@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 17 2010)
+## Python code generated with wxFormBuilder (version Nov 18 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
 ###########################################################################
 
 from widgets import SortableListCtrl
-from widgets import PropertyTreeList
+from widgets import PropertyScrolledPanel
 import wx
 import wx.combo
 
@@ -560,50 +560,43 @@ class LicenseDialog ( wx.Dialog ):
 class SettingsDialog ( wx.Dialog ):
 	
 	def __init__( self, parent ):
-		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Settings", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = wx.EmptyString, pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
 		
-		self.SetSizeHintsSz( wx.Size( 350,300 ), wx.DefaultSize )
+		self.SetSizeHintsSz( wx.Size( 500,300 ), wx.DefaultSize )
 		
-		bSizer6 = wx.BoxSizer( wx.VERTICAL )
+		sizer = wx.BoxSizer( wx.VERTICAL )
 		
-		self.PropertySheet = PropertyTreeList( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TR_DEFAULT_STYLE|wx.TR_HIDE_ROOT )
-		bSizer6.Add( self.PropertySheet, 1, wx.ALL|wx.EXPAND, 5 )
+		self.PropertyScrolledPanel = PropertyScrolledPanel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.HSCROLL|wx.VSCROLL )
+		self.PropertyScrolledPanel.SetScrollRate( 5, 5 )
+		self.PropertyScrolledPanel.SetMinSize( wx.Size( 500,250 ) )
 		
-		btn = wx.StdDialogButtonSizer()
-		self.btnSave = wx.Button( self, wx.ID_SAVE )
-		btn.AddButton( self.btnSave )
-		self.btnCancel = wx.Button( self, wx.ID_CANCEL )
-		btn.AddButton( self.btnCancel )
-		btn.Realize();
-		bSizer6.Add( btn, 0, wx.EXPAND|wx.ALL, 5 )
+		sizer.Add( self.PropertyScrolledPanel, 1, wx.ALIGN_LEFT|wx.EXPAND, 0 )
 		
-		self.SetSizer( bSizer6 )
+		sdbSaveCancel = wx.StdDialogButtonSizer()
+		self.sdbSaveCancelSave = wx.Button( self, wx.ID_SAVE )
+		sdbSaveCancel.AddButton( self.sdbSaveCancelSave )
+		self.sdbSaveCancelCancel = wx.Button( self, wx.ID_CANCEL )
+		sdbSaveCancel.AddButton( self.sdbSaveCancelCancel )
+		sdbSaveCancel.Realize();
+		sizer.Add( sdbSaveCancel, 0, wx.ALIGN_RIGHT|wx.ALL|wx.EXPAND, 5 )
+		
+		self.SetSizer( sizer )
 		self.Layout()
-		bSizer6.Fit( self )
+		sizer.Fit( self )
 		
 		self.Centre( wx.BOTH )
 		
 		# Connect Events
-		self.Bind( wx.EVT_CLOSE, self.OnClose )
-		self.Bind( wx.EVT_SIZE, self.OnSize )
-		self.btnCancel.Bind( wx.EVT_BUTTON, self.OnCancel )
-		self.btnSave.Bind( wx.EVT_BUTTON, self.OnSave )
+		self.sdbSaveCancelCancel.Bind( wx.EVT_BUTTON, self.OnCancel )
+		self.sdbSaveCancelSave.Bind( wx.EVT_BUTTON, self.OnSave )
 	
 	def __del__( self ):
 		# Disconnect Events
-		self.Unbind( wx.EVT_CLOSE )
-		self.Unbind( wx.EVT_SIZE )
-		self.btnCancel.Unbind( wx.EVT_BUTTON, None )
-		self.btnSave.Unbind( wx.EVT_BUTTON, None )
+		self.sdbSaveCancelCancel.Unbind( wx.EVT_BUTTON, None )
+		self.sdbSaveCancelSave.Unbind( wx.EVT_BUTTON, None )
 	
 	
 	# Virtual event handlers, overide them in your derived class
-	def OnClose( self, event ):
-		event.Skip()
-	
-	def OnSize( self, event ):
-		event.Skip()
-	
 	def OnCancel( self, event ):
 		event.Skip()
 	

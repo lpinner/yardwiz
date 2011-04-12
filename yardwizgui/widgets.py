@@ -20,11 +20,12 @@
 
 '''Custom widgets'''
 
-import wx,time,locale,ordereddict,sys
-from wx.lib.mixins.listctrl import ColumnSorterMixin,ListCtrlAutoWidthMixin
-from wx.gizmos import TreeListCtrl
-
+import wx,time,locale,ordereddict,sys, copy
 iswin=sys.platform[0:3] == "win"
+
+from wx.lib.mixins.listctrl import ColumnSorterMixin,ListCtrlAutoWidthMixin
+from wx.lib.scrolledpanel import ScrolledPanel
+
 class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     """A sortable wx.ListCtrl"""
 
@@ -50,18 +51,18 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     def ClearAll(self,*args,**kwargs):
         wx.ListCtrl.ClearAll(self)
         self.itemDataMap = {}
-        
+
     def InsertColumn(self,*args,**kwargs):
         wx.ListCtrl.InsertColumn(self,*args,**kwargs)
         self.SetColumnCount(self.GetColumnCount())
-        
+
     def GetListCtrl(self):
         return self
 
     def Append(self,values):
         self.itemDataMap[self.GetItemCount()]=values
         wx.ListCtrl.Append(self,values)
-        
+
     def GetColumnSorter(self):
         return self.CustomSorter
 
@@ -84,7 +85,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
                     #Make the secondary sort always sort ascending
                     asc = self._colSortFlag[col]
                     if asc: val1,val2 = min(val1,val2),max(val1,val2)
-                    else:   val1,val2 = max(val1,val2),min(val1,val2)                        
+                    else:   val1,val2 = max(val1,val2),min(val1,val2)
                 except:
                     if value==values[-1]:
                         val1 = self.itemDataMap[key1][self.SecondarySortColumn]
@@ -97,12 +98,12 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             if order == 0:val1,val2=key1,key2
 
         return val1,val2
-        
+
     def NumValues(self, col, key1, key2):
         val1 = float(self.itemDataMap[key1][col])
         val2 = float(self.itemDataMap[key2][col])
         return val1,val2
-    
+
     def NumSorter(self, key1, key2):
         col = self._col
         asc = self._colSortFlag[col]
@@ -125,7 +126,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
                 if fmt==fmts[-1]:raise
                 else:pass
         return date1,date2
-    
+
     def DateSorter(self, key1, key2):
         col = self._col
         asc = self._colSortFlag[col]
@@ -135,7 +136,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             order = cmp(*self.GetSecondarySortValues(col, key1, key2))
         if asc:return order
         else:return -order
-        
+
     def CustomSorter(self, key1, key2):
         CustomSorters=[self.NumSorter,self.DateSorter]
         for sorter in CustomSorters:  #Assume it's a float or date and fall back to the default sorter if this fails
@@ -143,72 +144,85 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             except: pass
         return self.DefaultSorter(key1, key2)
 
-class PropertyTreeList( TreeListCtrl):
-    def __init__(self,*args,**kwargs):
-        TreeListCtrl.__init__(self,*args,**kwargs)
-        self.Bind(wx.EVT_TREE_SEL_CHANGED, self.OnTreeSelChanged)
-        self.Bind(wx.EVT_LIST_ITEM_SELECTED, self.OnTreeSelChanged)
-        self.Bind(wx.EVT_SIZE, self.OnSize)
-        self.Bind( wx.EVT_TREE_END_LABEL_EDIT, self.OnTreeEndLabelEdit )
-        self.Bind( wx.EVT_TREE_BEGIN_LABEL_EDIT, self.OnTreeBeginLabelEdit )
-        self.Bind( wx.EVT_LEFT_UP, self.OnLeftUp )
-        self.Bind( wx.EVT_TREE_BEGIN_LABEL_EDIT, self.OnTreeBeginLabelEdit )
+class PropertyScrolledPanel(ScrolledPanel):
+    def __init__(self, *args, **kwargs):
+        self._config={}
+        ScrolledPanel.__init__(self, *args, **kwargs)
+        sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(sizer)
+        self.SetupScrolling()
 
-    def SetConfig(self,config):
-        self.config=config
-        self.AddColumn('Property')
-        self.AddColumn('Value')
-        self.root = self.AddRoot("root")
+    def OnPaneChanged(self, evt=None):
+        self.Freeze()
+        #cp=evt.GetEventObject()
+        self.Layout()
+        # and also change the labels
+        #if cp.IsExpanded():
+        #    cp.SetLabel(...)
+        #else:
+        #    cp.SetLabel(...)
+        self.SetupScrolling()
+        self.Thaw()
+
+    def SetConfig(self, config, specs={}):
+        self._config={}
+        self.config=copy.deepcopy(config)
         sections = config.sections()
+        first=True
         for section in sections:
-            sec=self.AppendItem(self.root, section)
+            cp = wx.CollapsiblePane(self,
+                                    label=section,
+                                    style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE)
+            pane=cp.GetPane()
+            self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.OnPaneChanged, cp)
+            addrSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=1)
+            addrSizer.AddGrowableCol(1)
             options = config.options(section)
+            opts={}
             for option in options:
-                opt=self.AppendItem(sec, option)
-                self.SetItemText(opt, config.get(section, option), 1)
-        self.OnSize()
+                val=config.get(section, option)
+                spec=specs.get(section, {}).get(option, [])
+                #print '\t'*2, option, val
+                if spec:
+                    title, ctrl=spec[0:2]
+                    txtOption=wx.StaticText(pane, -1, title)
+                    if ctrl=='str':
+                        ctlOption=wx.TextCtrl( pane, wx.ID_ANY, val, wx.DefaultPosition, wx.DefaultSize, 0 )
+                    elif ctrl=='bool':
+                        ctlOption=wx.CheckBox( pane, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, 0 )
+                        if config.getboolean(section, option):
+                            ctlOption.SetValue(True)
+                    elif ctrl=='dir':
+                        ctlOption=wx.DirPickerCtrl( pane, wx.ID_ANY, val, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE|wx.DIRP_USE_TEXTCTRL )
+                    elif ctrl=='file':
+                        if len(spec)>2:ext=spec[2]
+                        else:ext='*.*'
+                        ctlOption=wx.FilePickerCtrl(pane, wx.ID_ANY, val, title, ext, wx.DefaultPosition, wx.DefaultSize, wx.FLP_DEFAULT_STYLE|wx.FLP_USE_TEXTCTRL )
+                    opts[option]=ctlOption
+                    addrSizer.Add(txtOption, 0,wx.LEFT|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 25)
+                    addrSizer.Add(ctlOption, 0, wx.EXPAND)
 
-    def OnSize(self, event=None):
-        if self.GetColumnCount() > 0:
-            width=self.GetSizeTuple()[0] / 2.0
-            for col in [0,1]:
-                self.GetColumn(col).SetWidth(width)
-            self.Refresh()
-        if event:event.Skip()
+            border = wx.BoxSizer()
+            border.Add(addrSizer, 1, wx.EXPAND|wx.ALL, 5)
+            pane.SetSizer(border)
 
-    def OnLeftUp( self, event ):
-       #Col 1 doesn't like firing OnTreeSelChanged, so
-       #trap clicks and force it so the column becomes editable
-        x,y = event.GetPosition()
-        minx=min(x,50)#self.GetColumnWidth(1)/2)
-        item = self.HitTest((minx,y))[0]
-        if item.IsOk():
-            self.OnTreeSelChanged(item=item)
-            self.SelectItem(item)
-        event.Skip()
+            if first:
+                cp.Expand()
+                first=False
+            self.Sizer.Add(cp, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
 
-    def OnTreeSelChanged(self, event=None, item=None):
-        if event:item=event.GetItem()
-        if not item:return
-        if self.HasChildren(item):
-            self.SetColumnEditable(1,False)
-            pass
-        else:
-            self.SetColumnEditable(1,True)
-            self.EditLabel(item, 1)
-        if event:event.Skip()
+            self._config[section]=opts
 
-    def OnTreeBeginLabelEdit( self, event ):
-        event.Skip()
+        self.SetupScrolling()
 
-    def OnTreeEndLabelEdit( self, event ):
-        #Don't know why, but column 0 was getting updated instead of column 1
-        #The code below works around that
-        item=event.GetItem()
-        section=self.GetItemText(self.GetItemParent(item),0)
-        option=self.GetItemText(item, 0)
-        value=event.Label
-        self.SetItemText(item, option, 0) #Reset column 0
-        self.SetItemText(item, value, 1) #Explicitly set column 1
-        self.config.set(section, option, value)
-        event.Veto() #Cancel the edit as we've already written the new value to column 1
+    def GetConfig(self, saved):
+        if saved:
+            for section in self._config:
+                for option in self._config[section]:
+                    try:value=str(self._config[section][option].GetValue())
+                    except:value=self._config[section][option].GetPath()
+                    self.config.set(section, option, value)
+        return self.config
+
+
+

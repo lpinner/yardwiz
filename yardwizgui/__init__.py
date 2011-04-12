@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 '''Subclass of gui.GUI'''
-import os,sys,threading,thread,time,ConfigParser,signal,ctypes,copy,shlex
+import os,sys,threading,thread,time,ConfigParser,signal,ctypes,copy
 import locale,subprocess,re
 import ordereddict
 import wx
@@ -32,7 +32,7 @@ if iswin:
     wizexe='getWizPnP.exe'
     CTRL_C_EVENT = 0
     CREATE_NEW_PROCESS_GROUP=0x00000200 #getwizpnp kicks off child processes which the subprocess module doesn't kill unless a new process group is created.
-    STARTF_USESHOWWINDOW=1 #subprocess.STARTF_USESHOWWINDOW raises 
+    STARTF_USESHOWWINDOW=1 #subprocess.STARTF_USESHOWWINDOW raises
     creationflags=CREATE_NEW_PROCESS_GROUP
     startupinfo=subprocess.STARTUPINFO()#Windows starts up a console when a subprocess is run from a non-concole app like pythonw
     startupinfo.dwFlags |= STARTF_USESHOWWINDOW #subprocess.STARTF_USESHOWWINDOW
@@ -187,8 +187,8 @@ class GUI( gui.GUI ):
         #Date formats
         self.getwizpnp_dateformat='%a %b %d %H:%M:%S %Y'
         self.getwizpnp_timeformat='%H:%M'
-        self.filename_dateformat='%d-%m-%Y'
-        self.display_dateformat=self.config.get('Settings','dateformat')
+        self.display_dateformat=self.config.get('Settings','display_dateformat')
+        self.filename_dateformat=self.config.get('Settings','filename_dateformat')
         self.lstPrograms.datetimeformat=self.display_dateformat
         self.lstPrograms.timeformat=self.getwizpnp_timeformat #Program length
 
@@ -196,6 +196,35 @@ class GUI( gui.GUI ):
         postcmd=self.config.get('Settings','postdownloadcommand')
         postcmd=postcmd.replace('%f','%F')
         self.postcmd=postcmd.replace('%d','%D')
+
+        #postdownload sound
+        self.playsounds=self.config.get('Sounds','playsounds')
+        self.downloadcompletesound=self.config.get('Sounds','downloadcomplete')
+        if self.playsounds and not self.downloadcompletesound:
+            self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
+            self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
+
+    def _CleanupConfig(self):
+        #Bit of cleanup from previous versions
+        #configs - format = [oldsection, oldoption] or [oldsection, oldoption, newsection, newoption]
+        configs=[('Settings', 'server'),
+                 ('Settings', 'port'),
+                 ('Settings','xsize','Window', 'xsize'),
+                 ('Settings','ysize','Window','ysize'),
+                 ('Settings','xmin','Window','xmin'),
+                 ('Settings','ymin','Window','ymin'),
+                 ('Settings','dateformat','Settings', 'display_dateformat')
+                ]
+        for config in configs:
+            if len(config)==4:
+                try:
+                    self.config.set(config[2], config[3], self.config.get(config[0],config[1]))
+                except (ConfigParser.NoOptionError,ConfigParser.NoSectionError):
+                    pass
+            try:
+                self.config.remove_option(config[0],config[1])
+            except (ConfigParser.NoOptionError,ConfigParser.NoSectionError):
+                pass
 
     def _ClearPrograms(self):
         self.programs=[]
@@ -301,7 +330,7 @@ class GUI( gui.GUI ):
             idx = self.lstPrograms.GetNextSelected(idx)
 
         if not prognames:return
-        
+
         confirm=self.config.getint('Settings','confirmdelete')
         if confirm:
             confirm=ConfirmDelete('\n'+'\n'.join(prognames))
@@ -415,22 +444,26 @@ class GUI( gui.GUI ):
             idx=self.queue[0]
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
+            if not stopped and self.playsounds:
+                sound = wx.Sound(self.downloadcompletesound)
+                try:sound.Play(wx.SOUND_SYNC)
+                except Exception, err:
+                    self._Log(err)
 
-        cmd=shlex.split(self.postcmd,'#')
+
+        cmd=self.postcmd.split('#')[0].strip()
         if not stopped and idx>-1 and cmd:
             program=self.programs[idx]
-            cmd=self.postcmd.replace('%F', '"%s"'%program['filename'])
+            cmd=cmd.replace('%F', '"%s"'%program['filename'])
             cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
-            try:cmd=str(cmd)
-            except:
-                self._Log('Can\'t convert %s from unicode'%program['filename'])
-            else:                
-                cmd=shlex.split(cmd,'#')
-                try:
-                    pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
-                except Exception,err:
-                    self._Log('Can\'t run post download command on %s'%program['filename'])
-                    self._Log(err)
+            #cmd=shlex.split(cmd,'#') #Doesn't work on unicode strings
+            #regex from http://stackoverflow.com/questions/79968/split-a-string-by-spaces-preserving-quoted-substrings-in-python
+            cmd=[p for p in re.split("( |\\\".*?\\\"|'.*?')", cmd) if p.strip()]
+            try:
+                pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
+            except Exception,err:
+                self._Log('Can\'t run post download command on %s'%program['filename'])
+                self._Log(err)
 
         if len(self.queue)==0 or stopped:
             self._downloading=False
@@ -521,28 +554,33 @@ class GUI( gui.GUI ):
         self.userconfig=os.path.join(configdir,'config.ini')
         self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
         self.config.read([defaultconfig,self.userconfig])
-
-        try:
-            #Bit of cleanup from 0.1.2+ - we no longer use server:port, so remove them from the config
-            self.config.remove_option('Settings', 'server')
-            self.config.remove_option('Settings', 'port')
-            #Bit of cleanup from 0.2.2+ - xmin etc. now in [Windows]
-            self.config.set('Window', 'xsize', self.config.get('Settings','xsize'))
-            self.config.set('Window', 'ysize', self.config.get('Settings','ysize'))
-            self.config.set('Window', 'xmin', self.config.get('Settings','xmin'))
-            self.config.set('Window', 'ymin', self.config.get('Settings','ymin'))
-            self.config.remove_option('Settings', 'xsize')
-            self.config.remove_option('Settings', 'xmin')
-            self.config.remove_option('Settings', 'ymin')
-            self.config.remove_option('Settings', 'ysize')
-        except ConfigParser.NoOptionError:
-            pass
+        self._CleanupConfig()
 
         version=ConfigParser.ConfigParser()
-        version.read('VERSION')
+        version.read(os.path.join(data_path(),'..','VERSION'))
         self.version = version.get('Version','DISPLAY_VERSION')
         del version
 
+        self.configspec={
+            'Settings':{
+                'device':['Device', 'str'],
+                'lastdir':['Last directory', 'dir'],
+                'postdownloadcommand':['Post download command', 'str'],
+                'display_dateformat':['Date format for display','str'],
+                'filename_dateformat':['Date format for filenames', 'str'],
+                'confirmdelete':['Confirm delete', 'bool']
+                },
+            'Sounds':{
+                'downloadcomplete':['Sound file (.wav)',  'file', '*.wav'],
+                'playsounds':['Play sound after download', 'bool']
+             },
+            'Window':{
+                'xsize':['Width', 'str'],
+                'ysize':['Height', 'str'],
+                'xmin':['Left', 'str'],
+                'ymin':['Top', 'str'],
+             }
+        }
     def _Reset(self):
         self._ClearQueue()
         self._ClearPrograms()
@@ -589,7 +627,7 @@ class GUI( gui.GUI ):
             self.config.set('Window', 'xmin', str(xmin))
             self.config.set('Window', 'ymin', str(ymin))
         except:pass
-        
+
     def _WriteConfig(self):
         #Write self.config back
         self._UpdateSize()
@@ -709,11 +747,10 @@ class GUI( gui.GUI ):
 
     def mitPreferences_OnSelect( self, event ):
         self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
-        settings=SettingsDialog(self,self.config) #so make sure the device name get's updated.
+        settings=SettingsDialog(self,self.config,self.configspec) #so make sure the device name get's updated.
         if settings.saved:
             self.config=settings.config
             self._ApplyConfig()
-
     def mitQueue_onSelect( self, event ):
         self._Queue()
 
@@ -765,7 +802,7 @@ class Stderr(object):
     ##LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
     ##OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
     ##WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    
+
     softspace = 0
     _file = None
     _error = None
@@ -820,7 +857,7 @@ class AboutDialog( gui.AboutDialog ):
         else:
             license=os.path.abspath(os.path.join(path,'..','LICENSE'))
             version=os.path.abspath(os.path.join(path,'..','VERSION'))
-        
+
         ico =os.path.join(icons, u"icon.png")
         self.SetIcon( wx.Icon( ico, wx.BITMAP_TYPE_ANY ) )
         self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
@@ -844,37 +881,24 @@ class AboutDialog( gui.AboutDialog ):
         self.LicenseDialog.ShowModal()
 
 
-class SettingsDialog ( gui.SettingsDialog ):
-
-    def __init__( self, parent, config ):
-        gui.SettingsDialog.__init__( self, None )
-        self._config=config
-        self.config=copy.deepcopy(config) #So we don't update the original
-        self.PropertySheet.SetConfig(self.config)
-        self.PropertySheet.ExpandAll(self.PropertySheet.root) 
-
-        sxmin,symin=centrepos(self,parent)
-        self.SetPosition((sxmin,symin))
-
+class SettingsDialog( gui.SettingsDialog ):
+    def __init__( self, parent, config,  specs ):
         self.saved=False
-
+        gui.SettingsDialog.__init__(self, parent)
+        self.PropertyScrolledPanel.SetConfig(config, specs)
+        self.Layout()
+        self.Sizer.Fit( self )
         self.ShowModal()
 
-    def OnClose( self, event ):
-        self.config=self._config
-        self.EndModal(True)
-
     def OnCancel( self, event ):
-        self.config=self._config
-        self.EndModal(True)
+        self.config=self.PropertyScrolledPanel.GetConfig(False)
+        self.saved=False
+        self.EndModal(0)
 
     def OnSave( self, event ):
+        self.config=self.PropertyScrolledPanel.GetConfig(True)
         self.saved=True
-        self.EndModal(True)
-
-    def OnSize(self, event):
-        self.btnSave.SetFocus() #Get focus off treelistctrl
-        event.Skip()
+        self.EndModal(0)
 
 class ConfirmDelete( gui.ConfirmDelete ):
     def __init__( self, filename):
