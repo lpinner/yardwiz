@@ -1108,8 +1108,8 @@ class ThreadedDownloader( threading.Thread ):
 
         f=program['filename']
         MB=1024**2
-        #MB=1000**2 MiB
-        s=program['size']*MB
+        MiB=1000**2
+        s=program['size']*MiB
         start=time.time()
         if os.path.exists(f):prevsize=os.stat(f).st_size
         else:prevsize=0.0
@@ -1144,8 +1144,8 @@ class ThreadedDownloader( threading.Thread ):
                     now=time.time()
                     speed="%0.2f" % ((size-prevsize)/(now-start)/MB)
                     progress={'percent':int(size/s*100),
-                              'downloaded':int(size/MB),
-                              'size':program['size'],
+                              'downloaded':round(size/MB, 1),
+                              'size':round(program['size']/MB*MiB, 1),
                               'total':self.total,
                               'speed':speed}
                     self._updateprogress(progress,'Downloading %s...'%program['title'])
