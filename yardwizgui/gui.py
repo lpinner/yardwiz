@@ -486,7 +486,7 @@ class AboutDialog ( wx.Dialog ):
 		self.bmpIcon = wx.StaticBitmap( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 32,32 ), 0 )
 		bSizer5.Add( self.bmpIcon, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_HORIZONTAL|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 		
-		self.lblTitle = wx.StaticText( self, wx.ID_ANY, u"YARDWIZ\nYet Another Recording Downloader for the Wiz", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.lblTitle = wx.StaticText( self, wx.ID_ANY, u"YARDWiz\nYet Another Recording Downloader for the Wiz", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.lblTitle.Wrap( 300 )
 		self.lblTitle.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
 		
