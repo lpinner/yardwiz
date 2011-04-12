@@ -557,7 +557,7 @@ class GUI( gui.GUI ):
         self._CleanupConfig()
 
         version=ConfigParser.ConfigParser()
-        version.read(os.path.join(data_path(),'..','VERSION'))
+        version.read(os.path.join(top_path(),'VERSION'))
         self.version = version.get('Version','DISPLAY_VERSION')
         del version
 
@@ -850,14 +850,10 @@ class AboutDialog( gui.AboutDialog ):
         gui.AboutDialog.__init__( self, None )
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         path=data_path()
+        top=top_path()
         icons=os.path.join(path,u'icons')
-        license=os.path.join(path,'LICENSE')
-        if os.path.exists(license):
-            version=os.path.join(path,'VERSION')
-        else:
-            license=os.path.abspath(os.path.join(path,'..','LICENSE'))
-            version=os.path.abspath(os.path.join(path,'..','VERSION'))
-
+        license=os.path.join(top,'LICENSE')
+        version=os.path.join(top,'VERSION')
         ico =os.path.join(icons, u"icon.png")
         self.SetIcon( wx.Icon( ico, wx.BITMAP_TYPE_ANY ) )
         self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
@@ -1301,6 +1297,9 @@ def errordialog(message, caption):
     dlg.Destroy()
 def frozen():
     return hasattr(sys, "frozen")
+def top_path():
+    if frozen():return os.path.dirname(sys.executable)
+    return os.path.dirname(sys.argv[0])
 def data_path():
     if frozen():return os.path.dirname(sys.executable)
     return os.path.dirname(__file__)
