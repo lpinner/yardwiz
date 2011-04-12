@@ -1160,6 +1160,11 @@ class ThreadedDownloader( threading.Thread ):
             self._downloadcomplete(index=program['index'])
         else:
             #Should check filesize v. getwizpnp reported size...
+            progress={'percent':100,
+                      'downloaded':round(program['size']/MB*MiB, 1),
+                      'size':round(program['size']/MB*MiB, 1),
+                      'total':self.total,
+                      'speed':speed}
             self._updateprogress(progress)
             self._log('Download of %s complete.'%program['filename'])
             self._downloadcomplete(index=program['index'])
