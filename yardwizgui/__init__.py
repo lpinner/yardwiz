@@ -135,6 +135,7 @@ class GUI( gui.GUI ):
         try:#This will fail when the program is added manually, not via the AddProgram event
             program=evt.program
             program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
+            print program['date']
         except:pass
 
         display_date=time.strftime(self.display_dateformat,program['date'])
@@ -187,7 +188,7 @@ class GUI( gui.GUI ):
             self.SetPosition(wx.Point(xmin,ymin))
 
         #Date formats
-        self.getwizpnp_dateformat='%a %b %d %H:%M:%S %Y'
+        self.getwizpnp_dateformat='%b.%d.%Y_%H.%M' #        Apr.7.2011_21.28 '%a %b %d %H:%M:%S %Y'
         self.getwizpnp_timeformat='%H:%M'
         self.display_dateformat=self.config.get('Settings','display_dateformat')
         self.filename_dateformat=self.config.get('Settings','filename_dateformat')
@@ -917,16 +918,55 @@ class ConfirmDelete( gui.ConfirmDelete ):
             self.Fit()
 
 class ThreadedConnector( threading.Thread ):
-    def __init__( self, parent, device, ip, port, deleted=[]):
+    def __init__( self, parent, device, ip, port, deleted=[], quick=False):#, quick=False):
         threading.Thread.__init__( self )
         self.device=device
         self.ip=ip
         self.port=port
         self.parent=parent
         self.deleted=deleted
+        self.quick=quick
         self.start()
     def run(self):
+        if self.quick:
+            exit_code=self._quicklistprograms()
+        else:
+            exit_code=self._listprograms()
 
+        if exit_code > 0:
+            evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%proc.stderr.read())
+            try:wx.PostEvent(self.parent, evt)
+            except:pass #we're probably exiting
+        else:
+            evt = Connected(wizEVT_CONNECTED, -1,'Finished listing programs on the WizPnP server')
+            try:wx.PostEvent(self.parent, evt)
+            except:pass
+
+    def _quicklistprograms(self):
+        if self.device:
+            cmd=[wizexe,'--device',self.device,'--all','-q','--List','--sort=fatd'] #,'-q'
+        else:
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-q','--List','--sort=fatd']
+        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+
+        proglines=[]
+        index=-1
+        self.deleted=[]
+        for line in iter(proc.stdout.readline, ""):
+            line=line.strip()
+            program=self._quickparseprogram(line)
+            if program['index'] not in self.deleted:
+                index+=1
+                evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
+                try:
+                    wx.PostEvent(self.parent, evt)
+                    thread.start_new_thread(self._getinfo, (program['index'],index))
+                except:pass #we're probably exiting
+
+        exit_code=proc.wait()
+        return exit_code
+
+    def _listprograms(self):
         if self.device:
             cmd=[wizexe,'--device',self.device,'--all','-v','-l','--index','--sort=fatd'] #,'-q'
         else:
@@ -955,15 +995,15 @@ class ThreadedConnector( threading.Thread ):
                     proglines.append(line)
 
         exit_code=proc.wait()
-        if exit_code > 0:
-            evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%proc.stderr.read())
-            try:wx.PostEvent(self.parent, evt)
-            except:pass #we're probably exiting
-        else:
-            evt = Connected(wizEVT_CONNECTED, -1,'Finished listing programs on the WizPnP server')
-            try:wx.PostEvent(self.parent, evt)
-            except:pass
+        return exit_code
 
+    def _quickparseprogram(self,program):
+        program=program.split()
+        datetime=program[-1]
+        index=' '.join(program[:-1])
+        title='/'.join(index.split('/')[1:]).replace('_',':') #Strip off the root folder
+        return {'index':index,'date':datetime,'title':title}
+    
     def _parseprogram(self,proglines):
         flaglist=['*LOCKED','*RECORDING NOW']
         flags=[]
@@ -994,6 +1034,9 @@ class ThreadedConnector( threading.Thread ):
                 dirs=program['index'].split('/')
                 if len(dirs)>2:
                     program['title']='%s/%s'%('/'.join(dirs[1:-1]),program['title'])
+                datetime=program['index'].split()
+                program['date']=datetime[-1]
+                
             elif 'playtime' in line:
                 playtime=line
                 line=line.split()
@@ -1002,10 +1045,9 @@ class ThreadedConnector( threading.Thread ):
             elif 'autoDelete' in line:
                 pass
             else:
-                date=line
-                program['date']=line.split('-')[0].strip()
+                datetime=line.split('-')[0].strip()
         if info:
-            program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,date,playtime)
+            program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
         return program
 
     def _getinfo(self,indexname,indexnum):
