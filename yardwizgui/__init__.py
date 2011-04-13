@@ -23,7 +23,7 @@ import os,sys,threading,thread,time,ConfigParser,signal,ctypes,copy
 import locale,subprocess,re
 import ordereddict
 import wx
-import gui
+import gui, configspec
 APPNAME='YARDWiz'
 
 #Workarounds for crossplatform issues
@@ -77,7 +77,7 @@ class GUI( gui.GUI ):
         self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
 
         self.version,self.display_version=version()
-        
+
         self._ReadConfig()
         self._ApplyConfig()
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
@@ -555,28 +555,9 @@ class GUI( gui.GUI ):
         self.userconfig=os.path.join(configdir,'config.ini')
         self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
         self.config.read([defaultconfig,self.userconfig])
+        self.configspec=configspec.configspec
         self._CleanupConfig()
 
-        self.configspec={
-            'Settings':{
-                'device':['Device', 'str'],
-                'lastdir':['Last directory', 'dir'],
-                'postdownloadcommand':['Post download command', 'str'],
-                'display_dateformat':['Date format for display','str'],
-                'filename_dateformat':['Date format for filenames', 'str'],
-                'confirmdelete':['Confirm delete', 'bool']
-                },
-            'Sounds':{
-                'downloadcomplete':['Sound file (.wav)',  'file', '*.wav'],
-                'playsounds':['Play sound after download', 'bool']
-             },
-            'Window':{
-                'xsize':['Width', 'str'],
-                'ysize':['Height', 'str'],
-                'xmin':['Left', 'str'],
-                'ymin':['Top', 'str'],
-             }
-        }
     def _Reset(self):
         self._ClearQueue()
         self._ClearPrograms()

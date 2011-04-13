@@ -165,6 +165,7 @@ class PropertyScrolledPanel(ScrolledPanel):
         self.Thaw()
 
     def SetConfig(self, config, specs={}):
+        #specs format is {section:{option:[optionvalue, optiontype, tooltip, [optionargs]]}
         self._config={}
         self.config=copy.deepcopy(config)
         sections = config.sections()
@@ -182,9 +183,12 @@ class PropertyScrolledPanel(ScrolledPanel):
             for option in options:
                 val=config.get(section, option)
                 spec=specs.get(section, {}).get(option, [])
-                #print '\t'*2, option, val
                 if spec:
                     title, ctrl=spec[0:2]
+                    if len(spec)>2:tooltip=spec[2]
+                    else:tooltip=''
+                    if len(spec)==4:args=spec[3]
+                    else:args=[]
                     txtOption=wx.StaticText(pane, -1, title)
                     if ctrl=='str':
                         ctlOption=wx.TextCtrl( pane, wx.ID_ANY, val, wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -195,9 +199,14 @@ class PropertyScrolledPanel(ScrolledPanel):
                     elif ctrl=='dir':
                         ctlOption=wx.DirPickerCtrl( pane, wx.ID_ANY, val, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE|wx.DIRP_USE_TEXTCTRL )
                     elif ctrl=='file':
-                        if len(spec)>2:ext=spec[2]
+                        if args:ext=args[0]
                         else:ext='*.*'
                         ctlOption=wx.FilePickerCtrl(pane, wx.ID_ANY, val, title, ext, wx.DefaultPosition, wx.DefaultSize, wx.FLP_DEFAULT_STYLE|wx.FLP_USE_TEXTCTRL )
+                    else:continue
+                    if tooltip:
+                        tooltip=wx.ToolTip(tooltip)
+                        txtOption.SetToolTip(tooltip)
+                        ctlOption.SetToolTip(tooltip)
                     opts[option]=ctlOption
                     addrSizer.Add(txtOption, 0,wx.LEFT|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 25)
                     addrSizer.Add(ctlOption, 0, wx.EXPAND)

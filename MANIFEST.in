@@ -1,4 +1,4 @@
-include yardwiz install.bat uninstall.bat README LICENSE TODO RELEASE VERSION Microsoft.VC90.CRT.manifest msvc*90.dll
+include yardwiz install.bat uninstall.bat README LICENSE TODO RELEASE VERSION
 recursive-include yardwizgui/config *
 recursive-include yardwizgui/icons *
 recursive-include yardwizgui/sounds *
