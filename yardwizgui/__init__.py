@@ -928,9 +928,9 @@ class ThreadedConnector( threading.Thread ):
     def run(self):
 
         if self.device:
-            cmd=[wizexe,'--device',self.device,'--all','-v','-l','--index'] #,'-q'
+            cmd=[wizexe,'--device',self.device,'--all','-v','-l','--index','--sort=fatd'] #,'-q'
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-v','-l','--index']
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-v','-l','--index','--sort=fatd']
         proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
