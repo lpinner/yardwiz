@@ -968,9 +968,10 @@ class ThreadedConnector( threading.Thread ):
 
     def _listprograms(self):
         if self.device:
-            cmd=[wizexe,'--device',self.device,'--all','-v','-l','--index','--sort=fatd'] #,'-q'
+            cmd=[wizexe,'--device',self.device]
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-v','-l','--index','--sort=fatd']
+            cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        cmd.extend_all(['--all','-v','-l','--episode','--index','--sort=fatd'])
         proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
@@ -1003,7 +1004,7 @@ class ThreadedConnector( threading.Thread ):
         index=' '.join(program[:-1])
         title='/'.join(index.split('/')[1:]).replace('_',':') #Strip off the root folder
         return {'index':index,'date':datetime,'title':title}
-    
+
     def _parseprogram(self,proglines):
         flaglist=['*LOCKED','*RECORDING NOW']
         flags=[]
@@ -1036,7 +1037,7 @@ class ThreadedConnector( threading.Thread ):
                     program['title']='%s/%s'%('/'.join(dirs[1:-1]),program['title'])
                 datetime=program['index'].split()
                 program['date']=datetime[-1]
-                
+
             elif 'playtime' in line:
                 playtime=line
                 line=line.split()
