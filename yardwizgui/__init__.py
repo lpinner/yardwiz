@@ -324,8 +324,8 @@ class GUI( gui.GUI ):
         programs=self.programs
         while idx != -1:
             pidx = self.lstPrograms.GetItem(idx).Data
-            print idx,pidx,self.programs.items()[pidx][0]
-            pidx = self.programs.items()[pidx][0]
+            print idx,pidx,self.programs.keys()[pidx]
+            pidx = self.programs.keys()[pidx]
             program = self.programs[pidx]
 
             progname='%s - %s'%(program['title'],time.strftime(self.filename_dateformat,program['date']))
@@ -466,6 +466,7 @@ class GUI( gui.GUI ):
             pidx=self.queue[0]
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
+            self.lstPrograms.SetItemTextColour(self.programs.keys().index(pidx), wx.Colour(45,83,164)) 
             if not stopped and self.playsounds:
                 sound = wx.Sound(self.downloadcompletesound)
                 try:sound.Play(wx.SOUND_SYNC)
@@ -536,9 +537,8 @@ class GUI( gui.GUI ):
         i=-1
         while idx != -1:
             qidx = self.lstPrograms.GetItem(idx).Data
-            pidx=self.programs.items()[idx][0]
+            pidx=self.programs.keys()[idx]
             program = self.programs[pidx]
-            print program
             pidx=program['index']
             if '*RECORDING' in program['title']:
                 self._Log('Unable to download %s as it is currently recording.'%program['title'])
@@ -589,7 +589,7 @@ class GUI( gui.GUI ):
         if idx>-1:
             self.txtInfo.Clear()
             idx = self.lstPrograms.GetItem(idx).Data
-            pidx=self.programs.items()[idx][0]
+            pidx=self.programs.keys()[idx]
             info=self.programs[pidx].get('info','No program information available')
             self.txtInfo.WriteText(info+'\n')
             self.txtInfo.ShowPosition(0)
@@ -986,15 +986,13 @@ class ThreadedConnector( threading.Thread ):
         proc=subprocess.Popen(cmd+['-q','--List'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         programs=[]
-        self.deleted=[]
         for line in iter(proc.stdout.readline, ""):
             line=line.strip()
             program=self._quickparseprogram(line)
-            if program['index'] not in self.deleted:
-                programs.append(program['index'])
-                evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
-                try:wx.PostEvent(self.parent, evt)
-                except:raise#pass #we're probably exiting
+            programs.append(program['index'])
+            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
+            try:wx.PostEvent(self.parent, evt)
+            except:raise#pass #we're probably exiting
         del proc
 
         cmd.extend(['-vv','--episode','--index'])
@@ -1063,6 +1061,7 @@ class ThreadedConnector( threading.Thread ):
         program=index.split()
         datetime=program[-1]
         title=' '.join(program[:-1])
+        title=title.strip('_')
         title='/'.join(title.split('/')[1:]).replace('_',':') #Strip off the root folder
         return {'index':index.strip(),'date':datetime.strip(),'title':title.strip()}
 
@@ -1238,7 +1237,7 @@ class ThreadedDownloader( threading.Thread ):
 
         exit_code=self.proc.poll()
         stdout,stderr=self.proc.communicate()
-        if exit_code:
+        if exit_code or not os.path.exists(f):
             self._log('Error, unable to download %s.'%program['filename'])
             self._log(stderr)
             self._downloadcomplete(index=program['index'])
