@@ -24,6 +24,8 @@ import locale,subprocess,re
 import ordereddict
 import wx
 import gui, configspec
+from ordereddict import OrderedDict as odict
+
 APPNAME='YARDWiz'
 
 #Workarounds for crossplatform issues
@@ -83,6 +85,7 @@ class GUI( gui.GUI ):
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
 
         self._downloading=False
+        self.total=0
         self.deleted=[]
 
         self.ThreadedConnector=None
@@ -91,12 +94,14 @@ class GUI( gui.GUI ):
         self.Stop=threading.Event()
 
         self.Bind(EVT_ADDPROGRAM, self._AddProgram)
+        self.Bind(EVT_DELETEPROGRAM, self._DeleteProgram)
         self.Bind(EVT_UPDATEPROGRAM, self._UpdateProgram)
         self.Bind(EVT_CONNECTED, self._Connected)
 
         self.Bind(EVT_LOG, self.onLog)
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.Bind(EVT_DOWNLOADCOMPLETE, self.onDownloadComplete)
+        
 
         #Workarounds for crossplatform & wxversion issues
         try:self.lblProgressText.SetLabelText('')
@@ -132,25 +137,23 @@ class GUI( gui.GUI ):
     #######################################################################
     def _AddProgram(self,evt=None,program=None):
 
-        try:#This will fail when the program is added manually, not via the AddProgram event
-            program=evt.program
-            program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
-            print program['date']
-        except:pass
+        if evt:
+            program=evt.program #This will fail when the program is added manually, not via the AddProgram event
+            program['date']=time.strptime(program['date'],self.getwizpnp_dateformat) #Already converted if added manually
 
         display_date=time.strftime(self.display_dateformat,program['date'])
-        program['length']=program['length'].replace(':',decsep)
+        program['length']=program.get('length','').replace(':',decsep)
+        program['size']=program.get('size',0)
+        program['channel']=program.get('channel','')
 
         iidx=len(self.programs)
-        self.programs.append(program)
+        self.programs[program['index']]=program
 
         self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
         self.lstPrograms.SetItemData(iidx,iidx)
 
-        total=0
-        for program in self.programs:
-            total+=program['size']
-        self.StatusBar.SetFields(['','','Total recordings %sMB'%total])
+        self.total+=program['size']
+        if self.total>0:self.StatusBar.SetFields(['','','Total recordings %sMB'%self.total])
 
         for j in range(self.lstPrograms.GetColumnCount()):
             self.lstPrograms.SetColumnWidth(j, autosize)
@@ -186,6 +189,9 @@ class GUI( gui.GUI ):
         else:
             self.SetSize( wx.Size( xsize,ysize ) )
             self.SetPosition(wx.Point(xmin,ymin))
+
+        #Quick listing, can include deleted files
+        self.quicklisting=self.config.getboolean('Settings','quicklisting')
 
         #Date formats
         self.getwizpnp_dateformat='%b.%d.%Y_%H.%M' #        Apr.7.2011_21.28 '%a %b %d %H:%M:%S %Y'
@@ -230,7 +236,8 @@ class GUI( gui.GUI ):
                 pass
 
     def _ClearPrograms(self):
-        self.programs=[]
+        self.programs=odict()
+        self.total=0
         self.lstPrograms.HeaderWidths=[]
         self.lstPrograms.ClearAll()
         self.txtInfo.Clear()
@@ -239,7 +246,7 @@ class GUI( gui.GUI ):
         self.lstPrograms.InsertColumn( 2, u"Date" )
         self.lstPrograms.InsertColumn( 3, u"Size (MB)" )
         self.lstPrograms.InsertColumn( 4, u"Length" )
-        self.lstPrograms.SetSecondarySortColumn(2)
+        self.lstPrograms.SetSecondarySortColumn(2)#Date
 
         for j in range(self.lstPrograms.GetColumnCount()):
             self.lstPrograms.HeaderWidths.append(self.lstPrograms.GetColumnWidth(j))
@@ -282,7 +289,7 @@ class GUI( gui.GUI ):
         self._Log('Connecting to %s...'%self.config.get('Settings','device'))
 
         #Connect to the Wiz etc...
-        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted)
+        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted, quick=self.quicklisting)
 
     def _Connected(self,event=None):
         self.lblProgressText.SetLabelText('')
@@ -313,11 +320,13 @@ class GUI( gui.GUI ):
         i=-1
         deletions=[]
         prognames=[]
+        indices=[]
         programs=self.programs
         while idx != -1:
-            idx = self.lstPrograms.GetItem(idx).Data
-            program = self.programs[idx]
-            pidx=program['index']
+            pidx = self.lstPrograms.GetItem(idx).Data
+            print idx,pidx,self.programs.items()[pidx][0]
+            pidx = self.programs.items()[pidx][0]
+            program = self.programs[pidx]
 
             progname='%s - %s'%(program['title'],time.strftime(self.filename_dateformat,program['date']))
             if '*RECORDING' in progname:
@@ -327,6 +336,7 @@ class GUI( gui.GUI ):
                 self._Log('Unable to delete %s as it is LOCKED.'%(progname))
                 self._ShowTab(self.idxLog)
             else:
+                indices.append(idx)
                 deletions.append(pidx)
                 prognames.append(progname)
 
@@ -344,7 +354,10 @@ class GUI( gui.GUI ):
             delete=True
         if delete:
             self._ShowTab(self.idxLog)
-            for pidx,progname in zip(deletions,prognames):
+            indices.reverse()
+            deletions.reverse()
+            prognames.reverse()
+            for idx,pidx,progname in zip(indices,deletions,prognames):
                 self._Log('Deleting %s from the Wiz.'%progname)
                 if self.device:
                     cmddel=subprocess.list2cmdline([wizexe,'--device',self.device,'--delete','--all','--BWName',pidx])
@@ -361,17 +374,22 @@ class GUI( gui.GUI ):
                     if not stdout.strip():
                         self.deleted.append(pidx)
                         self._Log('Deleted %s.'%progname)
+                        self.lstPrograms.DeleteItem(idx)
                     else:raise Exception,stderr
                 except Exception,err:
                     self._Log('Error, unable to delete  %s.'%progname)
                     self._Log(str(err))
                     continue
 
-            self._ClearPrograms()
-            for program in programs:
-                if not program['index'] in deletions:
-                    self._AddProgram(program=program)
+            #self._ClearPrograms()
+            #for program in programs:
+            #    if not program['index'] in deletions:
+            #        self._AddProgram(program=program)
 
+    def _DeleteProgram(self,event):
+        idx=self.lstPrograms.FindItemData(-1,event.index)
+        self.lstPrograms.DeleteItem(idx)
+        
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
@@ -401,8 +419,8 @@ class GUI( gui.GUI ):
     def _DownloadQueue(self):
         if self._downloading:return
         programs=[]
-        for idx in self.queue:
-            program = self.programs[idx]
+        for pidx in self.queue:
+            program = self.programs[pidx]
             filename = program.get('filename',None)
 
             if not filename:
@@ -443,9 +461,9 @@ class GUI( gui.GUI ):
         self.ThreadedDownloader=ThreadedDownloader(self,self.device,self.ip,self.port,programs,self.Play,self.Stop)
 
     def _DownloadComplete(self,index,stopped):
-        idx=-1
+        pidx=0
         if len(self.queue)>0:
-            idx=self.queue[0]
+            pidx=self.queue[0]
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
             if not stopped and self.playsounds:
@@ -456,8 +474,8 @@ class GUI( gui.GUI ):
 
 
         cmd=self.postcmd.split('#')[0].strip()
-        if not stopped and idx>-1 and cmd:
-            program=self.programs[idx]
+        if not stopped and pidx and cmd:
+            program=self.programs[pidx]
             cmd=cmd.replace('%F', '"%s"'%program['filename'])
             cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
             try:
@@ -518,13 +536,16 @@ class GUI( gui.GUI ):
         i=-1
         while idx != -1:
             qidx = self.lstPrograms.GetItem(idx).Data
-            program = self.programs[qidx]
+            pidx=self.programs.items()[idx][0]
+            program = self.programs[pidx]
+            print program
+            pidx=program['index']
             if '*RECORDING' in program['title']:
                 self._Log('Unable to download %s as it is currently recording.'%program['title'])
                 self._ShowTab(self.idxLog)
-            elif qidx not in self.queue:
+            elif pidx not in self.queue:
                 i+=1
-                self.queue.append(qidx)
+                self.queue.append(pidx)
                 self.lstQueue.Append([program['title'],time.strftime(self.display_dateformat,program['date'])])
                 self.lstQueue.SetItemData(i,qidx)
 
@@ -568,7 +589,8 @@ class GUI( gui.GUI ):
         if idx>-1:
             self.txtInfo.Clear()
             idx = self.lstPrograms.GetItem(idx).Data
-            info=self.programs[idx].get('info','No program information available')
+            pidx=self.programs.items()[idx][0]
+            info=self.programs[pidx].get('info','No program information available')
             self.txtInfo.WriteText(info+'\n')
             self.txtInfo.ShowPosition(0)
             self._ShowTab(self.idxInfo)
@@ -576,11 +598,24 @@ class GUI( gui.GUI ):
     def _ShowTab(self,tabindex):
         self.nbTabArea.ChangeSelection(tabindex)
 
-    def _UpdateProgram(self,evt):
-        index=evt.index
-        info=evt.info
-        self.programs[index]['info']=info
-        self._Log('Updated episode info for %s.'%self.programs[index]['index'].split('/')[-1])
+    def _UpdateProgram(self,event):
+        idx=self.lstPrograms.FindItemData(-1,event.index)
+        program=event.program
+        if type(program['date']) is str:program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
+        self.programs[program['index']]=program
+        self.lstPrograms.SetStringItem(idx,0,program['title'])
+        self.lstPrograms.SetStringItem(idx,1,program['channel'])
+        self.lstPrograms.SetStringItem(idx,2,time.strftime(self.display_dateformat,program['date']))
+        self.lstPrograms.SetStringItem(idx,3,"%0.1f" % program['size'])
+        self.lstPrograms.SetStringItem(idx,4,program['length'])
+        self._Log('Updated episode info for %s.'%program['title'])
+        for j in range(self.lstPrograms.GetColumnCount()):
+            self.lstPrograms.SetColumnWidth(j, autosize)
+            if not iswin:
+                c=self.lstPrograms.GetColumnWidth(j)
+                h=self.lstPrograms.HeaderWidths[j]
+                if h>c:self.lstPrograms.SetColumnWidth(j,h)
+        self.lstPrograms.resizeLastColumn(self.mincolwidth)
 
     def _UpdateProgress(self,progress,message):
         self.gaugeProgressBar.Show()
@@ -918,7 +953,7 @@ class ConfirmDelete( gui.ConfirmDelete ):
             self.Fit()
 
 class ThreadedConnector( threading.Thread ):
-    def __init__( self, parent, device, ip, port, deleted=[], quick=False):#, quick=False):
+    def __init__( self, parent, device, ip, port, deleted=[], quick=False):
         threading.Thread.__init__( self )
         self.device=device
         self.ip=ip
@@ -944,26 +979,52 @@ class ThreadedConnector( threading.Thread ):
 
     def _quicklistprograms(self):
         if self.device:
-            cmd=[wizexe,'--device',self.device,'--all','-q','--List','--sort=fatd'] #,'-q'
+            cmd=[wizexe,'--device',self.device]
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-q','--List','--sort=fatd']
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+            cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        cmd.extend(['--all','--sort=fatd'])
+        proc=subprocess.Popen(cmd+['-q','--List'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
-        proglines=[]
-        index=-1
+        programs=[]
         self.deleted=[]
         for line in iter(proc.stdout.readline, ""):
             line=line.strip()
             program=self._quickparseprogram(line)
             if program['index'] not in self.deleted:
-                index+=1
+                programs.append(program['index'])
                 evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
-                try:
-                    wx.PostEvent(self.parent, evt)
-                    thread.start_new_thread(self._getinfo, (program['index'],index))
-                except:pass #we're probably exiting
+                try:wx.PostEvent(self.parent, evt)
+                except:raise#pass #we're probably exiting
+        del proc
+
+        cmd.extend(['-vv','--episode','--index'])
+        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proglines=[]
+        exists=[]
+        for line in iter(proc.stdout.readline, ""):
+            line=line.strip()
+            if line[0:13]!='Connecting to':
+                if not line:#Start of next program in list
+                    if proglines:
+                        tmp=list(proglines)
+                        proglines=[]
+                        program=self._parseprogram(tmp)
+                        program['info']='\n'.join(tmp)
+                        if program['index'] not in self.deleted:
+                            idx=programs.index(program['index'])
+                            exists.append(program['index'])
+                            evt = AddProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
+                            try:wx.PostEvent(self.parent, evt)
+                            except:pass #we're probably exiting
+                else:
+                    proglines.append(line)
 
         exit_code=proc.wait()
+        for idx,pidx in enumerate(programs):
+            if pidx not in exists: #It's been deleted from the wiz which hasn't bee reindexed
+                evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1, programs,idx)
+                try:wx.PostEvent(self.parent, evt)
+                except:pass #we're probably exiting
         return exit_code
 
     def _listprograms(self):
@@ -971,7 +1032,7 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'--device',self.device]
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        cmd.extend_all(['--all','-v','-l','--episode','--index','--sort=fatd'])
+        cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
         proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
@@ -990,7 +1051,7 @@ class ThreadedConnector( threading.Thread ):
                             try:
                                 wx.PostEvent(self.parent, evt)
                                 if not 'info' in program:
-                                    thread.start_new_thread(self._getinfo, (program['index'],index))
+                                    thread.start_new_thread(self._getinfo, (program,index))
                             except:pass #we're probably exiting
                 else:
                     proglines.append(line)
@@ -998,12 +1059,12 @@ class ThreadedConnector( threading.Thread ):
         exit_code=proc.wait()
         return exit_code
 
-    def _quickparseprogram(self,program):
-        program=program.split()
+    def _quickparseprogram(self,index):
+        program=index.split()
         datetime=program[-1]
-        index=' '.join(program[:-1])
-        title='/'.join(index.split('/')[1:]).replace('_',':') #Strip off the root folder
-        return {'index':index,'date':datetime,'title':title}
+        title=' '.join(program[:-1])
+        title='/'.join(title.split('/')[1:]).replace('_',':') #Strip off the root folder
+        return {'index':index.strip(),'date':datetime.strip(),'title':title.strip()}
 
     def _parseprogram(self,proglines):
         flaglist=['*LOCKED','*RECORDING NOW']
@@ -1051,25 +1112,30 @@ class ThreadedConnector( threading.Thread ):
             program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
         return program
 
-    def _getinfo(self,indexname,indexnum):
+    def _getinfo(self,program,idx):
+        pidx=program['index']
         if self.device:
-            cmd=[wizexe,'--device',self.device,'-vv','--all','-l','--BWName',indexname]
+            cmd=[wizexe,'--device',self.device]
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'-vv','--all','-l','--BWName',indexname]
+            cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        cmd.extend(['-vv','--all','-l','--BWName',pidx])
         cmd=subprocess.list2cmdline(cmd)
-        #This fails for some reason (on Win32) if a wx.FileDialog is open (i.e.) a download is started. Workaround is to set shell=True
+        #This fails for some reason (on Win32) if a wx.FileDialog is open (i.e.) a download is started.
+        #Workaround is to set shell=True
         #proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         stdout,stderr=proc.communicate()
         exit_code=proc.wait()
 
+        #print '\n'.join((pidx,stdout,stderr))
         if exit_code==0:
             info=[]
             for line in stdout.split('\n'):
                 line=line.strip()
-                if not 'Connecting to' in line and not 'autoDelete:' in line:
+                if not 'Connecting to' in line:
                     info.append(line)
-            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, '\n'.join(info), indexnum)
+            program['info']='\n'.join(info)
+            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
             try:wx.PostEvent(self.parent, evt)
             except:pass #we're probably exiting
 
@@ -1114,9 +1180,10 @@ class ThreadedDownloader( threading.Thread ):
         d=os.path.dirname(program['filename'])
         f=os.path.splitext(os.path.basename(program['filename']))[0]
         if self.device:
-            cmd=[wizexe,'--device',self.device,'--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
+            cmd=[wizexe,'--device',self.device]
         else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']]
+            cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
         try:
             self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         except Exception,err:
@@ -1366,14 +1433,24 @@ class AddProgram(wx.PyCommandEvent):
         self.program = program
         self.index = index
 
+wizEVT_DELETEPROGRAM = wx.NewEventType()
+EVT_DELETEPROGRAM = wx.PyEventBinder(wizEVT_DELETEPROGRAM, 1)
+class DeleteProgram(wx.PyCommandEvent):
+    """Event to signal that a program should be deleted"""
+    def __init__(self, etype, eid, program=None, index=-1):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+        self.program = program
+        self.index = index
+
 wizEVT_UPDATEPROGRAM = wx.NewEventType()
 EVT_UPDATEPROGRAM = wx.PyEventBinder(wizEVT_UPDATEPROGRAM, 1)
 class UpdateProgram(wx.PyCommandEvent):
     """Event to signal that program info has been updated"""
-    def __init__(self, etype, eid, info=None,index=-1):
+    def __init__(self, etype, eid, program=None,index=-1):
         """Creates the event object"""
         wx.PyCommandEvent.__init__(self, etype, eid)
-        self.info = info
+        self.program = program
         self.index = index
 
 wizEVT_CONNECTED = wx.NewEventType()
