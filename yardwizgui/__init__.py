@@ -324,7 +324,6 @@ class GUI( gui.GUI ):
         programs=self.programs
         while idx != -1:
             pidx = self.lstPrograms.GetItem(idx).Data
-            print idx,pidx,self.programs.keys()[pidx]
             pidx = self.programs.keys()[pidx]
             program = self.programs[pidx]
 

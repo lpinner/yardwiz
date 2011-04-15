@@ -41,7 +41,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
         self._args=args
         self._kwargs=kwargs
         wx.ListCtrl.__init__(self,*args,**kwargs)
-        self.itemDataMap = {}
+        self.itemDataMap = ordereddict.OrderedDict()
         ListCtrlAutoWidthMixin.__init__(self)
         ColumnSorterMixin.__init__(self, 0)
 
@@ -55,6 +55,10 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     def InsertColumn(self,*args,**kwargs):
         wx.ListCtrl.InsertColumn(self,*args,**kwargs)
         self.SetColumnCount(self.GetColumnCount())
+
+    def SetStringItem(self,item,col,value):
+        self.itemDataMap[self.itemDataMap.keys()[item]][col]=value
+        wx.ListCtrl.SetStringItem(self,item,col,value)
 
     def GetListCtrl(self):
         return self
