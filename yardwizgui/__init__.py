@@ -536,7 +536,7 @@ class GUI( gui.GUI ):
         i=-1
         while idx != -1:
             qidx = self.lstPrograms.GetItem(idx).Data
-            pidx=self.programs.keys()[idx]
+            pidx=self.programs.keys()[qidx]
             program = self.programs[pidx]
             pidx=program['index']
             if '*RECORDING' in program['title']:
@@ -963,12 +963,12 @@ class ThreadedConnector( threading.Thread ):
         self.start()
     def run(self):
         if self.quick:
-            exit_code=self._quicklistprograms()
+            exit_code,err=self._quicklistprograms()
         else:
-            exit_code=self._listprograms()
+            exit_code,err=self._listprograms()
 
         if exit_code > 0:
-            evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%proc.stderr.read())
+            evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%err)
             try:wx.PostEvent(self.parent, evt)
             except:pass #we're probably exiting
         else:
@@ -991,7 +991,7 @@ class ThreadedConnector( threading.Thread ):
             programs.append(program['index'])
             evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
             try:wx.PostEvent(self.parent, evt)
-            except:raise#pass #we're probably exiting
+            except:pass #we're probably exiting
         del proc
 
         cmd.extend(['-vv','--episode','--index'])
@@ -1018,11 +1018,11 @@ class ThreadedConnector( threading.Thread ):
 
         exit_code=proc.wait()
         for idx,pidx in enumerate(programs):
-            if pidx not in exists: #It's been deleted from the wiz which hasn't bee reindexed
+            if pidx not in exists: #It's been deleted from the wiz which hasn't been reindexed
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1, programs,idx)
                 try:wx.PostEvent(self.parent, evt)
                 except:pass #we're probably exiting
-        return exit_code
+        return exit_code,proc.stderr.read()
 
     def _listprograms(self):
         if self.device:
@@ -1054,7 +1054,7 @@ class ThreadedConnector( threading.Thread ):
                     proglines.append(line)
 
         exit_code=proc.wait()
-        return exit_code
+        return exit_code,proc.stderr.read()
 
     def _quickparseprogram(self,index):
         program=index.split()
