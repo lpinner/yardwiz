@@ -101,7 +101,7 @@ class GUI( gui.GUI ):
         self.Bind(EVT_LOG, self.onLog)
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.Bind(EVT_DOWNLOADCOMPLETE, self.onDownloadComplete)
-        
+        self.lstPrograms.SetSortEnabled(True)
 
         #Workarounds for crossplatform & wxversion issues
         try:self.lblProgressText.SetLabelText('')
@@ -262,6 +262,7 @@ class GUI( gui.GUI ):
 
     def _Connect(self):
         self._Reset()
+        self.lstPrograms.SetSortEnabled(False)
         self.btnConnect.Enable( False )
         self.mitDelete.Enable( False )
         self.lblProgressText.SetLabelText('Connecting...')
@@ -299,6 +300,7 @@ class GUI( gui.GUI ):
             self._Log(event.message)
         self.btnConnect.Enable( True )
         self.mitDelete.Enable( True )
+        self.lstPrograms.SetSortEnabled(True)
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):
@@ -326,7 +328,6 @@ class GUI( gui.GUI ):
             pidx = self.lstPrograms.GetItem(idx).Data
             pidx = self.programs.keys()[pidx]
             program = self.programs[pidx]
-
             progname='%s - %s'%(program['title'],time.strftime(self.filename_dateformat,program['date']))
             if '*RECORDING' in progname:
                 self._Log('Unable to delete %s as it is currently recording.'%(progname))
@@ -463,9 +464,10 @@ class GUI( gui.GUI ):
         pidx=0
         if len(self.queue)>0:
             pidx=self.queue[0]
+            item=self.lstPrograms.FindItemData(-1,self.programs.keys().index(pidx))
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
-            self.lstPrograms.SetItemTextColour(self.programs.keys().index(pidx), wx.Colour(45,83,164)) 
+            self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164)) 
             if not stopped and self.playsounds:
                 sound = wx.Sound(self.downloadcompletesound)
                 try:sound.Play(wx.SOUND_SYNC)
@@ -668,15 +670,15 @@ class GUI( gui.GUI ):
     def btnConnect_OnClick( self, event ):
         self._Connect()
 
-    def btnDownload_OnClick( self, event ):
-        self._DownloadQueue()
-
     def btnExit_onClick( self, event):
         self.Close(True)
 
     def btnClearQueue_OnClick( self, event ):
         self._ClearQueue()
         event.Skip()
+
+    def btnDownload_OnClick( self, event ):
+        self._DownloadQueue()
 
     def btnPlay_OnClick( self, event ):#hiding and showing play etc... buttons isn't working on ubuntu 10.04
         self.btnPlay.Enable( False )
@@ -1059,9 +1061,9 @@ class ThreadedConnector( threading.Thread ):
     def _quickparseprogram(self,index):
         program=index.split()
         datetime=program[-1]
-        title=' '.join(program[:-1])
-        title=title.strip('_')
-        title='/'.join(title.split('/')[1:]).replace('_',':') #Strip off the root folder
+        title=' '.join(program[:-1]).replace('/_','/')
+        title='/'.join(title.split('/')[1:])
+        title=title.replace('_',':') #Strip off the root folder
         return {'index':index.strip(),'date':datetime.strip(),'title':title.strip()}
 
     def _parseprogram(self,proglines):

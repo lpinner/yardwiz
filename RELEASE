@@ -1,5 +1,11 @@
 =Release notes=
 
+==0.2.4==
+===_New in 0.2.4_===
+  * Enabled quick listing of recordings as a non-default option.
+===_Fixed in 0.2.4_===
+  * Minor tweaks and bugfixes
+
 ==0.2.3==
 ===_New in 0.2.3_===
   * Added About and Preferences dialogs

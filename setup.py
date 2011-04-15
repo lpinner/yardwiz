@@ -41,7 +41,7 @@ setupargs={'name':'YARDWiz',
                    'Topic :: Multimedia :: Video'],
       'packages':['yardwizgui'],
       'scripts':['yardwiz'],
-      'package_data':{'yardwizgui': ['config/defaults.ini','icons/*.*','sounds/*']},
+      'package_data':{'yardwizgui': ['config/defaults.ini','icons/*.*','sounds/*.wav','sounds/README']},
     }
 
 

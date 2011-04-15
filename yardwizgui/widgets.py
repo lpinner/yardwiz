@@ -37,6 +37,9 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     #So the user can set the secondary sort column (to break ties)
     SecondarySortColumn=-1
 
+    #So we can disable sorting if required
+    _sortenabled=True
+    
     def __init__(self, *args, **kwargs):
         self._args=args
         self._kwargs=kwargs
@@ -148,6 +151,16 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             except: pass
         return self.DefaultSorter(key1, key2)
 
+    def SetSortEnabled(self, enabled=True):
+        if enabled:
+            self.Bind(wx.EVT_LIST_COL_CLICK, self._ColumnSorterMixin__OnColClick,self)
+        else:
+            #self.Unbind( wx.EVT_LIST_COL_CLICK ) #Unbinding doesn't work, need to stop event propagation
+            self.Bind(wx.EVT_LIST_COL_CLICK, self.__OnColClickSortDisabled)
+
+    def __OnColClickSortDisabled(self, evt):
+        pass
+    
 class PropertyScrolledPanel(ScrolledPanel):
     def __init__(self, *args, **kwargs):
         self._config={}
