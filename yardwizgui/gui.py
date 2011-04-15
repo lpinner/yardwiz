@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 18 2010)
+## Python code generated with wxFormBuilder (version Nov 17 2010)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -26,34 +26,28 @@ class GUI ( wx.Frame ):
 		
 		bSizer4 = wx.BoxSizer( wx.VERTICAL )
 		
-		fgSizer1 = wx.FlexGridSizer( 1, 4, 0, 0 )
-		fgSizer1.SetFlexibleDirection( wx.BOTH )
-		fgSizer1.SetNonFlexibleGrowMode( wx.FLEX_GROWMODE_SPECIFIED )
+		bSizer81 = wx.BoxSizer( wx.HORIZONTAL )
 		
-		fgSizer1.SetMinSize( wx.Size( -1,25 ) ) 
 		self.lblServerCombo = wx.StaticText( self, wx.ID_ANY, u"Wiz server:", wx.DefaultPosition, wx.DefaultSize, 0 )
 		self.lblServerCombo.Wrap( -1 )
 		self.lblServerCombo.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_CAPTIONTEXT ) )
 		
-		fgSizer1.Add( self.lblServerCombo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
+		bSizer81.Add( self.lblServerCombo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
-		self.cbxDevice = wx.combo.BitmapComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, "", wx.TE_PROCESS_ENTER ) 
+		self.cbxDevice = wx.combo.BitmapComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,-1 ), "", wx.TE_PROCESS_ENTER ) 
 		self.cbxDevice.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave this field blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
 		self.cbxDevice.SetMinSize( wx.Size( 250,-1 ) )
 		
-		fgSizer1.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
-		
-		
-		fgSizer1.AddSpacer( ( 16, 0), 1, 0, 5 )
+		bSizer81.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.btnConnect = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnConnect.SetToolTipString( u"Connect to the WizPnp server\nand get recording information" )
 		
 		self.btnConnect.SetToolTipString( u"Connect to the WizPnp server\nand get recording information" )
 		
-		fgSizer1.Add( self.btnConnect, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
+		bSizer81.Add( self.btnConnect, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		
-		bSizer4.Add( fgSizer1, 0, wx.EXPAND, 5 )
+		bSizer4.Add( bSizer81, 0, wx.EXPAND, 5 )
 		
 		self.lstPrograms = SortableListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
 		self.lstPrograms.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
