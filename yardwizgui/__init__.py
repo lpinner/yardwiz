@@ -478,7 +478,8 @@ class GUI( gui.GUI ):
             item=self.lstPrograms.FindItemData(-1,self.programs.keys().index(pidx))
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
-            self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164)) 
+            try:self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
+            except:pass
             if not stopped and self.playsounds:
                 sound = wx.Sound(self.downloadcompletesound)
                 try:sound.Play(wx.SOUND_SYNC)
