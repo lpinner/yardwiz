@@ -1,5 +1,9 @@
 =Release notes=
 
+==0.2.5==
+===_Fixed in 0.2.5_===
+  * Fixes issue with with quicklisting where downloading before program info is updated causes an error.
+
 ==0.2.4==
 ===_New in 0.2.4_===
   * Enabled quick listing of recordings as a non-default option.

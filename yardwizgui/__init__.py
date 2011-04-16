@@ -115,8 +115,8 @@ class GUI( gui.GUI ):
             self.gaugeProgressBar._Hide=self.gaugeProgressBar.Hide
             self.gaugeProgressBar.Pulse=self._Pulse
             self.gaugeProgressBar.Hide=self._Hide
-            self.Bind(wx.EVT_TIMER, self._Pulse)
             self.progress_timer = wx.Timer(self)
+            self.Bind(wx.EVT_TIMER, self._Pulse,self.progress_timer)
 
         self.gaugeProgressBar.Hide()
 
@@ -416,9 +416,11 @@ class GUI( gui.GUI ):
             self._Log('Unable to discover any Wizzes.')
             self._ShowTab(self.idxLog)
 
-    def _DownloadQueue(self):
+    def _DownloadQueue(self,*args):
         if self._downloading:return
+
         programs=[]
+        size=0
         for pidx in self.queue:
             program = self.programs[pidx]
             filename = program.get('filename',None)
@@ -437,11 +439,20 @@ class GUI( gui.GUI ):
                 else:return #Stop showing file dialogs if queue download is cancelled
 
             program['filename']=filename
+            self.programs[pidx]['filename']=filename
             programs.append(program)
-
+            size+=program['size']
+            
         self._ShowTab(self.idxLog)
         if not programs:return
 
+        if size==0:
+            self.btnClearQueue.Enable( False )
+            self.btnDownload.Enable( False )
+            self.connecttimer = wx.PyTimer(self._DownloadQueue)
+            self.connecttimer.Start(250,wx.TIMER_ONE_SHOT)
+            return
+        
         self.btnPlay.Enable( False )
         self.btnPause.Enable( True )
         self.btnStop.Enable( True )
@@ -522,8 +533,9 @@ class GUI( gui.GUI ):
         self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
 
     def _Pulse(self,*args,**kwargs):
-        self.gaugeProgressBar._Pulse()
-        self.progress_timer.Start(100,True)
+        if not self._downloading:
+            self.gaugeProgressBar._Pulse()
+            self.progress_timer.Start(100,True)
 
     def _Queue(self,clear=False):
         if self._downloading:return
@@ -603,7 +615,10 @@ class GUI( gui.GUI ):
         idx=self.lstPrograms.FindItemData(-1,event.index)
         program=event.program
         if type(program['date']) is str:program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
-        self.programs[program['index']]=program
+        if program['index'] in self.programs:
+            self.programs[program['index']].update(program)
+        else:
+            self.programs[program['index']]=program
         self.lstPrograms.SetStringItem(idx,0,program['title'])
         self.lstPrograms.SetStringItem(idx,1,program['channel'])
         self.lstPrograms.SetStringItem(idx,2,time.strftime(self.display_dateformat,program['date']))
@@ -1229,7 +1244,7 @@ class ThreadedDownloader( threading.Thread ):
                     speed="%0.2f" % ((size-prevsize)/(now-start)/MB)
                     progress={'percent':int(size/s*100),
                               'downloaded':round(size/MB, 1),
-                              'size':round(program['size']/MB*MiB, 1),
+                              'size':round(program['size'], 1),
                               'total':self.total,
                               'speed':speed}
                     self._updateprogress(progress,'Downloading %s...'%program['title'])
