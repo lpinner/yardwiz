@@ -107,6 +107,9 @@ else:
     setup(**setupargs)
 
 try:
+    shutil.rmtree('build')
+except:pass
+try:
     os.unlink('yardwizgui.__version__.py')
     os.unlink('yardwizgui.__license__.py')
 except:pass
