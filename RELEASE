@@ -1,5 +1,9 @@
 =Release notes=
 
+==0.2.6==
+===_New in 0.2.6_===
+  * Added link to online help.
+
 ==0.2.5==
 ===_Fixed in 0.2.5_===
   * Fixes issue with with quicklisting where downloading before program info is updated causes an error.

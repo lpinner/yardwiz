@@ -226,6 +226,9 @@ class GUI ( wx.Frame ):
 		self.mbrMenu.Append( self.mnuSettings, u"Settings" ) 
 		
 		self.mnuHelp = wx.Menu()
+		self.mitHelp = wx.MenuItem( self.mnuHelp, wx.ID_ANY, u"Online Help...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuHelp.AppendItem( self.mitHelp )
+		
 		self.mitAbout = wx.MenuItem( self.mnuHelp, wx.ID_ANY, u"About...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuHelp.AppendItem( self.mitAbout )
 		
@@ -266,6 +269,7 @@ class GUI ( wx.Frame ):
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
 		self.Bind( wx.EVT_MENU, self.btnExit_onClick, id = self.mitExit.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitPreferences_OnSelect, id = self.mitPreferences.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitHelp_OnSelect, id = self.mitHelp.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitAbout_OnSelect, id = self.mitAbout.GetId() )
 	
 	def __del__( self ):
@@ -299,6 +303,7 @@ class GUI ( wx.Frame ):
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
 		self.Unbind( wx.EVT_MENU, id = self.mitExit.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitPreferences.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitHelp.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitAbout.GetId() )
 	
 	
@@ -386,6 +391,9 @@ class GUI ( wx.Frame ):
 	
 	
 	def mitPreferences_OnSelect( self, event ):
+		event.Skip()
+	
+	def mitHelp_OnSelect( self, event ):
 		event.Skip()
 	
 	def mitAbout_OnSelect( self, event ):

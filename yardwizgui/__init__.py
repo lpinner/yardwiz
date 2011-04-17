@@ -20,7 +20,7 @@
 
 '''Subclass of gui.GUI'''
 import os,sys,threading,thread,time,ConfigParser,signal,ctypes,copy
-import locale,subprocess,re
+import locale,subprocess,re,webbrowser
 import ordereddict
 import wx
 import gui, configspec
@@ -478,13 +478,14 @@ class GUI( gui.GUI ):
             item=self.lstPrograms.FindItemData(-1,self.programs.keys().index(pidx))
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
-            try:self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
-            except:pass
-            if not stopped and self.playsounds:
-                sound = wx.Sound(self.downloadcompletesound)
-                try:sound.Play(wx.SOUND_SYNC)
-                except Exception, err:
-                    self._Log(err)
+            if not stopped:
+                try:self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
+                except:pass
+                if self.playsounds:
+                    sound = wx.Sound(self.downloadcompletesound)
+                    try:sound.Play(wx.SOUND_SYNC)
+                    except Exception, err:
+                        self._Log(err)
 
 
         cmd=self.postcmd.split('#')[0].strip()
@@ -782,11 +783,15 @@ class GUI( gui.GUI ):
             self.config=settings.config
             self._ApplyConfig()
             self._WriteConfig()
+
     def mitQueue_onSelect( self, event ):
         self._Queue()
 
     def mitRemove_OnSelect( self, event ):
         self._DeleteFromQueue()
+
+    def mitHelp_OnSelect( self, event ):
+        webbrowser.open_new_tab('http://code.google.com/p/yardwiz/wiki/Help')
 
     def onLog( self, event ):
         self._Log(event.message)
