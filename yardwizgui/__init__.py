@@ -709,7 +709,6 @@ class GUI( gui.GUI ):
         self.btnPause.Enable( False )
         self.btnStop.Enable( False )
         self.Play.clear()
-        event.Skip()
 
     def btnStop_OnClick( self, event ):
         self.Stop.set()
