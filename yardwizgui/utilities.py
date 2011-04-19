@@ -41,8 +41,8 @@ class ThreadedDeleter( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--BWName']
 
+        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         for idx,program in zip(self.indices,self.programs):
-
             cmddel=subprocess.list2cmdline(cmd+['--delete',program['index']])
             cmdchk=subprocess.list2cmdline(cmd+['--list',program['index']])
             try:
@@ -55,10 +55,12 @@ class ThreadedDeleter( threading.Thread ):
             except Exception,err:
                 self._Log(err)
             else:
-                self._Log('Deleted %s.'%programe['title'])
-                evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,index)
+                self._Log('Deleted %s.'%program['title'])
+                evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
                 try:wx.PostEvent(self.parent, evt)
                 except:pass
+
+        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _Log(self,message):
         evt = Log(wizEVT_LOG, -1,message)

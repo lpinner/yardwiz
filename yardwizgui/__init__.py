@@ -314,8 +314,8 @@ class GUI( gui.GUI ):
         prognames=[]
         
         while idx != -1:
-            pidx = self.lstPrograms.GetItem(idx).Data
-            pidx = self.programs.keys()[pidx]
+            lidx = self.lstPrograms.GetItem(idx).Data
+            pidx = self.programs.keys()[lidx]
             program = self.programs[pidx]
             
             if '*RECORDING' in program['title']:
@@ -326,7 +326,7 @@ class GUI( gui.GUI ):
                 self._ShowTab(self.idxLog)
             else:
                 prognames.append('%s-%s'%(program['title'],time.strftime(self.filename_dateformat,program['date'])))
-                indices.append(idx)
+                indices.append(lidx)
                 programs.append(program)
 
             idx = self.lstPrograms.GetNextSelected(idx)
@@ -346,15 +346,11 @@ class GUI( gui.GUI ):
             indices.reverse()
             programs.reverse()
             deletions=ThreadedDeleter(self,self.device,self.ip,self.port,programs,indices)
-            #self._ClearPrograms()
-            #for program in programs:
-            #    if not program['index'] in deletions:
-            #        self._AddProgram(program=program)
 
     def _DeleteProgram(self,event):
         idx=self.lstPrograms.FindItemData(-1,event.index)
         pidx=self.programs.keys()[event.index]
-        self.deleted.append(pidx)
+        if pidx not in self.deleted:self.deleted.append(pidx)
         self.lstPrograms.DeleteItem(idx)
         
     def _Discover(self):
