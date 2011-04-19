@@ -755,6 +755,26 @@ class GUI( gui.GUI ):
     def mitHelp_OnSelect( self, event ):
         webbrowser.open_new_tab('http://code.google.com/p/yardwiz/wiki/Help')
 
+    def onActivate( self, event ):
+        self._UpdateSize()
+        event.Skip()
+
+    def onDownloadComplete( self, event ):
+        self._DownloadComplete(event.index,event.stopped)
+        event.Skip()
+
+    def cbxDevice_OnKeyDown( self, event ):
+        if event.GetKeyCode() == wx.WXK_F5:
+            self._Connect()
+        else:
+            event.Skip()
+
+    def OnKeyDown( self, event ):
+        if event.GetKeyCode() == wx.WXK_F5:
+            self._Connect()
+        else:
+            event.Skip()
+        
     def onLog( self, event ):
         self._Log(event.message)
         event.Skip()
@@ -765,14 +785,6 @@ class GUI( gui.GUI ):
 
     def OnSize( self, event ):
         self._UpdateSize()
-        event.Skip()
-
-    def onActivate( self, event ):
-        self._UpdateSize()
-        event.Skip()
-
-    def onDownloadComplete( self, event ):
-        self._DownloadComplete(event.index,event.stopped)
         event.Skip()
 
 class LicenseDialog( gui.LicenseDialog ):

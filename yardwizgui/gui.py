@@ -243,8 +243,10 @@ class GUI ( wx.Frame ):
 		self.Bind( wx.EVT_ACTIVATE, self.onActivate )
 		self.Bind( wx.EVT_ACTIVATE_APP, self.onActivateApp )
 		self.Bind( wx.EVT_CLOSE, self.onCloseApp )
+		self.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_UPDATE_UI, self.OnUpdateUI )
+		self.cbxDevice.Bind( wx.EVT_KEY_DOWN, self.cbxDevice_OnKeyDown )
 		self.cbxDevice.Bind( wx.EVT_KILL_FOCUS, self.cbxDevice_OnKillFocus )
 		self.cbxDevice.Bind( wx.EVT_TEXT_ENTER, self.cbxDevice_OnTextEnter )
 		self.btnConnect.Bind( wx.EVT_BUTTON, self.btnConnect_OnClick )
@@ -277,8 +279,10 @@ class GUI ( wx.Frame ):
 		self.Unbind( wx.EVT_ACTIVATE )
 		self.Unbind( wx.EVT_ACTIVATE_APP )
 		self.Unbind( wx.EVT_CLOSE )
+		self.Unbind( wx.EVT_KEY_DOWN )
 		self.Unbind( wx.EVT_SIZE )
 		self.Unbind( wx.EVT_UPDATE_UI )
+		self.cbxDevice.Unbind( wx.EVT_KEY_DOWN, None )
 		self.cbxDevice.Unbind( wx.EVT_KILL_FOCUS, None )
 		self.cbxDevice.Unbind( wx.EVT_TEXT_ENTER, None )
 		self.btnConnect.Unbind( wx.EVT_BUTTON, None )
@@ -317,10 +321,16 @@ class GUI ( wx.Frame ):
 	def onCloseApp( self, event ):
 		event.Skip()
 	
+	def OnKeyDown( self, event ):
+		event.Skip()
+	
 	def OnSize( self, event ):
 		event.Skip()
 	
 	def OnUpdateUI( self, event ):
+		event.Skip()
+	
+	def cbxDevice_OnKeyDown( self, event ):
 		event.Skip()
 	
 	def cbxDevice_OnKillFocus( self, event ):
