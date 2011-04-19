@@ -44,7 +44,6 @@ setupargs={'name':'YARDWiz',
       'package_data':{'yardwizgui': ['config/defaults.ini','icons/*.*','sounds/*.wav','sounds/README']},
     }
 
-
 if len(sys.argv)>1 and sys.argv[1]=='uninstall':
     import os,shutil
     for p in sys.path:
@@ -72,7 +71,6 @@ elif len(sys.argv)>1 and sys.argv[1]=='py2exe':
     setupargs['data_files']=[('',['getwizpnp.exe']),
                              ('',['README']),
                              ('',['LICENSE']),
-                             ('',['TODO']),
                              ('',['RELEASE']),
                              ('',['VERSION']),
                              ('',['Microsoft.VC90.CRT.manifest']),
