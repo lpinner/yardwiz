@@ -3,10 +3,13 @@
 ==0.2.6==
 ===_New in 0.2.6_===
   * Added link to online help.
+===_Fixed in 0.2.6_===
+  * Fixes issue with GUI becoming unresponsive when deleting ([http://code.google.com/p/yardwiz/issues/detail?id=14 Issue 14]
+  * Fixes issue with GUI appearing offscreen ([http://code.google.com/p/yardwiz/issues/detail?id=15 Issue 15]
 
 ==0.2.5==
 ===_Fixed in 0.2.5_===
-  * Fixes issue with with quicklisting where downloading before program info is updated causes an error.
+  * Fixes issue with quicklisting where downloading before program info is updated causes an error.
 
 ==0.2.4==
 ===_New in 0.2.4_===
