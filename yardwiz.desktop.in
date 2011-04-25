@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=%s
+Terminal=false
+Exec=yardwiz
+Name=YARDWiz
+GenericName=YARDWiz
+Icon=%s/share/pixmaps/yardwiz.png
+Categories=Gnome;AudioVideo;
+Comment=Yet Another Recording Downloader for the Wiz

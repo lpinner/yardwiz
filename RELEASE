@@ -1,11 +1,17 @@
 =Release notes=
 
+==0.2.7==
+===_New in 0.2.7_===
+  * Improved setup.py
+===_Fixed in 0.2.7_===
+  * 
+
 ==0.2.6==
 ===_New in 0.2.6_===
   * Added link to online help.
 ===_Fixed in 0.2.6_===
-  * Fixes issue with GUI becoming unresponsive when deleting ([http://code.google.com/p/yardwiz/issues/detail?id=14 Issue 14]
-  * Fixes issue with GUI appearing offscreen ([http://code.google.com/p/yardwiz/issues/detail?id=15 Issue 15]
+  * Fixes issue with GUI becoming unresponsive when deleting ([http://code.google.com/p/yardwiz/issues/detail?id=14 Issue 14])
+  * Fixes issue with GUI appearing offscreen ([http://code.google.com/p/yardwiz/issues/detail?id=15 Issue 15])
 
 ==0.2.5==
 ===_Fixed in 0.2.5_===

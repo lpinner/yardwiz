@@ -19,7 +19,7 @@
 # THE SOFTWARE.
 
 '''Subclass of gui.GUI'''
-import os,sys,threading,thread,time,ConfigParser
+import os,sys,threading,time,ConfigParser
 import locale,re,webbrowser
 import ordereddict
 import wx
@@ -46,7 +46,7 @@ class GUI( gui.GUI ):
 
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         icons=os.path.join(data_path(),u'icons')
-        ico = wx.Icon( os.path.join(icons, u"icon.png"), wx.BITMAP_TYPE_ANY )
+        ico = wx.Icon( os.path.join(icons, u"yardwiz.png"), wx.BITMAP_TYPE_ANY )
         self.SetIcon(ico)
         self.btnConnect.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"reload.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnConnect.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"reload_disabled.png"), wx.BITMAP_TYPE_ANY ) )
@@ -114,7 +114,7 @@ class GUI( gui.GUI ):
         #Regular expressions for IP, IP:port, and hostname
         self._regexip=r'^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}$' #May not be a valid IP, but it's the right form...
         self._regexipport=self._regexip[:-1]+'(:(\d{1,5}))$'
-        
+
     #######################################################################
     #Methods
     #######################################################################
@@ -308,16 +308,15 @@ class GUI( gui.GUI ):
 
     def _DeleteFromWiz(self):
         idx = self.lstPrograms.GetFirstSelected()
-        i=-1
         programs=[]
         indices=[]
         prognames=[]
-        
+
         while idx != -1:
             lidx = self.lstPrograms.GetItem(idx).Data
             pidx = self.programs.keys()[lidx]
             program = self.programs[pidx]
-            
+
             if '*RECORDING' in program['title']:
                 self._Log('Unable to delete %s as it is currently recording.'%program['title'])
                 self._ShowTab(self.idxLog)
@@ -352,7 +351,7 @@ class GUI( gui.GUI ):
         pidx=self.programs.keys()[event.index]
         if pidx not in self.deleted:self.deleted.append(pidx)
         self.lstPrograms.DeleteItem(idx)
-        
+
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
@@ -405,7 +404,7 @@ class GUI( gui.GUI ):
             self.programs[pidx]['filename']=filename
             programs.append(program)
             size+=program['size']
-            
+
         self._ShowTab(self.idxLog)
         if not programs:return
 
@@ -415,7 +414,7 @@ class GUI( gui.GUI ):
             self.connecttimer = wx.PyTimer(self._DownloadQueue)
             self.connecttimer.Start(250,wx.TIMER_ONE_SHOT)
             return
-        
+
         self.btnPlay.Enable( False )
         self.btnPause.Enable( True )
         self.btnStop.Enable( True )
@@ -774,7 +773,7 @@ class GUI( gui.GUI ):
             self._Connect()
         else:
             event.Skip()
-        
+
     def onLog( self, event ):
         self._Log(event.message)
         event.Skip()
@@ -800,7 +799,7 @@ class AboutDialog( gui.AboutDialog ):
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         path=data_path()
         icons=os.path.join(path,u'icons')
-        ico=os.path.join(icons, u"icon.png")
+        ico=os.path.join(icons, u"yardwiz.png")
         self.SetIcon( wx.Icon( ico, wx.BITMAP_TYPE_ANY ) )
         self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
 
@@ -891,4 +890,3 @@ class ConfirmDelete( gui.ConfirmDelete ):
 #######################################################################
 if iswin and frozen():
     sys.stderr = Stderr()
-    del Stderr
