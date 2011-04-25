@@ -46,11 +46,11 @@ class ThreadedDeleter( threading.Thread ):
             cmddel=subprocess.list2cmdline(cmd+['--delete',program['index']])
             cmdchk=subprocess.list2cmdline(cmd+['--list',program['index']])
             try:
-                proc=subprocess.Popen(cmddel, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                exit_code=proc.wait()
-                proc=subprocess.Popen(cmdchk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                exit_code=proc.wait()
-                stdout,stderr=proc.communicate()
+                self.proc=subprocess.Popen(cmddel, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                exit_code=self.proc.wait()
+                self.proc=subprocess.Popen(cmdchk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                exit_code=self.proc.wait()
+                stdout,stderr=self.proc.communicate()
                 if stdout.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
             except Exception,err:
                 self._Log(err)
@@ -98,23 +98,23 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','--sort=fatd'])
-        proc=subprocess.Popen(cmd+['-q','--List'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(cmd+['-q','--List'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         programs=[]
-        for line in iter(proc.stdout.readline, ""):
+        for line in iter(self.proc.stdout.readline, ""):
             line=line.strip()
             program=self._quickparseprogram(line)
             programs.append(program['index'])
             evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
             try:wx.PostEvent(self.parent, evt)
             except:pass #we're probably exiting
-        del proc
+        del self.proc
 
         cmd.extend(['-vv','--episode','--index'])
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         proglines=[]
         exists=[]
-        for line in iter(proc.stdout.readline, ""):
+        for line in iter(self.proc.stdout.readline, ""):
             line=line.strip()
             if line[0:13]!='Connecting to':
                 if not line:#Start of next program in list
@@ -132,13 +132,13 @@ class ThreadedConnector( threading.Thread ):
                 else:
                     proglines.append(line)
 
-        exit_code=proc.wait()
+        exit_code=self.proc.wait()
         for idx,pidx in enumerate(programs):
             if pidx not in exists: #It's been deleted from the wiz which hasn't been reindexed
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1, programs,idx)
                 try:wx.PostEvent(self.parent, evt)
                 except:pass #we're probably exiting
-        return exit_code,proc.stderr.read()
+        return exit_code,self.proc.stderr.read()
 
     def _listprograms(self):
         if self.device:
@@ -146,11 +146,11 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
         index=-1
-        for line in iter(proc.stdout.readline, ""):
+        for line in iter(self.proc.stdout.readline, ""):
             line=line.strip()
             if line[0:13]!='Connecting to':
                 if not line:#Start of next program in list
@@ -169,8 +169,8 @@ class ThreadedConnector( threading.Thread ):
                 else:
                     proglines.append(line)
 
-        exit_code=proc.wait()
-        return exit_code,proc.stderr.read()
+        exit_code=self.proc.wait()
+        return exit_code,self.proc.stderr.read()
 
     def _quickparseprogram(self,index):
         program=index.split()
@@ -236,10 +236,10 @@ class ThreadedConnector( threading.Thread ):
         cmd=subprocess.list2cmdline(cmd)
         #This fails for some reason (on Win32) if a wx.FileDialog is open (i.e.) a download is started.
         #Workaround is to set shell=True
-        #proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        stdout,stderr=proc.communicate()
-        exit_code=proc.wait()
+        #self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        stdout,stderr=self.proc.communicate()
+        exit_code=self.proc.wait()
 
         #print '\n'.join((pidx,stdout,stderr))
         if exit_code==0:

@@ -637,15 +637,6 @@ class GUI( gui.GUI ):
     #######################################################################
     #Event handlers
     #######################################################################
-    def onCloseApp( self, event ):
-        self._WriteConfig()
-        try:del self.ThreadedConnector
-        except:pass
-        try:del self.ThreadedDownloader
-        except:pass
-        event.Skip()
-        sys.exit(0)
-
     def btnConnect_OnClick( self, event ):
         self._Connect()
 
@@ -674,6 +665,12 @@ class GUI( gui.GUI ):
 
     def btnStop_OnClick( self, event ):
         self.Stop.set()
+
+    def cbxDevice_OnKeyDown( self, event ):
+        if event.GetKeyCode() == wx.WXK_F5:
+            self._Connect()
+        else:
+            event.Skip()
 
     def cbxDevice_OnKillFocus( self, event ):
         self.config.set('Settings','device',self.cbxDevice.GetValue())
@@ -758,15 +755,20 @@ class GUI( gui.GUI ):
         self._UpdateSize()
         event.Skip()
 
+    def onCloseApp( self, event ):
+        self.Hide()
+        self.Stop.set()
+        self._WriteConfig()
+        try:del self.ThreadedConnector
+        except:pass
+        try:del self.ThreadedDownloader
+        except:pass
+        self.Destroy()
+        sys.exit(0)
+
     def onDownloadComplete( self, event ):
         self._DownloadComplete(event.index,event.stopped)
         event.Skip()
-
-    def cbxDevice_OnKeyDown( self, event ):
-        if event.GetKeyCode() == wx.WXK_F5:
-            self._Connect()
-        else:
-            event.Skip()
 
     def OnKeyDown( self, event ):
         if event.GetKeyCode() == wx.WXK_F5:
