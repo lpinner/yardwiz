@@ -2,9 +2,10 @@
 
 ==0.2.7==
 ===_New in 0.2.7_===
-  * Improved setup.py
+  * Improved setup.py, creates Linux Gnome Menu launcher and Windows Start Menu short when installing from source.
 ===_Fixed in 0.2.7_===
-  * 
+  * Close the GUI quicker instead of becoming unresponsive when exiting the application while connecting or downloading.
+  * Get install paths properly instead of guessing them (when installing from source).
 
 ==0.2.6==
 ===_New in 0.2.6_===
