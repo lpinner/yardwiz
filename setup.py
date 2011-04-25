@@ -4,7 +4,7 @@ import os,sys,ConfigParser,shutil
 
 def getpaths():
     #fake a setup to get the paths
-    lib,scripts,data=('','','')
+    lib,scripts,data,prefix=('','','','')
     args=sys.argv[:]
     if 'uninstall' in sys.argv:
         idx=sys.argv.index('uninstall')
@@ -17,8 +17,9 @@ def getpaths():
         lib=s.command_obj['install'].install_lib
         scripts=s.command_obj['install'].install_scripts
         data=s.command_obj['install'].install_data
+        prefix=s.command_obj['install'].prefix
     sys.argv=args[:]
-    return lib,scripts,data
+    return lib,scripts,data,prefix
 
 def writelicenseversion():
     #Create the license and version scripts
@@ -33,13 +34,38 @@ def writelicenseversion():
     v.close()
     l.close()
 
+def createshortcut(filename,target, arguments=None, startin=None, icon=None, description=None):
+    try:
+        import win32com.client #I'd really like to do this without pythonwin...
+        shell = win32com.client.Dispatch("WScript.Shell")
+        shortcut = shell.CreateShortCut(filename)
+        shortcut.TargetPath = target
+        if arguments:shortcut.Arguments = arguments
+        if startin:shortcut.WorkingDirectory = startin
+        if icon:shortcut.IconLocation=icon
+        if description:shortcut.Description=description
+        shortcut.save()
+    except ImportError:
+        print 'Can\'t create shortcut without pythonwin installed'
+
+def getprogrammenu(allusers=True):
+    import ctypes
+    from ctypes.wintypes import HWND,HANDLE,DWORD,LPCWSTR,MAX_PATH,create_unicode_buffer
+    GetFolderPath=ctypes.windll.shell32.SHGetFolderPathW
+    if allusers:intFolder=23
+    else:intFolder=2
+    GetFolderPath.argtypes = [HWND, ctypes.c_int, HANDLE, DWORD, LPCWSTR]
+    auPathBuffer = create_unicode_buffer(MAX_PATH)
+    exit_code=GetFolderPath(0, intFolder, 0, 0, auPathBuffer)
+    return auPathBuffer.value
+
 config=ConfigParser.ConfigParser()
 config.read('VERSION')
 version=config.get('Version','VERSION')                 #N.N.N.N format version number
 display_version=config.get('Version','DISPLAY_VERSION') #Version text string
 short_version=version[:-2]
 
-lib,scripts,data=getpaths()
+lib,scripts,data,prefix=getpaths()
 
 setupargs={'name':'YARDWiz',
       'version':short_version,
@@ -93,6 +119,17 @@ elif 'uninstall' in sys.argv:
     if os.path.exists(f):
         os.unlink(f)
         print 'Removed '+f
+    try:
+        sm=getprogrammenu()
+        if os.path.exists(f):
+            os.unlink(f)
+            print 'Removed '+f
+        sm=getprogrammenu(False)
+        f='%s\\yardwiz.lnk'%sm
+        if os.path.exists(f):
+            os.unlink(f)
+            print 'Removed '+f
+    except:pass
     sys.exit(0)
 
 elif 'sdist' in sys.argv in sys.argv:
@@ -125,6 +162,18 @@ if 'linux' in sys.platform and 'install' in sys.argv:
     os.chmod(os.path.join(data,'share/applications/yardwiz.desktop'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
     print 'Changing mode of %s/share/pixmaps/yardwiz.png to 744'%data
     os.chmod(os.path.join(data,'share/pixmaps/yardwiz.png'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH)
+
+elif 'win' in sys.platform and 'install' in sys.argv:
+    filename='YARDWiz.lnk'
+    target='%s\\pythonw.exe'%prefix
+    arguments='%s\\yardwiz'%scripts
+    startin=prefix
+    icon='%s\\yardwizgui\\icons\\icon.ico'%lib
+    description=setupargs['description']
+    try:#Assume admin privileges
+        createshortcut(os.path.join(getprogrammenu(),filename),target, arguments, startin, icon, description)
+    except:
+        createshortcut(os.path.join(getprogrammenu(False),filename),target, arguments, startin, icon, description)
 
 elif 'py2exe' in sys.argv:
     print 'Compiling installer.'
