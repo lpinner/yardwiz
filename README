@@ -5,7 +5,7 @@ YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP prgram.  get
 
 I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
 
-==Current Release 0.2.6===
+==Current Release 0.2.7===
 
 ==Screenshots==
 ===_Linux_===
@@ -42,7 +42,7 @@ To install, unzip the source archive, then:
 For easy access to the application, I just create shortcuts in my Windows Start Menu/Linux Gnome Menu:
   * Windows: create a shortcut to <python dir>\pythonw.exe <python dir>\Scripts\yardwiz
              E.G. C:\Python26\pythonw.exe C:\Python26\Scripts\yardwiz
-  * Linux: create a desktop/menu launcher to /usr/local/bin/yardwiz
+  * Linux: for Gniome users, setup.py creates a launcher in the sound and video menu, otherwise create a desktop/menu launcher to /usr/local/bin/yardwiz
     * Or you can just type 'yardwiz' in a terminal.
     
 To bling up your shortcut/launcher, there is an icon in the yardwizgui\icons folder.
