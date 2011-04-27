@@ -569,6 +569,7 @@ class GUI( gui.GUI ):
             pidx=self.programs.keys()[idx]
             info=self.programs[pidx].get('info','No program information available')
             self.txtInfo.WriteText(info+'\n')
+            self.txtInfo.SetInsertionPoint(0)
             self.txtInfo.ShowPosition(0)
             self._ShowTab(self.idxInfo)
 
@@ -627,7 +628,6 @@ class GUI( gui.GUI ):
         if not os.path.exists(os.path.dirname(self.userconfig)):
             os.mkdir(os.path.dirname(self.userconfig))
         self.config.write(open(self.userconfig,'w'))
-        #device=self.config.get('Settings','device')
 
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']
