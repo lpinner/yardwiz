@@ -234,7 +234,6 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['-vv','--all','-l','--BWName',pidx])
         cmd=subprocess.list2cmdline(cmd)
-        print cmd
         #This fails for some reason (on Win32) if a wx.FileDialog is open (i.e.) a download is started.
         #Workaround is to set shell=True
         #self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)

@@ -441,7 +441,9 @@ class GUI( gui.GUI ):
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
             if not stopped:
-                try:self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
+                try:
+                    self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
+                    self.lstPrograms.Select(item, 0) #Deselect
                 except:pass
                 if self.playsounds:
                     sound = wx.Sound(self.downloadcompletesound)
@@ -687,31 +689,22 @@ class GUI( gui.GUI ):
             self.lstPrograms.SetItemState(i, 0, wx.LIST_STATE_SELECTED)
         self.lstPrograms.Select(item)
         self.lstPrograms.PopupMenu(self.mnuPrograms)
-        event.Skip()
-
-    def lstPrograms_OnDeselect( self, event ):
-        event.Skip()
 
     def lstPrograms_OnDoubleClick( self, event ):
         self._Queue()
-        event.Skip()
 
     def lstPrograms_OnRightClick( self, event ):
         self.lstPrograms.PopupMenu(self.mnuPrograms)
-        event.Skip()
 
     def lstPrograms_OnSelect( self, event, showinfo=True ):
         if showinfo:self._ShowInfo()
-        event.Skip()
 
     def lstQueueOnContextMenu( self, event ):
         self.mitRemove.Enable( False )
         self.lstQueue.PopupMenu(self.mnuQueue)
-        event.Skip()
 
     def lstQueue_OnRightClick( self, event ):
         self.lstQueue.PopupMenu(self.mnuQueue)
-        event.Skip()
 
     def lstQueue_OnMiddleClick( self, event ):
         self.mitRemove_OnSelect(event)
@@ -728,11 +721,9 @@ class GUI( gui.GUI ):
     def mitDownload_onSelect( self, event ):
         self._Queue(clear=True)
         self._DownloadQueue()
-        event.Skip()
 
     def mitDownloadAll_OnSelect( self, event ):
         self._DownloadQueue()
-        event.Skip()
 
     def mitPreferences_OnSelect( self, event ):
         self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
@@ -768,7 +759,6 @@ class GUI( gui.GUI ):
 
     def onDownloadComplete( self, event ):
         self._DownloadComplete(event.index,event.stopped)
-        event.Skip()
 
     def OnKeyDown( self, event ):
         if event.GetKeyCode() == wx.WXK_F5:
@@ -778,11 +768,9 @@ class GUI( gui.GUI ):
 
     def onLog( self, event ):
         self._Log(event.message)
-        event.Skip()
 
     def onUpdateProgress( self, event ):
         self._UpdateProgress(event.progress,event.message)
-        event.Skip()
 
     def OnSize( self, event ):
         self._UpdateSize()
@@ -793,7 +781,6 @@ class LicenseDialog( gui.LicenseDialog ):
         gui.LicenseDialog.__init__(self,None)
         sxmin,symin=centrepos(self,parent)
         self.SetPosition((sxmin,symin))
-        #self.Centre( wx.BOTH )
 
 class AboutDialog( gui.AboutDialog ):
     def __init__( self, parent ):
@@ -810,7 +797,6 @@ class AboutDialog( gui.AboutDialog ):
 
         sxmin,symin=centrepos(self,parent)
         self.SetPosition((sxmin,symin))
-        #self.Centre( wx.BOTH )
 
         self.LicenseDialog=LicenseDialog(self)
         self.LicenseDialog.txtLicense.SetValue(txtlicense)
