@@ -163,7 +163,7 @@ if 'linux' in sys.platform and 'install' in sys.argv:
     print 'Changing mode of %s/share/pixmaps/yardwiz.png to 744'%data
     os.chmod(os.path.join(data,'share/pixmaps/yardwiz.png'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH)
 
-elif 'win' in sys.platform and 'install' in sys.argv:
+elif sys.platform[0:3]=='win' and 'install' in sys.argv:
     filename='YARDWiz.lnk'
     target='%s\\pythonw.exe'%prefix
     arguments='%s\\yardwiz'%scripts
