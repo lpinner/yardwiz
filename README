@@ -5,8 +5,6 @@ YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP prgram.  get
 
 I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
 
-==Current Release 0.2.7===
-
 ==Screenshots==
 ===_Linux_===
 http://yardwiz.googlecode.com/svn/images/screenshot-ubuntu.png

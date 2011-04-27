@@ -1,6 +1,11 @@
 #labels Featured
 =Release notes=
 
+==0.2.8==
+===_Fixed in 0.2.8_===
+  * Resolves Issue 16
+  * Resolves Issue 17
+
 ==0.2.7==
 ===_New in 0.2.7_===
   * Improved setup.py, creates Linux Gnome Menu launcher and Windows Start Menu short when installing from source.
