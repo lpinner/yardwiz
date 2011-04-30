@@ -4,24 +4,6 @@ import wx
 from ordereddict import OrderedDict as odict
 from events import *
 
-#Workarounds for crossplatform issues
-iswin=sys.platform[0:3] == "win"
-if iswin:
-    wizexe='getWizPnP.exe'
-    CTRL_C_EVENT = 0
-    CREATE_NEW_PROCESS_GROUP=0x00000200 #getwizpnp kicks off child processes which the subprocess module doesn't kill unless a new process group is created.
-    STARTF_USESHOWWINDOW=1 #subprocess.STARTF_USESHOWWINDOW raises
-    creationflags=CREATE_NEW_PROCESS_GROUP
-    startupinfo=subprocess.STARTUPINFO()#Windows starts up a console when a subprocess is run from a non-concole app like pythonw
-    startupinfo.dwFlags |= STARTF_USESHOWWINDOW #subprocess.STARTF_USESHOWWINDOW
-    Popen_kwargs={'creationflags':creationflags,'startupinfo':startupinfo}
-    autosize=wx.LIST_AUTOSIZE_USEHEADER #for ListCtrls
-
-else:
-    wizexe='getWizPnP.pl'
-    Popen_kwargs={}
-    autosize=wx.LIST_AUTOSIZE #for ListCtrls
-
 #######################################################################
 #Helper classes
 #######################################################################
@@ -98,7 +80,7 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','--sort=fatd'])
-        self.proc=subprocess.Popen(cmd+['-q','--List'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd+['-q','--List']), stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         programs=[]
         for line in iter(self.proc.stdout.readline, ""):
@@ -146,7 +128,7 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
-        self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         proglines=[]
         index=-1
@@ -299,7 +281,7 @@ class ThreadedDownloader( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
         try:
-            self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+            self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         except Exception,err:
             self._log('Error, unable to download %s.'%program['filename'])
             self._log(str(err))
@@ -538,7 +520,6 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
     exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
     if not path:
         path = os.environ.get("PATH", os.defpath)
-    if not path[0]=='.':path='.'+os.pathsep+path
     for p in path.split(os.pathsep):
         p = os.path.join(p, name)
         if os.access(p, flags):
@@ -549,7 +530,8 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
             if os.access(pext, flags):
                 if returnfirst:return pext
                 else:result.append(pext)
-    return result
+    if result:return result
+    else:return ''
 
 def errordialog(message, caption):
     dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
@@ -579,7 +561,8 @@ def license():
     return license
 
 def data_path():
-    if frozen():return os.path.dirname(sys.executable)
+    if frozen() and sys.frozen!='macosx_app':
+        return os.path.dirname(sys.executable)
     return os.path.dirname(__file__)
 
 def centrepos(self,parent):
@@ -592,3 +575,28 @@ def centrepos(self,parent):
     symin=pycen-sysize/2.0
     return sxmin,symin
 
+#Workarounds for crossplatform issues
+path = os.environ.get("PATH", os.defpath)
+if not '.' in path.split(os.pathsep):path='.'+os.pathsep+path
+p=os.path.abspath(os.path.dirname(sys.argv[0]))
+if not p in path.split(os.pathsep):path=p+os.pathsep+path
+os.environ['PATH']=path
+
+getwizpnp=['getWizPnP.exe','getWizPnP','getwizpnp','getWizPnP.pl']
+for f in getwizpnp:
+    wizexe=which(f)
+    if wizexe:break
+iswin=sys.platform[0:3] == "win"
+if iswin:
+    CTRL_C_EVENT = 0
+    CREATE_NEW_PROCESS_GROUP=0x00000200 #getwizpnp kicks off child processes which the subprocess module doesn't kill unless a new process group is created.
+    STARTF_USESHOWWINDOW=1 #subprocess.STARTF_USESHOWWINDOW raises
+    creationflags=CREATE_NEW_PROCESS_GROUP
+    startupinfo=subprocess.STARTUPINFO()#Windows starts up a console when a subprocess is run from a non-concole app like pythonw
+    startupinfo.dwFlags |= STARTF_USESHOWWINDOW #subprocess.STARTF_USESHOWWINDOW
+    Popen_kwargs={'creationflags':creationflags,'startupinfo':startupinfo}
+    autosize=wx.LIST_AUTOSIZE_USEHEADER #for ListCtrls
+
+else:
+    Popen_kwargs={}
+    autosize=wx.LIST_AUTOSIZE #for ListCtrls

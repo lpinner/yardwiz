@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from distutils.core import setup
-import os,sys,ConfigParser,shutil
+import os,sys,ConfigParser,shutil,zipfile
 
 def getpaths():
     #fake a setup to get the paths
@@ -88,14 +88,41 @@ setupargs={'name':'YARDWiz',
                    'Topic :: Multimedia :: Video'],
       'packages':['yardwizgui'],
       'scripts':['yardwiz'],
-      'package_data':{'yardwizgui': ['config/defaults.ini','icons/*.*','sounds/*.wav','sounds/README']},
-      'data_files':[('share/pixmaps',['yardwizgui/icons/yardwiz.png']),('share/applications',['yardwiz.desktop.in'])]
+      'package_data':{'yardwizgui': ['config/defaults.ini','icons/*.*','sounds/*.wav','sounds/README']}
     }
 
 if 'linux' in sys.platform and 'install' in sys.argv:
     setupargs['data_files']=[('share/pixmaps',['yardwizgui/icons/yardwiz.png']),('share/applications',['yardwiz.desktop'])]
     desktop=open('yardwiz.desktop.in').read()%(short_version,data)
     open('yardwiz.desktop','w').write(desktop)
+
+elif 'darwin' in sys.platform and 'py2app' in sys.argv:
+    from setuptools import setup
+    import glob,stat
+    shutil.copy('yardwiz','YARDWiz.py')
+    APP = [ 'YARDWiz.py']
+    DATA_FILES = [('',['README']),
+                  ('',['LICENSE']),
+                  ('',['RELEASE']),
+                  ('',['VERSION']),
+                  ('', ['getWizPnP']),
+                  ('sounds', glob.glob('yardwizgui/sounds/*')),
+                  ('config', ['yardwizgui/config/defaults.ini']),
+                  ('icons', glob.glob('yardwizgui/icons/*.*'))]
+    OPTIONS = {'extension': '.app', 'packages': 'yardwizgui'}
+
+    print 'Changing mode of getWizPnP to 755'
+    os.chmod('getWizPnP',stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
+
+    setup(
+        app=APP,
+        data_files=DATA_FILES,
+        options={'py2app': OPTIONS},
+        setup_requires=['py2app'],
+    )
+    os.unlink('YARDWiz.py')
+    shutil.rmtree('build')
+    sys.exit(0)
 
 elif 'uninstall' in sys.argv:
     import shutil
@@ -196,6 +223,13 @@ elif 'py2exe' in sys.argv:
                 if os.path.isdir(f):shutil.rmtree(f)
                 else:os.unlink(f)
 
+try:
+    fout='dist/YARDWiz-%s-MacOSX.zip'%short_version
+    shutil.copy('dist/YARDWiz-%s.zip'%short_version,fout)
+    zout=zipfile.ZipFile(fout,'a',zipfile.ZIP_DEFLATED)
+    zout.write('getWizPnP','YARDWiz-%s/getWizPnP'%short_version)
+    zout.close()
+except:raise#pass
 try:
     shutil.rmtree('build')
 except:pass

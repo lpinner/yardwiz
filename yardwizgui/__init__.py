@@ -104,10 +104,9 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.Hide()
 
         #check for GetWizPnP
-        errmsg='''Error: YARDWiz requires %s to communicate with your Beyonwiz.\n\nPlease install %s from: http://www.openwiz.org/wiki/GetWizPnP_Release'''%(wizexe,wizexe)
-        ok=which(wizexe)
-        if not ok:
-            errdial = wx.MessageDialog(None,errmsg,'Missing GetWizPnP', wx.OK | wx.ICON_ERROR)
+        errmsg='''Error: YARDWiz requires getWizPnP to communicate with your Beyonwiz.\n\nPlease install getWizPnP from: http://www.openwiz.org/wiki/GetWizPnP_Release'''
+        if not wizexe:
+            errdial = wx.MessageDialog(None,errmsg,'Missing getWizPnP', wx.OK | wx.ICON_ERROR)
             errdial.ShowModal()
             sys.exit(1)
 
@@ -876,5 +875,5 @@ class ConfirmDelete( gui.ConfirmDelete ):
 #######################################################################
 #Workarounds for py2exe
 #######################################################################
-if iswin and frozen():
+if frozen():
     sys.stderr = Stderr()
