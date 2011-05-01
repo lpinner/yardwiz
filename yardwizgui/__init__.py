@@ -181,9 +181,6 @@ class GUI( gui.GUI ):
             ymin=min([ymin,yres-ysize])
             self.SetPosition(wx.Point(xmin,ymin))
 
-        #Quick listing, can include deleted files
-        self.quicklisting=self.config.getboolean('Settings','quicklisting')
-
         #Date formats
         self.getwizpnp_dateformat='%b.%d.%Y_%H.%M' #Apr.7.2011_21.28 '%a %b %d %H:%M:%S %Y'
         self.getwizpnp_timeformat='%H:%M'
@@ -209,6 +206,7 @@ class GUI( gui.GUI ):
         #configs - format = [oldsection, oldoption] or [oldsection, oldoption, newsection, newoption]
         configs=[('Settings', 'server'),
                  ('Settings', 'port'),
+                 ('Settings', 'quicklisting'),
                  ('Settings','xsize','Window', 'xsize'),
                  ('Settings','ysize','Window','ysize'),
                  ('Settings','xmin','Window','xmin'),
@@ -281,7 +279,7 @@ class GUI( gui.GUI ):
         self._Log('Connecting to %s...'%self.config.get('Settings','device'))
 
         #Connect to the Wiz etc...
-        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted, quick=self.quicklisting)
+        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted)
 
     def _Connected(self,event=None):
         self.lblProgressText.SetLabelText('')

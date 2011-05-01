@@ -50,20 +50,17 @@ class ThreadedDeleter( threading.Thread ):
         except:pass #we're probably exiting
         
 class ThreadedConnector( threading.Thread ):
-    def __init__( self, parent, device, ip, port, deleted=[], quick=False):
+    def __init__( self, parent, device, ip, port, deleted=[]):
         threading.Thread.__init__( self )
         self.device=device
         self.ip=ip
         self.port=port
         self.parent=parent
         self.deleted=deleted
-        self.quick=quick
         self.start()
+
     def run(self):
-        if self.quick:
-            exit_code,err=self._quicklistprograms()
-        else:
-            exit_code,err=self._listprograms()
+        exit_code,err=self._listprograms()
 
         if exit_code > 0:
             evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%err)
@@ -74,7 +71,7 @@ class ThreadedConnector( threading.Thread ):
             try:wx.PostEvent(self.parent, evt)
             except:pass
 
-    def _quicklistprograms(self):
+    def _listprograms(self):
         if self.device:
             cmd=[wizexe,'--device',self.device]
         else:
@@ -85,7 +82,7 @@ class ThreadedConnector( threading.Thread ):
         programs=[]
         for line in iter(self.proc.stdout.readline, ""):
             line=line.strip()
-            program=self._quickparseprogram(line)
+            program=self._parseprogramname(line)
             programs.append(program['index'])
             evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
             try:wx.PostEvent(self.parent, evt)
@@ -122,36 +119,7 @@ class ThreadedConnector( threading.Thread ):
                 except:pass #we're probably exiting
         return exit_code,self.proc.stderr.read()
 
-    def _listprograms(self):
-        if self.device:
-            cmd=[wizexe,'--device',self.device]
-        else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
-        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        thread.start_new_thread(self._getinfo,())
-        proglines=[]
-        index=-1
-        for line in iter(self.proc.stdout.readline, ""):
-            line=line.strip()
-            if line[0:13]!='Connecting to':
-                if not line:#Start of next program in list
-                    if proglines:
-                        tmp=list(proglines)
-                        proglines=[]
-                        program=self._parseprogram(tmp)
-                        if program['index'] not in self.deleted:
-                            index+=1
-                            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
-                            try:wx.PostEvent(self.parent, evt)
-                            except:pass #we're probably exiting
-                else:
-                    proglines.append(line)
-
-        exit_code=self.proc.wait()
-        return exit_code,self.proc.stderr.read()
-
-    def _quickparseprogram(self,index):
+    def _parseprogramname(self,index):
         program=index.split()
         datetime=program[-1]
         title=' '.join(program[:-1]).replace('/_','/')
@@ -204,41 +172,6 @@ class ThreadedConnector( threading.Thread ):
         if info:
             program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
         return program
-
-    def _getinfo(self):
-        time.sleep(1)
-        if self.device:
-            cmd=[wizexe,'--device',self.device]
-        else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        cmd.extend(['-vv','--all','-l','--episode','--index','--sort=fatd'])
-        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        proglines=[]
-        index=-1
-        for line in iter(self.proc.stdout.readline, ""):
-            line=line.strip()
-            if line[0:13]!='Connecting to':
-                if not line:#Start of next program in list
-                    if proglines:
-                        tmp=list(proglines)
-                        proglines=[]
-                        program=self._parseprogram(tmp)
-                        if program['index'] not in self.deleted:
-                            index+=1
-                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
-                            try:wx.PostEvent(self.parent, evt)
-                            except:pass #we're probably exiting
-                else:
-                    proglines.append(line)
-
-        exit_code=self.proc.wait()
-        return exit_code,self.proc.stderr.read()
-
-    def __del__(self):
-        try:
-            self.proc.kill()
-            del self.proc
-        except:pass
 
 class ThreadedDownloader( threading.Thread ):
     def __init__(self, parent, device, ip, port, programs, evtPlay, evtStop):
@@ -582,8 +515,9 @@ if not p in path.split(os.pathsep):path=p+os.pathsep+path
 os.environ['PATH']=path
 getwizpnp=['getWizPnP.exe','getWizPnP','getwizpnp','getWizPnP.pl']
 for f in getwizpnp:
-    wizexe=which(f)
-    if wizexe:break
+    if which(f):
+        wizexe=f
+        break
 
 iswin=sys.platform[0:3] == "win"
 if iswin:
