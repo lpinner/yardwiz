@@ -80,7 +80,7 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','--sort=fatd'])
-        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd+['-q','--List']), stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd+['-q','--List']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         programs=[]
         for line in iter(self.proc.stdout.readline, ""):
@@ -93,7 +93,7 @@ class ThreadedConnector( threading.Thread ):
         del self.proc
 
         cmd.extend(['-vv','--episode','--index'])
-        self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         proglines=[]
         exists=[]
         for line in iter(self.proc.stdout.readline, ""):
@@ -108,7 +108,7 @@ class ThreadedConnector( threading.Thread ):
                         if program['index'] not in self.deleted:
                             idx=programs.index(program['index'])
                             exists.append(program['index'])
-                            evt = AddProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
+                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
                             try:wx.PostEvent(self.parent, evt)
                             except:pass #we're probably exiting
                 else:
@@ -128,8 +128,8 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
-        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        thread.start_new_thread(self._getinfo,())
         proglines=[]
         index=-1
         for line in iter(self.proc.stdout.readline, ""):
@@ -143,10 +143,7 @@ class ThreadedConnector( threading.Thread ):
                         if program['index'] not in self.deleted:
                             index+=1
                             evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
-                            try:
-                                wx.PostEvent(self.parent, evt)
-                                if not 'info' in program:
-                                    thread.start_new_thread(self._getinfo, (program,index))
+                            try:wx.PostEvent(self.parent, evt)
                             except:pass #we're probably exiting
                 else:
                     proglines.append(line)
@@ -208,32 +205,34 @@ class ThreadedConnector( threading.Thread ):
             program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
         return program
 
-    def _getinfo(self,program,idx):
-        pidx=program['index']
+    def _getinfo(self):
+        time.sleep(1)
         if self.device:
             cmd=[wizexe,'--device',self.device]
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        cmd.extend(['-vv','--all','-l','--BWName',pidx])
-        cmd=subprocess.list2cmdline(cmd)
-        #This fails for some reason (on Win32) if a wx.FileDialog is open (i.e.) a download is started.
-        #Workaround is to set shell=True
-        #self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        stdout,stderr=proc.communicate()
-        exit_code=proc.wait()
+        cmd.extend(['-vv','--all','-l','--episode','--index','--sort=fatd'])
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proglines=[]
+        index=-1
+        for line in iter(self.proc.stdout.readline, ""):
+            line=line.strip()
+            if line[0:13]!='Connecting to':
+                if not line:#Start of next program in list
+                    if proglines:
+                        tmp=list(proglines)
+                        proglines=[]
+                        program=self._parseprogram(tmp)
+                        if program['index'] not in self.deleted:
+                            index+=1
+                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
+                            try:wx.PostEvent(self.parent, evt)
+                            except:pass #we're probably exiting
+                else:
+                    proglines.append(line)
 
-        #print '\n'.join((pidx,stdout,stderr))
-        if exit_code==0:
-            info=[]
-            for line in stdout.split('\n'):
-                line=line.strip()
-                if not 'Connecting to' in line:
-                    info.append(line)
-            program['info']='\n'.join(info)
-            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
-            try:wx.PostEvent(self.parent, evt)
-            except:pass #we're probably exiting
+        exit_code=self.proc.wait()
+        return exit_code,self.proc.stderr.read()
 
     def __del__(self):
         try:
@@ -281,7 +280,7 @@ class ThreadedDownloader( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
         try:
-            self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+            self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         except Exception,err:
             self._log('Error, unable to download %s.'%program['filename'])
             self._log(str(err))
@@ -434,7 +433,7 @@ class Stderr(object):
     softspace = 0
     _file = None
     _error = None
-    tmp=os.environ.get('TEMP',os.environ.get('TMP','.'))
+    tmp=os.environ.get('TEMP',os.environ.get('TMP','/tmp'))
     fname=os.path.join(tmp, 'yardwiz.log')
     def errordialog(self,message, caption):
         import wx
@@ -581,11 +580,11 @@ if not '.' in path.split(os.pathsep):path='.'+os.pathsep+path
 p=os.path.abspath(os.path.dirname(sys.argv[0]))
 if not p in path.split(os.pathsep):path=p+os.pathsep+path
 os.environ['PATH']=path
-
 getwizpnp=['getWizPnP.exe','getWizPnP','getwizpnp','getWizPnP.pl']
 for f in getwizpnp:
     wizexe=which(f)
     if wizexe:break
+
 iswin=sys.platform[0:3] == "win"
 if iswin:
     CTRL_C_EVENT = 0
@@ -596,7 +595,6 @@ if iswin:
     startupinfo.dwFlags |= STARTF_USESHOWWINDOW #subprocess.STARTF_USESHOWWINDOW
     Popen_kwargs={'creationflags':creationflags,'startupinfo':startupinfo}
     autosize=wx.LIST_AUTOSIZE_USEHEADER #for ListCtrls
-
 else:
     Popen_kwargs={}
     autosize=wx.LIST_AUTOSIZE #for ListCtrls

@@ -129,7 +129,10 @@ class GUI( gui.GUI ):
         program['channel']=program.get('channel','')
 
         iidx=len(self.programs)
-        self.programs[program['index']]=program
+        if program['index'] in self.programs:
+            self.programs[program['index']].update(program)
+        else:
+            self.programs[program['index']]=program
 
         self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
         self.lstPrograms.SetItemData(iidx,iidx)

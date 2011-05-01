@@ -108,18 +108,17 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
                   ('', ['getWizPnP']),
                   ('sounds', glob.glob('yardwizgui/sounds/*')),
                   ('config', ['yardwizgui/config/defaults.ini']),
-                  ('icons', glob.glob('yardwizgui/icons/*.*'))]
-    OPTIONS = {'extension': '.app', 'packages': 'yardwizgui'}
-
-    print 'Changing mode of getWizPnP to 755'
-    os.chmod('getWizPnP',stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
-
+                  ('icons', glob.glob('yardwizgui/icons/*.png'))]
+    OPTIONS = {'extension': '.app', 'packages': 'yardwizgui', 'iconfile': 'yardwizgui/icons/yardwiz.icns'}
+    
     setup(
         app=APP,
         data_files=DATA_FILES,
         options={'py2app': OPTIONS},
         setup_requires=['py2app'],
     )
+    print 'Changing mode of getWizPnP to 755'
+    os.chmod('dist/YARDWiz.app/Contents/Resources/getwizpnp',755)
     os.unlink('YARDWiz.py')
     shutil.rmtree('build')
     sys.exit(0)
