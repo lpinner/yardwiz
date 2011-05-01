@@ -104,21 +104,43 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     DATA_FILES = [('',['README']),
                   ('',['LICENSE']),
                   ('',['RELEASE']),
-                  ('',['VERSION']),
-                  ('', ['getWizPnP']),
-                  ('sounds', glob.glob('yardwizgui/sounds/*')),
-                  ('config', ['yardwizgui/config/defaults.ini']),
-                  ('icons', glob.glob('yardwizgui/icons/*.png'))]
-    OPTIONS = {'extension': '.app', 'packages': 'yardwizgui', 'iconfile': 'yardwizgui/icons/yardwiz.icns'}
+                  ('',['VERSION'])]
+    OPTIONS = {'extension': '.app', 'packages': 'yardwizgui',
+               'iconfile': 'yardwizgui/icons/yardwiz.icns',
+               'excludes':['doctest','pdb','difflib','encodings.big5','encodings.big5hkscs','encodings.cp037',
+               'encodings.cp1006','encodings.cp1026','encodings.cp1140','encodings.cp1250','encodings.cp1251',
+               'encodings.cp1252','encodings.cp1253','encodings.cp1254','encodings.cp1255','encodings.cp1256',
+               'encodings.cp1257','encodings.cp1258','encodings.cp424','encodings.cp437','encodings.cp500',
+               'encodings.cp737','encodings.cp775','encodings.cp850','encodings.cp852','encodings.cp855',
+               'encodings.cp856','encodings.cp857','encodings.cp860','encodings.cp861','encodings.cp862',
+               'encodings.cp863','encodings.cp864','encodings.cp865','encodings.cp866','encodings.cp869',
+               'encodings.cp874','encodings.cp875','encodings.cp932','encodings.cp949','encodings.cp950',
+               'encodings.euc_jis_2004','encodings.euc_jisx0213','encodings.euc_jp','encodings.euc_kr',
+               'encodings.gb18030','encodings.gb2312','encodings.gbk','encodings.hp_roman8','encodings.hz',
+               'encodings.idna','encodings.iso2022_jp','encodings.iso2022_jp_1','encodings.iso2022_jp_2',
+               'encodings.iso2022_jp_2004','encodings.iso2022_jp_3','encodings.iso2022_jp_ext',
+               'encodings.iso2022_kr','encodings.iso8859_1','encodings.iso8859_10','encodings.iso8859_11',
+               'encodings.iso8859_13','encodings.iso8859_14','encodings.iso8859_15','encodings.iso8859_16',
+               'encodings.iso8859_2','encodings.iso8859_3','encodings.iso8859_4','encodings.iso8859_5',
+               'encodings.iso8859_6','encodings.iso8859_7','encodings.iso8859_8','encodings.iso8859_9',
+               'encodings.johab','encodings.koi8_r','encodings.koi8_u','encodings.mac_arabic',
+               'encodings.mac_centeuro','encodings.mac_croatian','encodings.mac_cyrillic','encodings.mac_farsi',
+               'encodings.mac_greek','encodings.mac_iceland','encodings.mac_latin2','encodings.mac_roman',
+               'encodings.mac_romanian','encodings.mac_turkish','encodings.mbcs','encodings.palmos',
+               'encodings.ptcp154','encodings.punycode','encodings.quopri_codec','encodings.rot_13',
+               'encodings.shift_jis','encodings.shift_jis_2004','encodings.shift_jisx0213','encodings.tis_620',
+               'encodings.uu_codec','encodings.bz2_codec','encodings.utf_16','encodings.utf_16_be','encodings.utf_16_le',
+               'encodings.utf_32','encodings.utf_32_be','encodings.utf_32_le']}
     
-    setup(
-        app=APP,
-        data_files=DATA_FILES,
-        options={'py2app': OPTIONS},
-        setup_requires=['py2app'],
-    )
+    setup(app=APP,
+          data_files=DATA_FILES,
+          options={'py2app': OPTIONS},
+          setup_requires=['py2app'])
+  
+    print 'Copying getWizPnP to app'
+    shutil.copy('getWizPnP','dist/YARDWiz.app/Contents/Resources/getWizPnP')
     print 'Changing mode of getWizPnP to 755'
-    os.chmod('dist/YARDWiz.app/Contents/Resources/getwizpnp',755)
+    os.chmod('dist/YARDWiz.app/Contents/Resources/getwizpnp',stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
     os.unlink('YARDWiz.py')
     shutil.rmtree('build')
     sys.exit(0)
