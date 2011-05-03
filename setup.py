@@ -1,6 +1,6 @@
 #!/usr/bin/python
 from distutils.core import setup
-import os,sys,ConfigParser,shutil,zipfile
+import os,sys,ConfigParser,shutil,zipfile,subprocess
 
 def getpaths():
     #fake a setup to get the paths
@@ -99,7 +99,7 @@ if 'linux' in sys.platform and 'install' in sys.argv:
 elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     from setuptools import setup
     import glob,stat
-    shutil.copy('yardwiz','YARDWiz.py')
+        
     APP = [ 'YARDWiz.py']
     DATA_FILES = [('',['README']),
                   ('',['LICENSE']),
@@ -129,9 +129,13 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
                'encodings.mac_romanian','encodings.mac_turkish','encodings.mbcs','encodings.palmos',
                'encodings.ptcp154','encodings.punycode','encodings.quopri_codec','encodings.rot_13',
                'encodings.shift_jis','encodings.shift_jis_2004','encodings.shift_jisx0213','encodings.tis_620',
-               'encodings.uu_codec','encodings.bz2_codec','encodings.utf_16','encodings.utf_16_be','encodings.utf_16_le',
-               'encodings.utf_32','encodings.utf_32_be','encodings.utf_32_le']}
+               'encodings.uu_codec','encodings.bz2_codec','encodings.utf_16','encodings.utf_16_be',
+               'encodings.utf_16_le','encodings.utf_32','encodings.utf_32_be','encodings.utf_32_le']}
     
+    shutil.copy('yardwiz','YARDWiz.py')
+    if os.path.exists('dist'):shutil.rmtree('dist')
+    if os.path.exists('build'):shutil.rmtree('build')
+
     setup(app=APP,
           data_files=DATA_FILES,
           options={'py2app': OPTIONS},
@@ -143,6 +147,12 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     os.chmod('dist/YARDWiz.app/Contents/Resources/getwizpnp',stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
     os.unlink('YARDWiz.py')
     shutil.rmtree('build')
+    print 'Creating disk image'
+    cmd='hdiutil create -size 70m -imagekey zlib-level=9 -srcfolder dist/YARDWiz.app dist/YARDWiz-%s.dmg'%short_version
+    proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout,stderr=proc.communicate()
+    exit_code=proc.wait()
+    if exit_code:print stderr
     sys.exit(0)
 
 elif 'uninstall' in sys.argv:
@@ -184,7 +194,7 @@ elif 'sdist' in sys.argv in sys.argv:
     writelicenseversion()
 
 elif 'py2exe' in sys.argv:
-    import py2exe,glob,subprocess,zipfile,shutil
+    import py2exe,glob
 
     writelicenseversion()
 
@@ -244,13 +254,6 @@ elif 'py2exe' in sys.argv:
                 if os.path.isdir(f):shutil.rmtree(f)
                 else:os.unlink(f)
 
-try:
-    fout='dist/YARDWiz-%s-MacOSX.zip'%short_version
-    shutil.copy('dist/YARDWiz-%s.zip'%short_version,fout)
-    zout=zipfile.ZipFile(fout,'a',zipfile.ZIP_DEFLATED)
-    zout.write('getWizPnP','YARDWiz-%s/getWizPnP'%short_version)
-    zout.close()
-except:raise#pass
 try:
     shutil.rmtree('build')
 except:pass
