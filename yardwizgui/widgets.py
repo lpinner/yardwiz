@@ -168,16 +168,18 @@ class PropertyScrolledPanel(ScrolledPanel):
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(sizer)
         self.SetupScrolling()
+        self.expanded=0
+        self.panes=[]
 
     def OnPaneChanged(self, evt=None):
         self.Freeze()
-        #cp=evt.GetEventObject()
+        expanded=-1
+        for i,pane in enumerate(self.panes):
+            if pane.Expanded:
+                if i==self.expanded:pane.Collapse()
+                else:expanded=i
+        self.expanded=expanded
         self.Layout()
-        # and also change the labels
-        #if cp.IsExpanded():
-        #    cp.SetLabel(...)
-        #else:
-        #    cp.SetLabel(...)
         self.SetupScrolling()
         self.Thaw()
 
@@ -186,11 +188,11 @@ class PropertyScrolledPanel(ScrolledPanel):
         self._config={}
         self.config=copy.deepcopy(config)
         sections = config.sections()
-        first=True
         for section in sections:
             cp = wx.CollapsiblePane(self,
                                     label=section,
                                     style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE)
+            self.panes.append(cp)
             pane=cp.GetPane()
             self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.OnPaneChanged, cp)
             addrSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=1)
@@ -232,13 +234,11 @@ class PropertyScrolledPanel(ScrolledPanel):
             border.Add(addrSizer, 1, wx.EXPAND|wx.ALL, 5)
             pane.SetSizer(border)
 
-            if first:
-                cp.Expand()
-                first=False
             self.Sizer.Add(cp, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
 
             self._config[section]=opts
 
+        self.panes[0].Expand()
         self.SetupScrolling()
 
     def GetConfig(self, saved):
