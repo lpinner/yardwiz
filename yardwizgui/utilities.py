@@ -50,17 +50,20 @@ class ThreadedDeleter( threading.Thread ):
         except:pass #we're probably exiting
         
 class ThreadedConnector( threading.Thread ):
-    def __init__( self, parent, device, ip, port, deleted=[]):
+    def __init__( self, parent, device, ip, port, deleted=[], quick=False):
         threading.Thread.__init__( self )
         self.device=device
         self.ip=ip
         self.port=port
         self.parent=parent
         self.deleted=deleted
+        self.quick=quick
         self.start()
-
     def run(self):
-        exit_code,err=self._listprograms()
+        if self.quick:
+            exit_code,err=self._quicklistprograms()
+        else:
+            exit_code,err=self._listprograms()
 
         if exit_code > 0:
             evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%err)
@@ -71,7 +74,7 @@ class ThreadedConnector( threading.Thread ):
             try:wx.PostEvent(self.parent, evt)
             except:pass
 
-    def _listprograms(self):
+    def _quicklistprograms(self):
         if self.device:
             cmd=[wizexe,'--device',self.device]
         else:
@@ -82,7 +85,7 @@ class ThreadedConnector( threading.Thread ):
         programs=[]
         for line in iter(self.proc.stdout.readline, ""):
             line=line.strip()
-            program=self._parseprogramname(line)
+            program=self._quickparseprogram(line)
             programs.append(program['index'])
             evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
             try:wx.PostEvent(self.parent, evt)
@@ -119,7 +122,36 @@ class ThreadedConnector( threading.Thread ):
                 except:pass #we're probably exiting
         return exit_code,self.proc.stderr.read()
 
-    def _parseprogramname(self,index):
+    def _listprograms(self):
+        if self.device:
+            cmd=[wizexe,'--device',self.device]
+        else:
+            cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        thread.start_new_thread(self._getinfo,())
+        proglines=[]
+        index=-1
+        for line in iter(self.proc.stdout.readline, ""):
+            line=line.strip()
+            if line[0:13]!='Connecting to':
+                if not line:#Start of next program in list
+                    if proglines:
+                        tmp=list(proglines)
+                        proglines=[]
+                        program=self._parseprogram(tmp)
+                        if program['index'] not in self.deleted:
+                            index+=1
+                            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
+                            try:wx.PostEvent(self.parent, evt)
+                            except:pass #we're probably exiting
+                else:
+                    proglines.append(line)
+
+        exit_code=self.proc.wait()
+        return exit_code,self.proc.stderr.read()
+
+    def _quickparseprogram(self,index):
         program=index.split()
         datetime=program[-1]
         title=' '.join(program[:-1]).replace('/_','/')
@@ -173,6 +205,84 @@ class ThreadedConnector( threading.Thread ):
             program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
         return program
 
+    def _getinfo(self):
+        time.sleep(1)
+        if self.device:
+            cmd=[wizexe,'--device',self.device]
+        else:
+            cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        cmd.extend(['-vvv','--all','-l','--episode','--index','--sort=fatd'])
+        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proglines=[]
+        index=-1
+        for line in iter(self.proc.stdout.readline, ""):
+            line=line.strip()
+            if line[0:13]!='Connecting to':
+                if not line:#Start of next program in list
+                    if proglines:
+                        tmp=list(proglines)
+                        proglines=[]
+                        program=self._parseprogram(tmp)
+                        program['info']='\n'.join(tmp)
+                        if program['index'] not in self.deleted:
+                            index+=1
+                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
+                            try:wx.PostEvent(self.parent, evt)
+                            except:pass #we're probably exiting
+                else:
+                    proglines.append(line)
+
+        exit_code=self.proc.wait()
+        return exit_code,self.proc.stderr.read()
+
+    def __del__(self):
+        try:
+            self.proc.kill()
+            del self.proc
+        except:pass
+
+class ThreadedDeleter( threading.Thread ):
+    def __init__( self, parent, device, ip, port, programs,indices):
+        threading.Thread.__init__( self )
+        self.parent=parent
+        self.device=device
+        self.ip=ip
+        self.port=port
+        self.programs=programs
+        self.indices=indices
+        self.start()
+    def run(self):
+        if self.device:
+            cmd=[wizexe,'--device','--all','--BWName']
+        else:
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--BWName']
+
+        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        for idx,program in zip(self.indices,self.programs):
+            cmddel=subprocess.list2cmdline(cmd+['--delete',program['index']])
+            cmdchk=subprocess.list2cmdline(cmd+['--list',program['index']])
+            try:
+                self.proc=subprocess.Popen(cmddel, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                exit_code=self.proc.wait()
+                self.proc=subprocess.Popen(cmdchk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                exit_code=self.proc.wait()
+                stdout,stderr=self.proc.communicate()
+                if stdout.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
+            except Exception,err:
+                self._Log(err)
+            else:
+                self._Log('Deleted %s.'%program['title'])
+                evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
+                try:wx.PostEvent(self.parent, evt)
+                except:pass
+
+        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+    def _Log(self,message):
+        evt = Log(wizEVT_LOG, -1,message)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass #we're probably exiting
+        
 class ThreadedDownloader( threading.Thread ):
     def __init__(self, parent, device, ip, port, programs, evtPlay, evtStop):
         threading.Thread.__init__( self )
@@ -515,9 +625,8 @@ if not p in path.split(os.pathsep):path=p+os.pathsep+path
 os.environ['PATH']=path
 getwizpnp=['getWizPnP.exe','getWizPnP','getwizpnp','getWizPnP.pl']
 for f in getwizpnp:
-    if which(f):
-        wizexe=f
-        break
+    wizexe=which(f)
+    if wizexe:break
 
 iswin=sys.platform[0:3] == "win"
 if iswin:
