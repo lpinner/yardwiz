@@ -206,7 +206,6 @@ class GUI( gui.GUI ):
         #configs - format = [oldsection, oldoption] or [oldsection, oldoption, newsection, newoption]
         configs=[('Settings', 'server'),
                  ('Settings', 'port'),
-                 ('Settings', 'quicklisting'),
                  ('Settings','xsize','Window', 'xsize'),
                  ('Settings','ysize','Window','ysize'),
                  ('Settings','xmin','Window','xmin'),
@@ -279,7 +278,7 @@ class GUI( gui.GUI ):
         self._Log('Connecting to %s...'%self.config.get('Settings','device'))
 
         #Connect to the Wiz etc...
-        self.ThreadedConnector=ThreadedConnector(self,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted)
+        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted)
 
     def _Connected(self,event=None):
         self.lblProgressText.SetLabelText('')
@@ -586,11 +585,13 @@ class GUI( gui.GUI ):
             self.programs[program['index']].update(program)
         else:
             self.programs[program['index']]=program
-        self.lstPrograms.SetStringItem(idx,0,program['title'])
-        self.lstPrograms.SetStringItem(idx,1,program['channel'])
-        self.lstPrograms.SetStringItem(idx,2,time.strftime(self.display_dateformat,program['date']))
-        self.lstPrograms.SetStringItem(idx,3,"%0.1f" % program['size'])
-        self.lstPrograms.SetStringItem(idx,4,program['length'])
+        try:
+            self.lstPrograms.SetStringItem(idx,0,program['title'])
+            self.lstPrograms.SetStringItem(idx,1,program['channel'])
+            self.lstPrograms.SetStringItem(idx,2,time.strftime(self.display_dateformat,program['date']))
+            self.lstPrograms.SetStringItem(idx,3,"%0.1f" % program['size'])
+            self.lstPrograms.SetStringItem(idx,4,program['length'])
+        except:return #we're probably exiting
         self._Log('Updated episode info for %s.'%program['title'])
         for j in range(self.lstPrograms.GetColumnCount()):
             self.lstPrograms.SetColumnWidth(j, autosize)

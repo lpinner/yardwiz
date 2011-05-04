@@ -1,4 +1,4 @@
-import os,sys,threading,thread,time,signal,ctypes,copy
+import os,sys,threading,time,signal,ctypes,copy
 import locale,subprocess,re
 import wx
 from ordereddict import OrderedDict as odict
@@ -7,50 +7,8 @@ from events import *
 #######################################################################
 #Helper classes
 #######################################################################
-class ThreadedDeleter( threading.Thread ):
-    def __init__( self, parent, device, ip, port, programs,indices):
-        threading.Thread.__init__( self )
-        self.parent=parent
-        self.device=device
-        self.ip=ip
-        self.port=port
-        self.programs=programs
-        self.indices=indices
-        self.start()
-    def run(self):
-        if self.device:
-            cmd=[wizexe,'--device','--all','--BWName']
-        else:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--BWName']
-
-        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        for idx,program in zip(self.indices,self.programs):
-            cmddel=subprocess.list2cmdline(cmd+['--delete',program['index']])
-            cmdchk=subprocess.list2cmdline(cmd+['--list',program['index']])
-            try:
-                self.proc=subprocess.Popen(cmddel, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                exit_code=self.proc.wait()
-                self.proc=subprocess.Popen(cmdchk, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                exit_code=self.proc.wait()
-                stdout,stderr=self.proc.communicate()
-                if stdout.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
-            except Exception,err:
-                self._Log(err)
-            else:
-                self._Log('Deleted %s.'%program['title'])
-                evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
-                try:wx.PostEvent(self.parent, evt)
-                except:pass
-
-        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-
-    def _Log(self,message):
-        evt = Log(wizEVT_LOG, -1,message)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
-        
 class ThreadedConnector( threading.Thread ):
-    def __init__( self, parent, device, ip, port, deleted=[], quick=False):
+    def __init__( self, parent, evtStop, device, ip, port, deleted=[], quick=False):
         threading.Thread.__init__( self )
         self.device=device
         self.ip=ip
@@ -58,6 +16,8 @@ class ThreadedConnector( threading.Thread ):
         self.parent=parent
         self.deleted=deleted
         self.quick=quick
+        self.thread=None
+        self._stop = evtStop
         self.start()
     def run(self):
         if self.quick:
@@ -84,6 +44,9 @@ class ThreadedConnector( threading.Thread ):
 
         programs=[]
         for line in iter(self.proc.stdout.readline, ""):
+            if self._stop.isSet():
+                try:kill(self.proc)
+                finally:return (0,'')
             line=line.strip()
             program=self._quickparseprogram(line)
             programs.append(program['index'])
@@ -97,6 +60,9 @@ class ThreadedConnector( threading.Thread ):
         proglines=[]
         exists=[]
         for line in iter(self.proc.stdout.readline, ""):
+            if self._stop.isSet():
+                try:kill(self.proc)
+                finally:return (0,'')
             line=line.strip()
             if line[0:13]!='Connecting to':
                 if not line:#Start of next program in list
@@ -114,7 +80,9 @@ class ThreadedConnector( threading.Thread ):
                 else:
                     proglines.append(line)
 
-        exit_code=self.proc.wait()
+        try:exit_code=self.proc.wait()
+        except:return (0,'')#We're probably exiting
+
         for idx,pidx in enumerate(programs):
             if pidx not in exists: #It's been deleted from the wiz which hasn't been reindexed
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1, programs,idx)
@@ -129,10 +97,14 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
         self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        thread.start_new_thread(self._getinfo,())
+        self.thread=threading.Thread(target=self._getinfo)
+        self.thread.start()
         proglines=[]
         index=-1
         for line in iter(self.proc.stdout.readline, ""):
+            if self._stop.isSet():
+                try:kill(self.proc)
+                finally:return (0,'')
             line=line.strip()
             if line[0:13]!='Connecting to':
                 if not line:#Start of next program in list
@@ -148,8 +120,10 @@ class ThreadedConnector( threading.Thread ):
                 else:
                     proglines.append(line)
 
-        exit_code=self.proc.wait()
-        return exit_code,self.proc.stderr.read()
+        try:
+            exit_code=self.proc.wait()
+            return exit_code,self.proc.stderr.read()
+        except:return (0,'')#we're probably exiting
 
     def _quickparseprogram(self,index):
         program=index.split()
@@ -212,10 +186,15 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['-vvv','--all','-l','--episode','--index','--sort=fatd'])
-        self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         proglines=[]
         index=-1
-        for line in iter(self.proc.stdout.readline, ""):
+        for line in iter(proc.stdout.readline, ""):
+            if self._stop.isSet():
+                try:
+                    kill(proc)
+                    del proc
+                finally:return
             line=line.strip()
             if line[0:13]!='Connecting to':
                 if not line:#Start of next program in list
@@ -232,12 +211,17 @@ class ThreadedConnector( threading.Thread ):
                 else:
                     proglines.append(line)
 
-        exit_code=self.proc.wait()
-        return exit_code,self.proc.stderr.read()
+        try:
+            exit_code=proc.wait()
+            return exit_code,proc.stderr.read()
+        except:pass #we're probably exiting
 
     def __del__(self):
+        if self.thread:
+            self._stop.set()
+
         try:
-            self.proc.kill()
+            kill(self.proc)
             del self.proc
         except:pass
 
@@ -374,7 +358,8 @@ class ThreadedDownloader( threading.Thread ):
                     start=time.time()
                     prevsize=size
 
-        exit_code=self.proc.poll()
+        try:exit_code=self.proc.poll()
+        except:return#We're probably exiting
         stdout,stderr=self.proc.communicate()
         if exit_code or not os.path.exists(f):
             self._log('Error, unable to download %s.'%program['filename'])
@@ -407,46 +392,11 @@ class ThreadedDownloader( threading.Thread ):
         except:pass #we're probably exiting
 
     def _stopdownload(self):
-        if iswin:
-            #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
-            CTRL_C_EVENT = 0
-            ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, self.proc.pid)
-            if self.proc.poll() is None: #Nup, get nastier...
-                #There doesn't seem to be any way to kill getwizpnp from within python
-                #when it is kicked off by pythonw.exe (even tried ctypes.windll.kernel32.TerminateProcess)
-                #other than taskkill/pskill (or manually with task manager -> kill process tree)
-                #Killing with sigint works fine when process is started by python.exe... I'm stumped!
-                #
-                #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
-                #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
-                try:
-                    cmd = ['pskill','/accepteula', '-t',str(self.proc.pid)]
-                    proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                    exit_code=proc.wait()
-                except WindowsError,err:
-                    try:
-                        cmd = ['taskkill','/F','/t','/PID',str(self.proc.pid)]
-                        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                        exit_code=proc.wait()
-                    except WindowsError,err:
-                        if err.winerror==2:
-                            msg= '%s\nYour version of Windows does not include the "taskkill" command, '
-                            msg+='you will need to end all GetWizPnP.exe processess manually using '
-                            msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
-                            msg+='If you wish to make use of the stop and pause functionality, download '
-                            msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
-                            msg+='and copy PsKill.exe to the %s directory\n%s'
-                            self._log(msg%('#'*10,APPNAME,'#'*10))
-                        else:
-                            self._log(str(err))
-
-        else:
-            self.proc.send_signal(signal.SIGINT)
-        time.sleep(1)
-
+        try:kill(self.proc)
+        except Exception,err:self._log(str(err))
     def __del__(self):
         try:
-            self.proc.kill()
+            kill(self.proc)
             del self.proc
         except:pass
 
@@ -581,7 +531,42 @@ def errordialog(message, caption):
     dlg.Destroy()
 def frozen():
     return hasattr(sys, "frozen")
-
+def kill(proc):
+        if iswin:
+            #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
+            CTRL_C_EVENT = 0
+            ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, proc.pid)
+            if proc.poll() is None: #Nup, get nastier...
+                #There doesn't seem to be any way to kill getwizpnp from within python
+                #when it is kicked off by pythonw.exe (even tried ctypes.windll.kernel32.TerminateProcess)
+                #other than taskkill/pskill (or manually with task manager -> kill process tree)
+                #Killing with sigint works fine when process is started by python.exe... I'm stumped!
+                #
+                #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
+                #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
+                try:
+                    cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
+                    killproc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                    exit_code=killproc.wait()
+                except WindowsError,err:
+                    try:
+                        cmd = ['taskkill','/F','/t','/PID',str(self.proc.pid)]
+                        killproc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                        exit_code=killproc.wait()
+                    except WindowsError,err:
+                        if err.winerror==2:
+                            msg= '%s\nYour version of Windows does not include the "taskkill" command, '
+                            msg+='you will need to end all GetWizPnP.exe processess manually using '
+                            msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
+                            msg+='If you wish to make use of the stop and pause functionality, download '
+                            msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
+                            msg+='and copy PsKill.exe to the %s directory\n%s'
+                            raise WindowsError,msg%('#'*10,APPNAME,'#'*10)
+                        else:
+                            raise
+        else:
+            proc.send_signal(signal.SIGINT)
+        time.sleep(1)
 def version():
     try:
         import __version__
@@ -618,17 +603,20 @@ def centrepos(self,parent):
     return sxmin,symin
 
 #Workarounds for crossplatform issues
+iswin=sys.platform[0:3] == "win"
+
 path = os.environ.get("PATH", os.defpath)
 if not '.' in path.split(os.pathsep):path='.'+os.pathsep+path
 p=os.path.abspath(os.path.dirname(sys.argv[0]))
 if not p in path.split(os.pathsep):path=p+os.pathsep+path
 os.environ['PATH']=path
 getwizpnp=['getWizPnP.exe','getWizPnP','getwizpnp','getWizPnP.pl']
+if not iswin:del getwizpnp[0]
 for f in getwizpnp:
-    wizexe=which(f)
-    if wizexe:break
+    if which(f):
+        wizexe=f
+        break
 
-iswin=sys.platform[0:3] == "win"
 if iswin:
     CTRL_C_EVENT = 0
     CREATE_NEW_PROCESS_GROUP=0x00000200 #getwizpnp kicks off child processes which the subprocess module doesn't kill unless a new process group is created.
