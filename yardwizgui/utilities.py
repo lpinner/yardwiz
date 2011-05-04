@@ -18,21 +18,13 @@ class ThreadedConnector( threading.Thread ):
         self.quick=quick
         self.thread=None
         self._stop = evtStop
+        self._stop.clear()
         self.start()
     def run(self):
         if self.quick:
             exit_code,err=self._quicklistprograms()
         else:
             exit_code,err=self._listprograms()
-
-        if exit_code > 0:
-            evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%err)
-            try:wx.PostEvent(self.parent, evt)
-            except:pass #we're probably exiting
-        else:
-            evt = Connected(wizEVT_CONNECTED, -1,'Finished listing programs on the WizPnP server')
-            try:wx.PostEvent(self.parent, evt)
-            except:pass
 
     def _quicklistprograms(self):
         if self.device:
@@ -88,7 +80,17 @@ class ThreadedConnector( threading.Thread ):
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1, programs,idx)
                 try:wx.PostEvent(self.parent, evt)
                 except:pass #we're probably exiting
-        return exit_code,self.proc.stderr.read()
+
+        err=self.proc.stderr.read()
+        if exit_code > 0:
+            evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%err)
+            try:wx.PostEvent(self.parent, evt)
+            except:pass #we're probably exiting
+        else:
+            evt = Connected(wizEVT_CONNECTED, -1,'Finished listing programs on the WizPnP server')
+            try:wx.PostEvent(self.parent, evt)
+            except:pass
+        return exit_code,err
 
     def _listprograms(self):
         if self.device:
@@ -119,7 +121,6 @@ class ThreadedConnector( threading.Thread ):
                             except:pass #we're probably exiting
                 else:
                     proglines.append(line)
-
         try:
             exit_code=self.proc.wait()
             return exit_code,self.proc.stderr.read()
@@ -180,7 +181,7 @@ class ThreadedConnector( threading.Thread ):
         return program
 
     def _getinfo(self):
-        time.sleep(1)
+        time.sleep(0.25)
         if self.device:
             cmd=[wizexe,'--device',self.device]
         else:
@@ -213,13 +214,19 @@ class ThreadedConnector( threading.Thread ):
 
         try:
             exit_code=proc.wait()
-            return exit_code,proc.stderr.read()
+            err=self.proc.stderr.read()
+            if exit_code > 0:
+                evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%err)
+                try:wx.PostEvent(self.parent, evt)
+                except:pass #we're probably exiting
+            else:
+                evt = Connected(wizEVT_CONNECTED, -1,'Finished listing programs on the WizPnP server')
+                try:wx.PostEvent(self.parent, evt)
+                except:pass
+            return exit_code,err
         except:pass #we're probably exiting
 
     def __del__(self):
-        if self.thread:
-            self._stop.set()
-
         try:
             kill(self.proc)
             del self.proc
@@ -532,41 +539,41 @@ def errordialog(message, caption):
 def frozen():
     return hasattr(sys, "frozen")
 def kill(proc):
-        if iswin:
-            #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
-            CTRL_C_EVENT = 0
-            ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, proc.pid)
-            if proc.poll() is None: #Nup, get nastier...
-                #There doesn't seem to be any way to kill getwizpnp from within python
-                #when it is kicked off by pythonw.exe (even tried ctypes.windll.kernel32.TerminateProcess)
-                #other than taskkill/pskill (or manually with task manager -> kill process tree)
-                #Killing with sigint works fine when process is started by python.exe... I'm stumped!
-                #
-                #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
-                #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
+    if iswin:
+        #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
+        CTRL_C_EVENT = 0
+        ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, proc.pid)
+        if proc.poll() is None: #Nup, get nastier...
+            #There doesn't seem to be any way to kill getwizpnp from within python
+            #when it is kicked off by pythonw.exe (even tried ctypes.windll.kernel32.TerminateProcess)
+            #other than taskkill/pskill (or manually with task manager -> kill process tree)
+            #Killing with sigint works fine when process is started by python.exe... I'm stumped!
+            #
+            #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
+            #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
+            try:
+                cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
+                killproc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                exit_code=killproc.wait()
+            except WindowsError,err:
                 try:
-                    cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
+                    cmd = ['taskkill','/F','/t','/PID',str(proc.pid)]
                     killproc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
                     exit_code=killproc.wait()
                 except WindowsError,err:
-                    try:
-                        cmd = ['taskkill','/F','/t','/PID',str(self.proc.pid)]
-                        killproc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                        exit_code=killproc.wait()
-                    except WindowsError,err:
-                        if err.winerror==2:
-                            msg= '%s\nYour version of Windows does not include the "taskkill" command, '
-                            msg+='you will need to end all GetWizPnP.exe processess manually using '
-                            msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
-                            msg+='If you wish to make use of the stop and pause functionality, download '
-                            msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
-                            msg+='and copy PsKill.exe to the %s directory\n%s'
-                            raise WindowsError,msg%('#'*10,APPNAME,'#'*10)
-                        else:
-                            raise
-        else:
-            proc.send_signal(signal.SIGINT)
-        time.sleep(1)
+                    if err.winerror==2:
+                        msg= '%s\nYour version of Windows does not include the "taskkill" command, '
+                        msg+='you will need to end all GetWizPnP.exe processess manually using '
+                        msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
+                        msg+='If you wish to make use of the stop and pause functionality, download '
+                        msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
+                        msg+='and copy PsKill.exe to the %s directory\n%s'
+                        raise WindowsError,msg%('#'*10,APPNAME,'#'*10)
+                    else:
+                        raise
+    else:
+        proc.send_signal(signal.SIGINT)
+    time.sleep(1)
 def version():
     try:
         import __version__

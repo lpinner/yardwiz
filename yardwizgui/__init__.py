@@ -68,6 +68,7 @@ class GUI( gui.GUI ):
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
 
         self._downloading=False
+        self._connecting=False
         self.total=0
         self.deleted=[]
 
@@ -249,7 +250,10 @@ class GUI( gui.GUI ):
         self.btnDownload.Enable( False )
 
     def _Connect(self):
+        if self._connecting:return
+        self._connecting=True
         self._Reset()
+        self.Stop.clear()
         self.lstPrograms.SetSortEnabled(False)
         self.btnConnect.Enable( False )
         self.mitDelete.Enable( False )
@@ -281,6 +285,7 @@ class GUI( gui.GUI ):
         self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted)
 
     def _Connected(self,event=None):
+        self._connecting=False
         self.lblProgressText.SetLabelText('')
         self.gaugeProgressBar.Hide()
 
@@ -410,6 +415,7 @@ class GUI( gui.GUI ):
         if size==0:
             self.btnClearQueue.Enable( False )
             self.btnDownload.Enable( False )
+            #Wait for the program info to update
             self.connecttimer = wx.PyTimer(self._DownloadQueue)
             self.connecttimer.Start(250,wx.TIMER_ONE_SHOT)
             return
