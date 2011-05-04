@@ -148,7 +148,7 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     os.unlink('YARDWiz.py')
     shutil.rmtree('build')
     print 'Creating disk image'
-    cmd='hdiutil create -size 70m -imagekey zlib-level=9 -srcfolder dist/YARDWiz.app dist/YARDWiz-%s.dmg'%short_version
+    cmd='hdiutil create -size 70m -imagekey zlib-level=9 -srcfolder dist/YARDWiz.app dist/YARDWiz-%s-OSX-10.6.dmg'%short_version
     proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout,stderr=proc.communicate()
     exit_code=proc.wait()
