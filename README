@@ -7,7 +7,8 @@ I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
 
 ==Screenshots==
 ||*_Linux_*||*_Windows_*||*_OSX_*||
-||[http://yardwiz.googlecode.com/svn/images/screenshot-ubuntu.png http://yardwiz.googlecode.com/svn/images/thumbnail-ubuntu.png]||[http://yardwiz.googlecode.com/svn/images/screenshot-win7.png http://yardwiz.googlecode.com/svn/images/thumbnail-win7.png]||[http://yardwiz.googlecode.com/svn/images/screenshot-osx.png http://yardwiz.googlecode.com/svn/images/thumbnail-osx.png]||
+
+||[http://code.google.com/p/yardwiz/wiki/ScreenshotLinux http://yardwiz.googlecode.com/svn/images/thumbnail-ubuntu.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotWin7 http://yardwiz.googlecode.com/svn/images/thumbnail-win7.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotOSX http://yardwiz.googlecode.com/svn/images/thumbnail-osx.png]||
 
 ==Requirements==
 YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10.04 and 10.10 and Mac OSX 10.6.2 with python 2.6, wxPython 2.8 and getWizPnP 0.4.3a. It should work on Windows Vista and other linux flavours.
