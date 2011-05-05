@@ -3,10 +3,10 @@
 
 ==0.2.9==
 ===_New in 0.2.9_===
-  * A standalone YARDWiz.app which includes a compiled version of getWizPnP 0.4.3a is available
+  * A standalone YARDWiz.app which includes a compiled version of getWizPnP 0.4.3a is available for OSX
   
 ===_Changes in 0.2.9_===
-  * Quick listing of recordings is now the default (and) only option
+  * Better behaviour of threads when closing the application
   * Minor tweaks for OSX
 
 ==0.2.8==
