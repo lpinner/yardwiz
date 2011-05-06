@@ -7,7 +7,6 @@ I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
 
 ==Screenshots==
 ||*_Linux_*||*_Windows_*||*_OSX_*||
-
 ||[http://code.google.com/p/yardwiz/wiki/ScreenshotLinux http://yardwiz.googlecode.com/svn/images/thumbnail-ubuntu.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotWin7 http://yardwiz.googlecode.com/svn/images/thumbnail-win7.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotOSX http://yardwiz.googlecode.com/svn/images/thumbnail-osx.png]||
 
 ==Requirements==
@@ -36,14 +35,20 @@ Run the windows installer, this is self contained and doesn't require the prior 
 Mount the disk image (.dmg) and drag the YARDWiz app to your applications folder.
 
 ===_From source_===
-Currently no other OS specific installers have been created, just a simple python setup.py script. 
-To install, unzip the source archive, then:
+Currently no other OS specific installers have been created, just a simple python setup.py script. To install, unzip the source archive, then:
   * Windows - run `install.bat` (you _may_ need to run it as Administrator).
   * Linux & OSX - `sudo python setup.py install`
 
-For easy access to the application, setup.py creates shortcuts in the Windows Start Menu/Linux Gnome Menu:
-Or on Linux, you can just type 'yardwiz' in a terminal.
+For easy access to the application, setup.py creates shortcuts in the Windows Start Menu/Linux Gnome Menu. Or on Linux and OSX, you can just type 'yardwiz' in a terminal.
 
+==Uninstalling==
+===Uninstalling on Windows===
+Run the windows uninstaller.
+
+===Uninstalling on OSX===
+Delete the YARDWiz app from your applications folder.
+
+===When installed from source===
 To uninstall (assuming you still have a copy of the source :):
   * Windows - run `uninstall.bat` (you _may_ need to run it as Administrator).
   * Linux & OSX - `sudo python setup.py uninstall`
@@ -53,4 +58,3 @@ To uninstall (assuming you still have a copy of the source :):
  * On Windows when running from pythonw.exe, the getwizpnp.exe subprocess has proven troublesome to kill (i.e if you want to pause or stop a download). I've had to fallback to using the taskkill.exe program that is included in most recent versions of Windows (XP and later). Taskkill.exe is _not_ included in Windows XP Home edition and I don't know if it is included in Windows Vista/7 basic/home/starter editions. If this is an issue, an alternative is to download PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 and extract PsKill.exe to somewhere on your PATH. YARDWiz will then attempt to use pskill instead.
  * wx.Sound does not seem to work on Ubuntu 10.10 (that may be my virtual environment though...)
  * The app really should use a lawnmower icon...
-
