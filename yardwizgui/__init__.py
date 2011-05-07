@@ -20,7 +20,7 @@
 
 '''Subclass of gui.GUI'''
 import os,sys,threading,time,ConfigParser
-import locale,re,webbrowser
+import re,webbrowser
 import ordereddict
 import wx
 import gui, configspec
@@ -29,8 +29,6 @@ from events import *
 from utilities import *
 
 APPNAME='YARDWiz'
-locale.setlocale(locale.LC_ALL,'')
-decsep=locale.localeconv()['mon_decimal_point']
 
 class GUI( gui.GUI ):
 
@@ -118,27 +116,38 @@ class GUI( gui.GUI ):
     #######################################################################
     #Methods
     #######################################################################
-    def _AddProgram(self,evt=None,program=None):
+    def _AddProgram(self,event=None,program=None):
 
-        if evt:
-            program=evt.program #This will fail when the program is added manually, not via the AddProgram event
+        if event:
+            program=event.program #This will fail when the program is added manually, not via the AddProgram event
+
+        if type(program['date']) is str:
             program['date']=time.strptime(program['date'],self.getwizpnp_dateformat) #Already converted if added manually
 
         display_date=time.strftime(self.display_dateformat,program['date'])
-        program['length']=program.get('length','').replace(':',decsep)
+        program['length']=program.get('length','')
         program['size']=program.get('size',0)
         program['channel']=program.get('channel','')
 
-        iidx=len(self.programs)
         if program['index'] in self.programs:
             self.programs[program['index']].update(program)
         else:
             self.programs[program['index']]=program
 
-        self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
-        self.lstPrograms.SetItemData(iidx,iidx)
+        iidx=event.index
+        lidx=self.lstPrograms.FindItemData(-1,iidx)
+        if lidx>-1:
+            self.lstPrograms.SetStringItem(lidx,0,program['title'])
+            self.lstPrograms.SetStringItem(lidx,1,program['channel'])
+            self.lstPrograms.SetStringItem(lidx,2,time.strftime(self.display_dateformat,program['date']))
+            self.lstPrograms.SetStringItem(lidx,3,"%0.1f" % program['size'])
+            self.lstPrograms.SetStringItem(lidx,4,program['length'])
+        else:
+            lidx=self.lstPrograms.GetItemCount()
+            self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
+            self.lstPrograms.SetItemData(lidx,iidx)
+            self.total+=program['size']
 
-        self.total+=program['size']
         if self.total>0:self.StatusBar.SetFields(['','','Total recordings %sMB'%self.total])
 
         for j in range(self.lstPrograms.GetColumnCount()):
@@ -149,7 +158,7 @@ class GUI( gui.GUI ):
                 if h>c:self.lstPrograms.SetColumnWidth(j,h)
         self.lstPrograms.resizeLastColumn(self.mincolwidth)
 
-        if evt:self._Log('Added %s - %s'%(program['title'],display_date))
+        if event:self._Log('Added %s - %s'%(program['title'],display_date))
         self.mitDownload.Enable( True )
         self.mitQueue.Enable( True )
 

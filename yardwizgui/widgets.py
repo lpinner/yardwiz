@@ -22,6 +22,7 @@
 
 import wx,time,locale,ordereddict,sys, copy
 iswin=sys.platform[0:3] == "win"
+locale.setlocale(locale.LC_ALL,'')
 
 from wx.lib.mixins.listctrl import ColumnSorterMixin,ListCtrlAutoWidthMixin
 from wx.lib.scrolledpanel import ScrolledPanel
@@ -33,6 +34,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     dateformat='%x'     #Locale's appropriate date time format code.
     timeformat='%X'     #Locale's appropriate date time format code.
     datetimeformat='%c' #Locale's appropriate date time format code.
+    decsep=locale.localeconv()['mon_decimal_point']
 
     #So the user can set the secondary sort column (to break ties)
     SecondarySortColumn=-1
@@ -107,8 +109,8 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
         return val1,val2
 
     def NumValues(self, col, key1, key2):
-        val1 = float(self.itemDataMap[key1][col])
-        val2 = float(self.itemDataMap[key2][col])
+        val1 = float(self.itemDataMap[key1][col].replace(':',self.decsep))
+        val2 = float(self.itemDataMap[key2][col].replace(':',self.decsep))
         return val1,val2
 
     def NumSorter(self, key1, key2):

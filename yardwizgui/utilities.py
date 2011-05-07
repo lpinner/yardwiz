@@ -1,5 +1,5 @@
 import os,sys,threading,time,signal,ctypes,copy
-import locale,subprocess,re
+import subprocess,re
 import wx
 from ordereddict import OrderedDict as odict
 from events import *
@@ -35,14 +35,14 @@ class ThreadedConnector( threading.Thread ):
         self.proc=subprocess.Popen(subprocess.list2cmdline(cmd+['-q','--List']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
 
         programs=[]
-        for line in iter(self.proc.stdout.readline, ""):
+        for index,line in enumerate(iter(self.proc.stdout.readline, "")):
             if self._stop.isSet():
                 try:kill(self.proc)
                 finally:return (0,'')
             line=line.strip()
             program=self._quickparseprogram(line)
             programs.append(program['index'])
-            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
+            evt = AddProgram(wizEVT_ADDPROGRAM,-1,program,index)
             try:wx.PostEvent(self.parent, evt)
             except:pass #we're probably exiting
         del self.proc
@@ -99,8 +99,6 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
         self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        self.thread=threading.Thread(target=self._getinfo)
-        self.thread.start()
         proglines=[]
         index=-1
         for line in iter(self.proc.stdout.readline, ""):
@@ -108,7 +106,10 @@ class ThreadedConnector( threading.Thread ):
                 try:kill(self.proc)
                 finally:return (0,'')
             line=line.strip()
-            if line[0:13]!='Connecting to':
+            if line[0:13]=='Connecting to':
+                self.thread=threading.Thread(target=self._getinfo)
+                self.thread.start()
+            else:
                 if not line:#Start of next program in list
                     if proglines:
                         tmp=list(proglines)
@@ -116,7 +117,7 @@ class ThreadedConnector( threading.Thread ):
                         program=self._parseprogram(tmp)
                         if program['index'] not in self.deleted:
                             index+=1
-                            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program)
+                            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program, index)
                             try:wx.PostEvent(self.parent, evt)
                             except:pass #we're probably exiting
                 else:
@@ -244,7 +245,7 @@ class ThreadedDeleter( threading.Thread ):
         self.start()
     def run(self):
         if self.device:
-            cmd=[wizexe,'--device','--all','--BWName']
+            cmd=[wizexe,'--device',self.device,'--all','--BWName']
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--BWName']
 
@@ -252,6 +253,8 @@ class ThreadedDeleter( threading.Thread ):
         for idx,program in zip(self.indices,self.programs):
             cmddel=subprocess.list2cmdline(cmd+['--delete',program['index']])
             cmdchk=subprocess.list2cmdline(cmd+['--list',program['index']])
+            #print cmddel
+            #print cmdchk
             try:
                 self.proc=subprocess.Popen(cmddel, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
                 exit_code=self.proc.wait()
@@ -259,8 +262,9 @@ class ThreadedDeleter( threading.Thread ):
                 exit_code=self.proc.wait()
                 stdout,stderr=self.proc.communicate()
                 if stdout.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
+                pass
             except Exception,err:
-                self._Log(err)
+                self._Log(str(err))
             else:
                 self._Log('Deleted %s.'%program['title'])
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
@@ -618,6 +622,7 @@ p=os.path.abspath(os.path.dirname(sys.argv[0]))
 if not p in path.split(os.pathsep):path=p+os.pathsep+path
 os.environ['PATH']=path
 getwizpnp=['getWizPnP.exe','getWizPnP','getwizpnp','getWizPnP.pl']
+wizexe=''
 if not iswin:del getwizpnp[0]
 for f in getwizpnp:
     if which(f):
