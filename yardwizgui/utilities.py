@@ -42,11 +42,11 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','--sort=fatd'])
-        logger.debug(subprocess.list2cmdline(cmd+['-q','--List']))
         self.proc=subproc(cmd+['-q','--List'])
         programs=[]
         for index,line in enumerate(iter(self.proc.stdout.readline, "")):
             if self._stop.isSet():
+                logger.debug('_stop.isSet')
                 try:kill(self.proc)
                 finally:return (0,'')
             line=line.strip()
@@ -69,7 +69,6 @@ class ThreadedConnector( threading.Thread ):
         del self.proc
 
         cmd.extend(['-vv','--episode','--index'])
-        logger.debug(subprocess.list2cmdline(cmd))
         self.proc=subproc(cmd)
         proglines=[]
         exists=[]
@@ -120,13 +119,12 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
-        logger.debug(subprocess.list2cmdline(cmd))
         self.proc=subproc(cmd)
         proglines=[]
         index=-1
         for line in iter(self.proc.stdout.readline, ""):
             if self._stop.isSet():
-                logger.debug('_stop')
+                logger.debug('_stop.isSet')
                 try:kill(self.proc)
                 finally:return (0,'')
             line=line.strip()
@@ -220,13 +218,12 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['-vvv','--all','-l','--episode','--index','--sort=fatd'])
-        logger.debug(subprocess.list2cmdline(cmd))
         proc=subproc(cmd)
         proglines=[]
         index=-1
         for line in iter(proc.stdout.readline, ""):
             if self._stop.isSet():
-                logger.debug('_stop')
+                logger.debug('_stop.isSet')
                 try:
                     kill(proc)
                     del proc
@@ -281,8 +278,6 @@ class ThreadedDeleter( threading.Thread ):
         for idx,program in zip(self.indices,self.programs):
             cmddel=cmd+['--delete',program['index']]
             cmdchk=cmd+['--list',program['index']]
-            logger.debug(subprocess.list2cmdline(cmddel))
-            logger.debug(subprocess.list2cmdline(cmdchk))
             try:
                 self.proc=subproc(cmddel)
                 exit_code=self.proc.wait()
@@ -346,7 +341,6 @@ class ThreadedDownloader( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
 
-        logger.debug(subprocess.list2cmdline(cmd))
         try:
             self.proc=subproc(cmd)
         except Exception,err:
@@ -436,7 +430,6 @@ class ThreadedDownloader( threading.Thread ):
     def _stopdownload(self):
         try:
             kill(self.proc)
-            logger.debug('Killed process %s, %s'%(self.proc.pid,self.proc.poll()))
         except Exception,err:self._log(str(err))
     def __del__(self):
         try:
@@ -600,6 +593,8 @@ def kill(proc):
     else:
         proc.send_signal(signal.SIGINT)
     time.sleep(0.5)
+    logger.debug('Killed process %s, %s'%(proc.pid,proc.poll()))
+
 def version():
     try:
         import __version__
@@ -637,6 +632,7 @@ def centrepos(self,parent):
 
 
 def subproc(cmd):
+    logger.debug(subprocess.list2cmdline(cmd))
     if 'pythonw.exe' in sys.executable:
         proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         proc.stdin.close()

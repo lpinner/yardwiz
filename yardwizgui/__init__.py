@@ -219,6 +219,8 @@ class GUI( gui.GUI ):
         debug=self.config.getboolean('Debug','debug')
         if debug:
             logger.setLevel(logging.DEBUG)
+            logger.debug(' '.join(APPNAME,version()[0],sys.executable, sys.platform))
+            logger.debug('\n'.join(['%s: %s'%(e,os.environ[e]) for e in os.environ]))
             sections = self.config.sections()
             config=['Config:']
             for section in sections:
