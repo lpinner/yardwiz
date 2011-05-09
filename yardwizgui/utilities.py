@@ -1,5 +1,5 @@
 import os,sys,threading,time,signal,ctypes,copy,logging,logging.handlers
-import subprocess,re
+import subprocess,re,ConfigParser
 import wx
 from ordereddict import OrderedDict as odict
 from events import *
