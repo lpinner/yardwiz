@@ -60,9 +60,6 @@ class GUI( gui.GUI ):
         self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
 
         self.version,self.display_version=version()
-
-        self._ReadConfig()
-        self._ApplyConfig()
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
 
         self._downloading=False
@@ -108,6 +105,9 @@ class GUI( gui.GUI ):
             errdial = wx.MessageDialog(None,errmsg,'Missing getWizPnP', wx.OK | wx.ICON_ERROR)
             errdial.ShowModal()
             sys.exit(1)
+
+        self._ReadConfig()
+        self._ApplyConfig()
 
         #Regular expressions for IP, IP:port, and hostname
         self._regexip=r'^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}$' #May not be a valid IP, but it's the right form...
@@ -220,7 +220,9 @@ class GUI( gui.GUI ):
         if debug:
             logger.setLevel(logging.DEBUG)
             logger.debug(' '.join([APPNAME,version()[0],sys.executable, sys.platform]))
-            logger.debug('\n'.join(['%s: %s'%(e,os.environ[e]) for e in os.environ]))
+            logger.debug(str(which(wizexe)))
+            #logger.debug('\n'.join(['%s: %s'%(e,os.environ[e]) for e in os.environ]))
+            logger.debug('\n'.join(['PATH']+os.environ.get("PATH", os.defpath).split(os.pathsep)))
             sections = self.config.sections()
             config=['Config:']
             for section in sections:

@@ -281,9 +281,9 @@ class ThreadedDeleter( threading.Thread ):
             try:
                 self.proc=subproc(cmddel)
                 exit_code=self.proc.wait()
+                stdout,stderr=self.proc.communicate()
                 self.proc=subproc(cmdchk)
                 exit_code=self.proc.wait()
-                stdout,stderr=self.proc.communicate()
                 if stdout.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
                 pass
             except Exception,err:
