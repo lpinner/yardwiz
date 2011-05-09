@@ -43,9 +43,7 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','--sort=fatd'])
         logger.debug(subprocess.list2cmdline(cmd+['-q','--List']))
-        #self.proc=subprocess.Popen(subprocess.list2cmdline(cmd+['-q','--List']), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        self.proc=subprocess.Popen(cmd+['-q','--List'], stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-
+        self.proc=subproc(cmd+['-q','--List'])
         programs=[]
         for index,line in enumerate(iter(self.proc.stdout.readline, "")):
             if self._stop.isSet():
@@ -72,8 +70,7 @@ class ThreadedConnector( threading.Thread ):
 
         cmd.extend(['-vv','--episode','--index'])
         logger.debug(subprocess.list2cmdline(cmd))
-        #self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subproc(cmd)
         proglines=[]
         exists=[]
         for line in iter(self.proc.stdout.readline, ""):
@@ -124,8 +121,7 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
         logger.debug(subprocess.list2cmdline(cmd))
-        #self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        self.proc=subproc(cmd)
         proglines=[]
         index=-1
         for line in iter(self.proc.stdout.readline, ""):
@@ -225,8 +221,7 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         cmd.extend(['-vvv','--all','-l','--episode','--index','--sort=fatd'])
         logger.debug(subprocess.list2cmdline(cmd))
-        #proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proc=subproc(cmd)
         proglines=[]
         index=-1
         for line in iter(proc.stdout.readline, ""):
@@ -289,11 +284,9 @@ class ThreadedDeleter( threading.Thread ):
             logger.debug(subprocess.list2cmdline(cmddel))
             logger.debug(subprocess.list2cmdline(cmdchk))
             try:
-                #self.proc=subprocess.Popen(subprocess.list2cmdline(cmddel), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                self.proc=subprocess.Popen(cmddel, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                self.proc=subproc(cmddel)
                 exit_code=self.proc.wait()
-                #self.proc=subprocess.Popen(subprocess.list2cmdline(cmdchk), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-                self.proc=subprocess.Popen(cmdchk, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                self.proc=subproc(cmdchk)
                 exit_code=self.proc.wait()
                 stdout,stderr=self.proc.communicate()
                 if stdout.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
@@ -355,8 +348,7 @@ class ThreadedDownloader( threading.Thread ):
 
         logger.debug(subprocess.list2cmdline(cmd))
         try:
-            #self.proc=subprocess.Popen(subprocess.list2cmdline(cmd), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-            self.proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+            self.proc=subproc(cmd)
         except Exception,err:
             self._log('Error, unable to download %s.'%program['filename'])
             self._log(str(err))
@@ -644,12 +636,12 @@ def kill(proc):
             #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
             try:
                 cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
-                killproc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                killproc=subproc(cmd)
                 exit_code=killproc.wait()
             except WindowsError,err:
                 try:
                     cmd = ['taskkill','/F','/t','/PID',str(proc.pid)]
-                    killproc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+                    killproc=subproc(cmd)
                     exit_code=killproc.wait()
                 except WindowsError,err:
                     if err.winerror==2:
@@ -701,13 +693,21 @@ def centrepos(self,parent):
     return sxmin,symin
 
 
+def subproc(cmd):
+    if 'pythonw.exe' in sys.executable:
+        proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proc.stdin.close()
+    else:
+        subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+    return proc
+    
 #######################################################################
 #Workarounds for py2exe/py2app
 #######################################################################
-if frozen():
+if frozen() or 'pythonw.exe' in sys.executable:
     sys.stderr = Stderr()
-else:
-    sys.stderr = Stderr()
+#else:
+#    sys.stderr = Stderr()
 
 #######################################################################
 #Setup logging
@@ -726,6 +726,7 @@ del tmp,formatter,handler
 #Workarounds for crossplatform issues
 #######################################################################
 iswin=sys.platform[0:3] == "win"
+
 path = os.environ.get("PATH", os.defpath)
 if not '.' in path.split(os.pathsep):path='.'+os.pathsep+path
 p=os.path.abspath(os.path.dirname(sys.argv[0]))

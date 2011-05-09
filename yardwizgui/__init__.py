@@ -388,8 +388,8 @@ class GUI( gui.GUI ):
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
-        cmd=subprocess.list2cmdline(cmd)
-        try:proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        try:
+            proc=subproc(cmd)
         except Exception,err:
             logger.error(str(err))
             self._Log('Error searching for Wizzes:')
