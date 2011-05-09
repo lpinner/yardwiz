@@ -188,7 +188,8 @@ class PropertyScrolledPanel(ScrolledPanel):
     def SetConfig(self, config, specs={}):
         #specs format is {section:{option:[optionvalue, optiontype, tooltip, [optionargs]]}
         self._config={}
-        self.config=copy.deepcopy(config)
+        #self.config=copy.deepcopy(config)
+        self.config=copy.copy(config)
         sections = config.sections()
         for section in sections:
             cp = wx.CollapsiblePane(self,
