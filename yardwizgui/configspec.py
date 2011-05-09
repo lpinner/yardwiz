@@ -23,5 +23,8 @@ configspec={
         'ysize':['Height', 'str'],
         'xmin':['Left', 'str'],
         'ymin':['Top', 'str'],
+     },
+    'Debug':{ 
+        'debug':['Enable debug messages',  'bool']
      }
 }

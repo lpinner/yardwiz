@@ -19,14 +19,14 @@
 # THE SOFTWARE.
 
 '''Subclass of gui.GUI'''
-import os,sys,threading,time,ConfigParser
+from utilities import *
+from events import *
+import os,sys,threading,time,ConfigParser,logging
 import re,webbrowser
 import ordereddict
 import wx
 import gui, configspec
 from ordereddict import OrderedDict as odict
-from events import *
-from utilities import *
 
 APPNAME='YARDWiz'
 
@@ -175,7 +175,6 @@ class GUI( gui.GUI ):
         xres,yres=wx.GetClientDisplayRect()[2:]
         if [xsize,ysize,xmin,ymin]==[-1,-1,-1,-1]:
             #Set default sizing
-            xres,yres=wx.GetClientDisplayRect()[2:]
             proportion=0.75
             aspectratio=1.25
             ysize=int(yres*proportion)
@@ -183,14 +182,15 @@ class GUI( gui.GUI ):
             self.SetSize( wx.Size( xsize,ysize ) )
             self.Centre( wx.BOTH )
         else:
-            self.SetSize( wx.Size( xsize,ysize ) )
             #make sure it's on the screen
             xmin=max([xmin,0])
             ymin=max([ymin,0])
             xmin=min([xmin,xres-xsize])
             ymin=min([ymin,yres-ysize])
+            xsize=min([xsize,xres])
+            ysize=min([ysize,yres])
+            self.SetSize( wx.Size( xsize,ysize ) )
             self.SetPosition(wx.Point(xmin,ymin))
-
 
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
@@ -214,6 +214,19 @@ class GUI( gui.GUI ):
         if not self.downloadcompletesound or self.downloadcompletesound.lower()=='<default>':
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
+
+        #debug
+        debug=self.config.getboolean('Debug','debug')
+        if debug:
+            logger.setLevel(logging.DEBUG)
+            sections = self.config.sections()
+            config=['Config:']
+            for section in sections:
+                config.append('  '+section)
+                options = self.config.options(section)
+                for option in options:
+                    config.append('    '+'='.join([option,self.config.get(section, option)]))
+            logger.debug('\n'.join(config))
 
     def _CleanupConfig(self):
         #Bit of cleanup from previous versions
@@ -292,6 +305,7 @@ class GUI( gui.GUI ):
             self.ip,self.port=self.device,'49152'
             self.device=None
 
+        logger.debug('Connecting to %s...'%self.config.get('Settings','device'))
         self._Log('Connecting to %s...'%self.config.get('Settings','device'))
 
         #Connect to the Wiz etc...
@@ -361,6 +375,8 @@ class GUI( gui.GUI ):
             self._ShowTab(self.idxLog)
             indices.reverse()
             programs.reverse()
+            logger.debug('_DeleteFromWiz, indices: %s'%str(indices))
+            logger.debug('_DeleteFromWiz, programs: %s'%str(programs))
             deletions=ThreadedDeleter(self,self.device,self.ip,self.port,programs,indices)
 
     def _DeleteProgram(self,event):
@@ -373,10 +389,17 @@ class GUI( gui.GUI ):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
         cmd=subprocess.list2cmdline(cmd)
-        proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        try:proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        except Exception,err:
+            logger.error(str(err))
+            self._Log('Error searching for Wizzes:')
+            self._Log(str(err))
         stdout,stderr=proc.communicate()
         exit_code=proc.wait()
         stdout=stdout.strip()
+        logger.debug('_Discover, exit_code: %s'%exit_code)
+        logger.debug('_Discover, stdout: %s'%stdout)
+        logger.debug('_Discover, stderr: %s'%stderr.strip())
         if stdout:
             self.cbxDevice.Clear()
             self.cbxDevice.SetValue('')
@@ -475,11 +498,12 @@ class GUI( gui.GUI ):
             program=self.programs[pidx]
             cmd=cmd.replace('%F', '"%s"'%program['filename'])
             cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
+            logger.debug('Postdownload command: %s'%cmd)
             try:
                 pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
             except Exception,err:
                 self._Log('Can\'t run post download command on %s'%program['filename'])
-                self._Log(err)
+                self._Log(str(err))
 
         if len(self.queue)==0 or stopped:
             self._downloading=False
@@ -513,8 +537,11 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar._Hide()
 
     def _Log(self,msg):
-        self.txtLog.WriteText(msg+'\n')
-        self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
+        msg=msg.strip()
+        if msg:
+          self.txtLog.WriteText(msg+'\n')
+          self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
+          logger.debug(msg)
 
     def _Pulse(self,*args,**kwargs):
         if not self._downloading:
@@ -893,8 +920,3 @@ class ConfirmDelete( gui.ConfirmDelete ):
             self.chkShowAgain.Fit()
             self.Fit()
 
-#######################################################################
-#Workarounds for py2exe
-#######################################################################
-if frozen():
-    sys.stderr = Stderr()
