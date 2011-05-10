@@ -222,7 +222,7 @@ class GUI( gui.GUI ):
             logger.debug(' '.join([APPNAME,version()[0],sys.executable, sys.platform]))
             logger.debug(str(which(wizexe)))
             #logger.debug('\n'.join(['%s: %s'%(e,os.environ[e]) for e in os.environ]))
-            logger.debug('\n'.join(['PATH']+os.environ.get("PATH", os.defpath).split(os.pathsep)))
+            logger.debug('\n\t'.join(['PATH']+os.environ.get("PATH", os.defpath).split(os.pathsep)))
             sections = self.config.sections()
             config=['Config:']
             for section in sections:
@@ -291,7 +291,7 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.Show()
         self.gaugeProgressBar.Pulse()
 
-        self.device=self.cbxDevice.GetValue().strip()
+        self.device=str(self.cbxDevice.GetValue()).strip()
         self.ip,self.port=None,None
         if not self.device:
             self._Discover()
@@ -410,7 +410,7 @@ class GUI( gui.GUI ):
             for wiz in stdout.split('\n'):
                 wiz=wiz.strip().split()
                 if wiz and len(wiz)>1:
-                    wizname=' '.join(wiz[1:])
+                    wizname=str(' '.join(wiz[1:]))
                     self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
                     self.cbxDevice.Append(wizname)
                     self.config.set('Settings','device',wizname)
@@ -436,8 +436,8 @@ class GUI( gui.GUI ):
                 filename=self._sanitize('%s %s'%(program['title'],filename_date))
                 dlg = wx.FileDialog(self, "Open", self.config.get('Settings','lastdir'), filename,"TS Files (*.ts)|*.ts|All Files|*.*", wx.FD_SAVE)
                 if (dlg.ShowModal() == wx.ID_OK):
-                    f=dlg.Filename
-                    d=dlg.Directory
+                    f=dlg.Filename#.encode(filesysenc)
+                    d=dlg.Directory#.encode(filesysenc)
                     if d[-1]==':':d+=os.path.sep
                     if not f[-3:].lower()=='.ts':f+='.ts'
                     self.config.set('Settings','lastdir',d)
@@ -678,6 +678,14 @@ class GUI( gui.GUI ):
     def _WriteConfig(self):
         #Write self.config back
         self._UpdateSize()
+        sections = self.config.sections()
+        for section in sections:
+            options = self.config.options(section)
+            for option in options:
+                val=self.config.get(section,option)
+                if isinstance(val, unicode):
+                    self.config.set(section,option,val.encode(filesysenc))
+
         if not os.path.exists(os.path.dirname(self.userconfig)):
             os.mkdir(os.path.dirname(self.userconfig))
         self.config.write(open(self.userconfig,'w'))

@@ -333,8 +333,9 @@ class ThreadedDownloader( threading.Thread ):
 
     def _download(self,program):
         self._log('Downloading %s...'%program['title'])
-        d=os.path.dirname(program['filename'])
-        f=os.path.splitext(os.path.basename(program['filename']))[0]
+        fd=program['filename'].encode(filesysenc)
+        d=os.path.dirname(fd)
+        f=os.path.splitext(os.path.basename(fd))[0]#strip extension
         if self.device:
             cmd=[wizexe,'--device',self.device]
         else:
@@ -633,6 +634,7 @@ def centrepos(self,parent):
 
 def subproc(cmd):
     logger.debug(subprocess.list2cmdline(cmd))
+    logger.debug(str(cmd))
     if 'pythonw.exe' in sys.executable:
         proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
         proc.stdin.close()
@@ -663,6 +665,8 @@ del tmp,formatter,handler
 #Workarounds for crossplatform issues
 #######################################################################
 iswin=sys.platform[0:3] == "win"
+
+filesysenc=sys.getfilesystemencoding()
 
 path = os.environ.get("PATH", os.defpath)
 if not '.' in path.split(os.pathsep):path='.'+os.pathsep+path
