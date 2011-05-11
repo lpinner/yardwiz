@@ -2,6 +2,12 @@
 from distutils.core import setup
 import os,sys,ConfigParser,shutil,zipfile,subprocess
 
+config=ConfigParser.ConfigParser()
+config.read('VERSION')
+version=config.get('Version','VERSION')                 #N.N.N.N format version number
+display_version=config.get('Version','DISPLAY_VERSION') #Version text string
+short_version=version[:-2]
+
 def getpaths():
     #fake a setup to get the paths
     lib,scripts,data,prefix=('','','','')
@@ -21,8 +27,19 @@ def getpaths():
     sys.argv=args[:]
     return lib,scripts,data,prefix
 
-def writelicenseversion():
+def writelicenseversion(version,display_version):
     #Create the license and version scripts
+    try:
+        import pysvn
+        client = pysvn.Client()
+        info=client.info('.')
+        rev=str(info.revision.number)
+        version=version.split('.')
+        version[-1]=rev
+        version='.'.join(version)
+    except:
+        raise#pass
+        
     license=open('LICENSE').read().strip()
     v=open('yardwizgui/__version__.py', 'w')
     l=open('yardwizgui/__license__.py', 'w')
@@ -59,11 +76,6 @@ def getprogrammenu(allusers=True):
     exit_code=GetFolderPath(0, intFolder, 0, 0, auPathBuffer)
     return auPathBuffer.value
 
-config=ConfigParser.ConfigParser()
-config.read('VERSION')
-version=config.get('Version','VERSION')                 #N.N.N.N format version number
-display_version=config.get('Version','DISPLAY_VERSION') #Version text string
-short_version=version[:-2]
 
 lib,scripts,data,prefix=getpaths()
 
@@ -191,12 +203,12 @@ elif 'uninstall' in sys.argv:
     sys.exit(0)
 
 elif 'sdist' in sys.argv in sys.argv:
-    writelicenseversion()
+    writelicenseversion(version,display_version)
 
 elif 'py2exe' in sys.argv:
     import py2exe,glob
 
-    writelicenseversion()
+    writelicenseversion(version,display_version)
 
     setupargs['windows'] = [{'script':'yardwiz',
                             'icon_resources':[(2, r'yardwizgui/icons/icon.ico')]

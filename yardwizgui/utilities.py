@@ -180,7 +180,7 @@ class ThreadedConnector( threading.Thread ):
         info=info.split('/')
         title=' '.join([info[0].strip(),flags])
 
-        program={'title':title.strip('*'),'channel':channel}
+        program={'title':title.strip('*').strip(),'channel':channel}
         if len(info) > 0:
             info=('/').join(info[1:]).strip()
             if info and len(info)<50:
@@ -286,7 +286,7 @@ class ThreadedDeleter( threading.Thread ):
                 self.proc=subproc(cmdchk)
                 exit_code=self.proc.wait()
                 stdout,stderr=self.proc.communicate()
-                if stdout.strip():raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
+                if stdout.strip():raise Exception,'Unable to delete %s'%(program['title'])
             except Exception,err:
                 self._Log(str(err))
             else:

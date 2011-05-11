@@ -2,3 +2,4 @@ include yardwiz yardwiz.desktop.in install.bat uninstall.bat README LICENSE RELE
 recursive-include yardwizgui/config *
 recursive-include yardwizgui/icons *
 recursive-include yardwizgui/sounds *
+global-exclude *.pyc
