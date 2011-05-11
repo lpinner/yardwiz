@@ -29,17 +29,18 @@ def getpaths():
 
 def writelicenseversion(version,display_version):
     #Create the license and version scripts
-    try:
-        import pysvn
-        client = pysvn.Client()
-        info=client.info('.')
-        rev=str(info.revision.number)
-        version=version.split('.')
-        version[-1]=rev
-        version='.'.join(version)
-    except:
-        raise#pass
-        
+    #Doesn't get latest rev. for the working copy, only the directory
+    #try:
+    #    import pysvn
+    #    client = pysvn.Client()
+    #    info=client.info('.')
+    #    rev=str(info.revision.number)
+    #    version=version.split('.')
+    #    version[-1]=rev
+    #    version='.'.join(version)
+    #except:
+    #    pass
+       
     license=open('LICENSE').read().strip()
     v=open('yardwizgui/__version__.py', 'w')
     l=open('yardwizgui/__license__.py', 'w')
@@ -202,7 +203,7 @@ elif 'uninstall' in sys.argv:
     except:pass
     sys.exit(0)
 
-elif 'sdist' in sys.argv in sys.argv:
+elif 'sdist' in sys.argv:
     writelicenseversion(version,display_version)
 
 elif 'py2exe' in sys.argv:

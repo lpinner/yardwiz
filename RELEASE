@@ -1,6 +1,20 @@
 #labels Featured
 =Release notes=
 
+==0.3.0==
+===_New in 0.3.0_===
+  * Added debug output as a preference
+
+===_Changes in 0.3.0_===
+  * Removed standalone OSX YARDWiz.app as the compiled getWizPnP only runs on OSX 10.6.2
+
+===_Fixed in 0.3.0_===
+  * Fixed bug on linux where getWizPnP wouldn't terminate i.e pausing or stopping a download.
+  * Fix to enable running on Python 2.7
+  * Fixed bug with non-ASCII filenames
+  * Fixed stdin bug when running under pythonw
+  * Fixed asynch issue when using default listing option
+
 ==0.2.9==
 ===_New in 0.2.9_===
   * A standalone YARDWiz.app which includes a compiled version of getWizPnP 0.4.3a is available for OSX

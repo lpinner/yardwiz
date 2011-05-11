@@ -385,9 +385,15 @@ class GUI( gui.GUI ):
 
     def _DeleteProgram(self,event):
         idx=self.lstPrograms.FindItemData(-1,event.index)
-        pidx=self.programs.keys()[event.index]
-        if pidx not in self.deleted:self.deleted.append(pidx)
-        self.lstPrograms.DeleteItem(idx)
+        if idx>-1:
+            pidx=self.programs.keys()[event.index]
+            if pidx not in self.deleted:self.deleted.append(pidx)
+            self.lstPrograms.DeleteItem(idx)
+
+        idx=self.lstQueue.FindItemData(-1,event.index)
+        if idx>-1:
+            del self.queue[self.queue.index(pidx)]
+            self.lstQueue.DeleteItem(idx)
 
     def _Discover(self):
         self._Log('Searching for Wizzes.')

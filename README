@@ -10,7 +10,7 @@ I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
 ||[http://code.google.com/p/yardwiz/wiki/ScreenshotLinux http://yardwiz.googlecode.com/svn/images/thumbnail-ubuntu.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotWin7 http://yardwiz.googlecode.com/svn/images/thumbnail-win7.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotOSX http://yardwiz.googlecode.com/svn/images/thumbnail-osx.png]||
 
 ==Requirements==
-YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10.04 and 10.10 and Mac OSX 10.6.2 with python 2.6, wxPython 2.8 and getWizPnP 0.4.3a. It should work on Windows Vista and other linux flavours.
+YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10.04 and 10.10 and Mac OSX 10.6.2 with python 2.6 & 2.7, wxPython 2.8 and getWizPnP 0.4.3a. It should work on Windows Vista and other linux flavours.
 
 ===_Windows_===
 A windows installer is now available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
@@ -31,8 +31,10 @@ Before running you will need to install the following software:
 ===_Windows_===
 Run the windows installer, this is self contained and doesn't require the prior installation of python, wxpython or getWizPnP.
 
+<wiki:comment>
 ===_OSX_===
 Mount the disk image (.dmg) and drag the YARDWiz app to your applications folder.
+</wiki:comment>
 
 ===_From source_===
 Currently no other OS specific installers have been created, just a simple python setup.py script. To install, unzip the source archive, then:
@@ -45,8 +47,10 @@ For easy access to the application, setup.py creates shortcuts in the Windows St
 ===Uninstalling on Windows===
 Run the windows uninstaller.
 
+<wiki:comment>
 ===Uninstalling on OSX===
 Delete the YARDWiz app from your applications folder.
+</wiki:comment>
 
 ===When installed from source===
 To uninstall (assuming you still have a copy of the source :):
