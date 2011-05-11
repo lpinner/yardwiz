@@ -15,8 +15,10 @@ YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10
 ===_Windows_===
 A windows installer is now available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
 
+<wiki:comment>
 ===_OSX_===
 An OSX application is now available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
+</wiki:comment>
 
 ===_From source_===
 Before running you will need to install the following software:
