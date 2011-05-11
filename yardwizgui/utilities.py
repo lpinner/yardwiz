@@ -282,10 +282,11 @@ class ThreadedDeleter( threading.Thread ):
                 self.proc=subproc(cmddel)
                 exit_code=self.proc.wait()
                 stdout,stderr=self.proc.communicate()
+                if stderr.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
                 self.proc=subproc(cmdchk)
                 exit_code=self.proc.wait()
-                if stdout.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
-                pass
+                stdout,stderr=self.proc.communicate()
+                if stdout.strip():raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
             except Exception,err:
                 self._Log(str(err))
             else:
