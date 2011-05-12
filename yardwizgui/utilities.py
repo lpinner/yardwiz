@@ -2,6 +2,7 @@ import os,sys,threading,time,signal,ctypes,copy,logging,logging.handlers
 import subprocess,re,ConfigParser
 import wx
 from ordereddict import OrderedDict as odict
+from collections import deque
 from events import *
 
 APPNAME='YARDWiz'
@@ -356,6 +357,7 @@ class ThreadedDownloader( threading.Thread ):
         start=time.time()
         if os.path.exists(f):prevsize=os.stat(f).st_size
         else:prevsize=0.0
+        speeds=deque([],maxlen=120)
         while self.proc.poll() is None:
             if self.Stop.isSet(): #Stop button pressed
                 self.Play.clear()
@@ -381,16 +383,23 @@ class ThreadedDownloader( threading.Thread ):
                 self._download(program)
                 return
             else: #We're still downloading, update the progress
-                time.sleep(1)
+                time.sleep(2)
                 if os.path.exists(f):#getwizpnp might not be going yet...
                     size=os.stat(f).st_size
                     now=time.time()
-                    speed="%0.2f" % ((size-prevsize)/(now-start)/MB)
+                    speed=((size-prevsize)/(now-start))
+                    n=float(len(speeds))
+                    try:
+                        avspeed=speed/n + sum(speeds)/n*(1-1/n)
+                        esttime=timefromsecs((s-size)/avspeed)
+                    except ZeroDivisionError:esttime='Unknown'
+                    speeds.append(speed)
                     progress={'percent':int(size/s*100),
                               'downloaded':round(size/MB, 1),
                               'size':round(program['size'], 1),
                               'total':round(self.total, 1),
-                              'speed':speed}
+                              'time':esttime,
+                              'speed':"%0.2f" % (speed/MB)}
                     self._updateprogress(progress,'Downloading %s...'%program['title'])
                     start=time.time()
                     prevsize=size
@@ -409,6 +418,7 @@ class ThreadedDownloader( threading.Thread ):
                       'downloaded':round(program['size']/MB*MiB, 1),
                       'size':round(program['size']/MB*MiB, 1),
                       'total':self.total,
+                      'time':'0',
                       'speed':speed}
             self._updateprogress(progress)
             self._log('Download of %s complete.'%program['filename'])
@@ -596,6 +606,14 @@ def kill(proc):
         proc.send_signal(signal.SIGINT)
     time.sleep(0.5)
     logger.debug('Killed process %s, %s'%(proc.pid,proc.poll()))
+
+def timefromsecs(secs):
+    m, s = divmod(secs, 60)
+    h, m = divmod(m, 60)
+    if h==0:
+        if m==0:return "%02d" % (s)
+        else:return "%02d:%02d" % (m, s)
+    else:return "%02d:%02d:%02d" % (h, m, s)
 
 def version():
     try:

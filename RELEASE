@@ -9,9 +9,8 @@
   * Removed standalone OSX YARDWiz.app as the compiled getWizPnP only runs on OSX 10.6.2
 
 ===_Bugs in 0.3.0_===
-  * Downloads can fail with getWizPnP error - "Search for WizPnP devices failed" when connecting via a device name even if recordings have been listed using device name.
-    * This has occurred one Win 7 Ultimate PC. Cause unknown. No issues on the same users Win XP PC.
-    * Workaround (thanks to netmask from the Beyonwiz forum): connect using IP or IP:Port syntax.
+  * Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed" when connecting via a device name, even after listing programs succeeded using that device name.  This has only occurred on one Win 7 Ultimate PC that I'm aware of and the issue does not occurr on the same users Win XP PC.  
+  * Workaround (thanks to netmask from the Beyonwiz forum): connect using IP or IP:Port syntax.
 
 ===_Fixed in 0.3.0_===
   * Fixed bug on linux where getWizPnP wouldn't terminate i.e pausing or stopping a download.

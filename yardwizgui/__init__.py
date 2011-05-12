@@ -61,6 +61,7 @@ class GUI( gui.GUI ):
 
         self.version,self.display_version=version()
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
+        self.StatusBar.SetFieldsCount(1)
 
         self._downloading=False
         self._connecting=False
@@ -148,7 +149,9 @@ class GUI( gui.GUI ):
             self.lstPrograms.SetItemData(lidx,iidx)
             self.total+=program['size']
 
-        if self.total>0:self.StatusBar.SetFields(['','','Total recordings %sMB'%self.total])
+        if self.total>0:
+            self.StatusBar.SetFieldsCount(1)
+            self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
 
         for j in range(self.lstPrograms.GetColumnCount()):
             self.lstPrograms.SetColumnWidth(j, autosize)
@@ -521,7 +524,8 @@ class GUI( gui.GUI ):
             #self.btnPause.Hide()
             #self.btnStop.Hide()
             self.gaugeProgressBar.Hide()
-            self.StatusBar.SetFields(['','',''])
+            self.StatusBar.SetFieldsCount(1)
+            self.StatusBar.SetFields([''])
             self.lblProgressText.SetLabelText('')
             self.btnPlay.Enable( False )
             self.btnPause.Enable( False )
@@ -638,9 +642,15 @@ class GUI( gui.GUI ):
         program=event.program
         if type(program['date']) is str:program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
         if program['index'] in self.programs:
+            if self.programs[program['index']]['size']==0:
+                self.total+=program['size']
             self.programs[program['index']].update(program)
         else:
             self.programs[program['index']]=program
+            self.total+=program['size']
+        if self.total>0:
+            self.StatusBar.SetFieldsCount(1)
+            self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
         try:
             self.lstPrograms.SetStringItem(idx,0,program['title'])
             self.lstPrograms.SetStringItem(idx,1,program['channel'])
@@ -663,13 +673,16 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.SetRange(100)
         if progress:
             self.gaugeProgressBar.SetValue(progress['percent'])
-            self.StatusBar.SetFields(['Speed %sMB/S'%progress['speed'],
+            self.StatusBar.SetFieldsCount(4)
+            self.StatusBar.SetFields(['Speed %sMB/S'%(progress['speed']),
+                                      'Time remaining %s'%(progress['time']),
                                       'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent']),
                                       'Queued %sMB'%progress['total']
                                       ])
         else:
             self.gaugeProgressBar.SetValue(0)
-            self.StatusBar.SetFields(['','',''])
+            self.StatusBar.SetFieldsCount(1)
+            self.StatusBar.SetFields([''])
 
     def _UpdateSize(self):
         try:
