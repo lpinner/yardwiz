@@ -37,6 +37,10 @@ class GUI( gui.GUI ):
     idxInfo=1
     idxQueue=2
 
+    #Regular expressions for IP, IP:port, and hostname
+    _regexip=r'^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}$' #May not be a valid IP, but it's the right form...
+    _regexipport=_regexip[:-1]+'(:(\d{1,5}))$'
+
     mincolwidth=60
 
     def __init__( self):
@@ -67,6 +71,7 @@ class GUI( gui.GUI ):
         self._connecting=False
         self.total=0
         self.deleted=[]
+        self.devices=odict()
 
         self.ThreadedConnector=None
         self.ThreadedDownloader=None
@@ -110,9 +115,6 @@ class GUI( gui.GUI ):
         self._ReadConfig()
         self._ApplyConfig()
 
-        #Regular expressions for IP, IP:port, and hostname
-        self._regexip=r'^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}$' #May not be a valid IP, but it's the right form...
-        self._regexipport=self._regexip[:-1]+'(:(\d{1,5}))$'
 
     #######################################################################
     #Methods
@@ -170,7 +172,14 @@ class GUI( gui.GUI ):
         #write stuff to various controls, eg server & port
         device=self.config.get('Settings','device')
         self.cbxDevice.Clear()
-        self.cbxDevice.SetValue(device)
+        if device:
+            dev=device.split()
+            ipport=re.match(self._regexipport,dev[0])
+            if ipport:
+                if len(dev)>1:
+                    device=' '.join(dev[1:])
+                    self.devices[device]=dev[0].split(':')
+            self.cbxDevice.SetValue(device)
         xsize=self.config.getint('Window','xsize')
         ysize=self.config.getint('Window','ysize')
         xmin=self.config.getint('Window','xmin')
@@ -294,23 +303,28 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.Show()
         self.gaugeProgressBar.Pulse()
 
-        self.device=str(self.cbxDevice.GetValue()).strip()
-        self.ip,self.port=None,None
-        if not self.device:
+        device=str(self.cbxDevice.GetValue()).strip()
+        if not device:
             self._Discover()
             self._Connected(False)
             if self.cbxDevice.GetCount()==1:self._Connect()
             return
+
+        if device in self.devices:
+            self.device=device
+            self.ip,self.port=self.devices[device]
+            self.config.set('Settings','device','%s:%s %s'%(self.ip,self.port,self.device))
+
         else:
-            self.config.set('Settings','device',self.device)
-            ipport=re.match(self._regexipport,self.device)
-            iponly=re.match(self._regexip,self.device)
-        if ipport:
-            self.ip,self.port=self.device.split(':')
-            self.device=None
-        elif iponly:
-            self.ip,self.port=self.device,'49152'
-            self.device=None
+            ipport=re.match(self._regexipport,device)
+            iponly=re.match(self._regexip,device)
+            if ipport:
+                self.ip,self.port=device.split(':')
+                self.device=None
+            elif iponly:
+                self.ip,self.port=device,'49152'
+                self.device=None
+            self.config.set('Settings','device',device)
 
         logger.debug('Connecting to %s...'%self.config.get('Settings','device'))
         self._Log('Connecting to %s...'%self.config.get('Settings','device'))
@@ -416,13 +430,21 @@ class GUI( gui.GUI ):
         if stdout:
             self.cbxDevice.Clear()
             self.cbxDevice.SetValue('')
+            firstwiz=''
             for wiz in stdout.split('\n'):
-                wiz=wiz.strip().split()
-                if wiz and len(wiz)>1:
+                wiz=wiz.strip()
+                if wiz:
+                    if not firstwiz:firstwiz=wiz
+                    wiz=wiz.split()
                     wizname=str(' '.join(wiz[1:]))
+                    self.devices[wizname]=wiz[0].split(':')#IP:Port
                     self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
                     self.cbxDevice.Append(wizname)
-                    self.config.set('Settings','device',wizname)
+
+            if self.cbxDevice.GetCount()>0:
+                self.cbxDevice.SetSelection(0)
+                self.config.set('Settings','device',firstwiz)
+
 
             if self.cbxDevice.GetCount()>0:self.cbxDevice.SetSelection(0)
         else:
@@ -753,7 +775,13 @@ class GUI( gui.GUI ):
             event.Skip()
 
     def cbxDevice_OnKillFocus( self, event ):
-        self.config.set('Settings','device',self.cbxDevice.GetValue())
+        device=str(self.cbxDevice.GetValue())
+        if device in self.devices:
+            ip,port=self.devices[device]
+            self.config.set('Settings','device','%s:%s %s'%(ip,port,device))
+        else:
+            self.config.set('Settings','device',device)
+        logger.debug(self.config.get('Settings','device'))
 
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()

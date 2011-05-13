@@ -38,10 +38,10 @@ class ThreadedConnector( threading.Thread ):
             except:pass
 
     def _quicklistprograms(self):
-        if self.device:
-            cmd=[wizexe,'--device',self.device]
-        else:
+        if self.ip:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        else:
+            cmd=[wizexe,'--device',self.device]
         cmd.extend(['--all','--sort=fatd'])
         self.proc=subproc(cmd+['-q','--List'])
         programs=[]
@@ -115,10 +115,10 @@ class ThreadedConnector( threading.Thread ):
 
     def _listprograms(self):
         self.thread=None
-        if self.device:
-            cmd=[wizexe,'--device',self.device]
-        else:
+        if self.ip:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        else:
+            cmd=[wizexe,'--device',self.device]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
         self.proc=subproc(cmd)
         proglines=[]
@@ -214,10 +214,10 @@ class ThreadedConnector( threading.Thread ):
 
     def _getinfo(self):
         time.sleep(0.25)
-        if self.device:
-            cmd=[wizexe,'--device',self.device]
-        else:
+        if self.ip:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        else:
+            cmd=[wizexe,'--device',self.device]
         cmd.extend(['-vvv','--all','-l','--episode','--index','--sort=fatd'])
         proc=subproc(cmd)
         proglines=[]
@@ -270,10 +270,10 @@ class ThreadedDeleter( threading.Thread ):
         self.indices=indices
         self.start()
     def run(self):
-        if self.device:
-            cmd=[wizexe,'--device',self.device,'--all','--BWName']
-        else:
+        if self.ip:
             cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--BWName']
+        else:
+            cmd=[wizexe,'--device',self.device,'--all','--BWName']
 
         self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         for idx,program in zip(self.indices,self.programs):
@@ -338,10 +338,10 @@ class ThreadedDownloader( threading.Thread ):
         fd=program['filename'].encode(filesysenc)
         d=os.path.dirname(fd)
         f=os.path.splitext(os.path.basename(fd))[0]#strip extension
-        if self.device:
-            cmd=[wizexe,'--device',self.device]
-        else:
+        if self.ip:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
+        else:
+            cmd=[wizexe,'--device',self.device]
         cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
 
         try:
