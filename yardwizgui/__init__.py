@@ -778,9 +778,9 @@ class GUI( gui.GUI ):
     def cbxDevice_OnKillFocus( self, event ):
         device=str(self.cbxDevice.GetValue())
         if device in self.devices:
-            ip,port=self.devices[device]
             devices=[]
             for device in self.devices:
+                ip,port=self.devices[device]
                 devices.append('%s:%s %s'%(ip,port,device))
             self.config.set('Settings','device',';'.join(devices))
         else:
