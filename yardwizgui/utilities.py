@@ -353,7 +353,7 @@ class ThreadedDownloader( threading.Thread ):
         f=program['filename']
         MB=1024.0**2
         MiB=1000.0**2
-        s=program['size']*MiB
+        s=program['size']*MB
         start=time.time()
         if os.path.exists(f):prevsize=os.stat(f).st_size
         else:prevsize=0.0
@@ -383,17 +383,20 @@ class ThreadedDownloader( threading.Thread ):
                 self._download(program)
                 return
             else: #We're still downloading, update the progress
-                time.sleep(2)
+                time.sleep(1)
                 if os.path.exists(f):#getwizpnp might not be going yet...
                     size=os.stat(f).st_size
                     now=time.time()
                     speed=((size-prevsize)/(now-start))
+                    if prevsize>0:speeds.append(speed) #Don't use the first speed
                     n=float(len(speeds))
-                    try:
-                        avspeed=speed/n + sum(speeds)/n*(1-1/n)
-                        esttime=timefromsecs((s-size)/avspeed)
-                    except ZeroDivisionError:esttime='Unknown'
-                    speeds.append(speed)
+                    if n<10:
+                        esttime='Calculating...'
+                    else:
+                        try:
+                            avspeed=sorted(speeds)[int(n/2+0.5)]##Pseudo median, smoother than mean
+                            esttime=timefromsecs((s-size)/avspeed)
+                        except ZeroDivisionError:esttime='Unknown'
                     progress={'percent':int(size/s*100),
                               'downloaded':round(size/MB, 1),
                               'size':round(program['size'], 1),

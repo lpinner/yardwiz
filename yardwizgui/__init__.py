@@ -149,7 +149,7 @@ class GUI( gui.GUI ):
             self.lstPrograms.SetItemData(lidx,iidx)
             self.total+=program['size']
 
-        if self.total>0:
+        if self.total>0 and not self._downloading:
             self.StatusBar.SetFieldsCount(1)
             self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
 
@@ -648,7 +648,7 @@ class GUI( gui.GUI ):
         else:
             self.programs[program['index']]=program
             self.total+=program['size']
-        if self.total>0:
+        if self.total>0 and not self._downloading:
             self.StatusBar.SetFieldsCount(1)
             self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
         try:
