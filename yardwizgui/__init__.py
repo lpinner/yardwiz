@@ -173,13 +173,19 @@ class GUI( gui.GUI ):
         device=self.config.get('Settings','device')
         self.cbxDevice.Clear()
         if device:
-            dev=device.split()
-            ipport=re.match(self._regexipport,dev[0])
-            if ipport:
-                if len(dev)>1:
-                    device=' '.join(dev[1:])
-                    self.devices[device]=dev[0].split(':')
-            self.cbxDevice.SetValue(device)
+            devs=device.split(';')
+            for dev in devs:
+                dev=dev.split()
+                ipport=re.match(self._regexipport,dev[0])
+                if ipport:
+                    if len(dev)>1:
+                        device=' '.join(dev[1:])
+                        self.devices[device]=dev[0].split(':')
+                self.cbxDevice.Append(device)
+
+        if self.cbxDevice.GetCount()>0:
+            self.cbxDevice.SetSelection(0)
+
         xsize=self.config.getint('Window','xsize')
         ysize=self.config.getint('Window','ysize')
         xmin=self.config.getint('Window','xmin')
@@ -313,8 +319,6 @@ class GUI( gui.GUI ):
         if device in self.devices:
             self.device=device
             self.ip,self.port=self.devices[device]
-            self.config.set('Settings','device','%s:%s %s'%(self.ip,self.port,self.device))
-
         else:
             ipport=re.match(self._regexipport,device)
             iponly=re.match(self._regexip,device)
@@ -324,10 +328,9 @@ class GUI( gui.GUI ):
             elif iponly:
                 self.ip,self.port=device,'49152'
                 self.device=None
-            self.config.set('Settings','device',device)
 
-        logger.debug('Connecting to %s...'%self.config.get('Settings','device'))
-        self._Log('Connecting to %s...'%self.config.get('Settings','device'))
+        logger.debug('Connecting to %s:%s %s'%(self.ip,self.port,self.device))
+        self._Log('Connecting to %s...'%device)
 
         #Connect to the Wiz etc...
         self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted, quick=self.quicklisting)
@@ -430,11 +433,11 @@ class GUI( gui.GUI ):
         if stdout:
             self.cbxDevice.Clear()
             self.cbxDevice.SetValue('')
-            firstwiz=''
+            wizzes=[]
             for wiz in stdout.split('\n'):
                 wiz=wiz.strip()
                 if wiz:
-                    if not firstwiz:firstwiz=wiz
+                    wizzes.append(wiz)
                     wiz=wiz.split()
                     wizname=str(' '.join(wiz[1:]))
                     self.devices[wizname]=wiz[0].split(':')#IP:Port
@@ -443,10 +446,8 @@ class GUI( gui.GUI ):
 
             if self.cbxDevice.GetCount()>0:
                 self.cbxDevice.SetSelection(0)
-                self.config.set('Settings','device',firstwiz)
+                self.config.set('Settings','device',';'.join(wizzes))
 
-
-            if self.cbxDevice.GetCount()>0:self.cbxDevice.SetSelection(0)
         else:
             self.cbxDevice.Clear()
             self.cbxDevice.SetValue('')
@@ -778,7 +779,10 @@ class GUI( gui.GUI ):
         device=str(self.cbxDevice.GetValue())
         if device in self.devices:
             ip,port=self.devices[device]
-            self.config.set('Settings','device','%s:%s %s'%(ip,port,device))
+            devices=[]
+            for device in self.devices:
+                devices.append('%s:%s %s'%(ip,port,device))
+            self.config.set('Settings','device',';'.join(devices))
         else:
             self.config.set('Settings','device',device)
         logger.debug(self.config.get('Settings','device'))
