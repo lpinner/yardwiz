@@ -342,11 +342,12 @@ class GUI( gui.GUI ):
 
         self._connecting=False
         self.Stop.clear()
-        self.lblProgressText.SetLabelText('')
-        self.gaugeProgressBar.Hide()
         self.btnConnect.Enable( True )
         self.mitDelete.Enable( True )
         self.lstPrograms.SetSortEnabled(True)
+        if not self._downloading:
+            self.lblProgressText.SetLabelText('')
+            self.gaugeProgressBar.Hide()
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):
@@ -487,9 +488,9 @@ class GUI( gui.GUI ):
         if not programs:return
 
         if size==0:
+            #Wait for the program info to update
             self.btnClearQueue.Enable( False )
             self.btnDownload.Enable( False )
-            #Wait for the program info to update
             self.connecttimer = wx.PyTimer(self._DownloadQueue)
             self.connecttimer.Start(250,wx.TIMER_ONE_SHOT)
             return
@@ -497,6 +498,8 @@ class GUI( gui.GUI ):
         self.btnPlay.Enable( False )
         self.btnPause.Enable( True )
         self.btnStop.Enable( True )
+        self.lblProgressText.SetLabelText('')
+        self.gaugeProgressBar.Hide()
         self.gaugeProgressBar.Show()
         #self.btnPlay.Show() #This produces 'unexpected results' on ubuntu 10.04 & 10.10
         #self.btnPause.Show()
@@ -698,7 +701,7 @@ class GUI( gui.GUI ):
             self.gaugeProgressBar.SetValue(progress['percent'])
             self.StatusBar.SetFieldsCount(4)
             self.StatusBar.SetFields(['Speed %sMB/S'%(progress['speed']),
-                                      'Time remaining %s'%(progress['time']),
+                                      progress['time'],
                                       'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent']),
                                       'Queued %sMB'%progress['total']
                                       ])

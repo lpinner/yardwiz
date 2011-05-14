@@ -405,15 +405,16 @@ class ThreadedDownloader( threading.Thread ):
                     size=os.stat(f).st_size
                     now=time.time()
                     speed=((size-prevsize)/(now-start))
-                    if prevsize>0:speeds.append(speed) #Don't use the first speed
+                    speeds.append(speed)
                     n=float(len(speeds))
                     if n<10:
-                        esttime='Calculating...'
+                        esttime='Calculating remaining time...'
                     else:
                         try:
-                            avspeed=sorted(speeds)[int(n/2+0.5)]##Pseudo median, smoother than mean
-                            esttime=timefromsecs((s-size)/avspeed)
-                        except ZeroDivisionError:esttime='Unknown'
+                            #avspeed=sorted(speeds)[int(n/2+0.5)] ##Pseudo median
+                            avspeed=sum(speeds)/n                 ##Mean
+                            esttime='Estimated time remaining: %s'%timefromsecs((s-size)/avspeed)
+                        except ZeroDivisionError:esttime='Unknown time remaining.'
                     progress={'percent':int(size/s*100),
                               'downloaded':round(size/MB, 1),
                               'size':round(program['size'], 1),
@@ -519,6 +520,108 @@ class Stderr(object):
 #######################################################################
 #Utility helper functions
 #######################################################################
+def data_path():
+    if frozen() and sys.frozen!='macosx_app':
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(__file__)
+
+def errordialog(message, caption):
+    dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
+    dlg.ShowModal()
+    dlg.Destroy()
+def frozen():
+    return hasattr(sys, "frozen")
+
+def centrepos(self,parent):
+    pxsize,pysize=parent.GetSizeTuple()
+    pxmin,pymin=parent.GetPositionTuple()
+    sxsize,sysize=self.GetSizeTuple()
+    pxcen=pxmin+pxsize/2.0
+    pycen=pymin+pysize/2.0
+    sxmin=pxcen-sxsize/2.0
+    symin=pycen-sysize/2.0
+    return sxmin,symin
+
+def kill(proc):
+    if iswin:
+        #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
+        CTRL_C_EVENT = 0
+        ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, proc.pid)
+        if proc.poll() is None: #Nup, get nastier...
+            #There doesn't seem to be any way to kill getwizpnp from within python
+            #when it is kicked off by pythonw.exe (even tried ctypes.windll.kernel32.TerminateProcess)
+            #other than taskkill/pskill (or manually with task manager -> kill process tree)
+            #Killing with sigint works fine when process is started by python.exe... I'm stumped!
+            #
+            #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
+            #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
+            try:
+                cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
+                killproc=subproc(cmd)
+                exit_code=killproc.wait()
+            except WindowsError,err:
+                try:
+                    cmd = ['taskkill','/F','/t','/PID',str(proc.pid)]
+                    killproc=subproc(cmd)
+                    exit_code=killproc.wait()
+                except WindowsError,err:
+                    if err.winerror==2:
+                        msg= '%s\nYour version of Windows does not include the "taskkill" command, '
+                        msg+='you will need to end all GetWizPnP.exe processess manually using '
+                        msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
+                        msg+='If you wish to make use of the stop and pause functionality, download '
+                        msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
+                        msg+='and copy PsKill.exe to the %s directory\n%s'
+                        raise WindowsError,msg%('#'*10,APPNAME,'#'*10)
+                    else:
+                        raise
+    else:
+        proc.send_signal(signal.SIGINT)
+    time.sleep(0.5)
+    logger.debug('Killed process %s, %s'%(proc.pid,proc.poll()))
+
+def license():
+    try:
+        import __license__
+        license=__license__.license
+    except ImportError:
+        license=open(os.path.join(os.path.dirname(sys.argv[0]),'LICENSE')).read().strip()
+    return license
+
+def subproc(cmd):
+    logger.debug(subprocess.list2cmdline(cmd))
+    logger.debug(str(cmd))
+    if 'pythonw.exe' in sys.executable:
+        proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proc.stdin.close()
+    else:
+        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+    return proc
+    
+def timefromsecs(secs):
+    m, s = divmod(secs, 60)
+    h, m = divmod(m, 60)
+    if h==0:
+        if m==0:
+            if s==1:return "%2d second" % (s)
+            else:return "%2d seconds" % (s)
+        elif m==1:return "%2d minute" % (m)
+        else:return "%2d minutes" % (m)
+    elif h==1 and m==0:return "%2d hour" % (h)
+    else:return "%2d:%02d hours" % (h, m)
+
+def version():
+    try:
+        import __version__
+        version=__version__.version
+        display_version=__version__.display_version
+    except ImportError:
+        version=ConfigParser.ConfigParser()
+        version.read(os.path.join(os.path.dirname(sys.argv[0]),'VERSION'))
+        display_version= version.get('Version','DISPLAY_VERSION')
+        version = version.get('Version','VERSION')
+    return version,display_version
+
 def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
     # This function is from the MetaGETA utilities module:
     # http://code.google.com/p/metageta/source/browse/trunk/lib/utilities.py
@@ -583,104 +686,6 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
     if result:return result
     else:return ''
 
-def errordialog(message, caption):
-    dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
-    dlg.ShowModal()
-    dlg.Destroy()
-def frozen():
-    return hasattr(sys, "frozen")
-def kill(proc):
-    if iswin:
-        #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
-        CTRL_C_EVENT = 0
-        ctypes.windll.kernel32.GenerateConsoleCtrlEvent(CTRL_C_EVENT, proc.pid)
-        if proc.poll() is None: #Nup, get nastier...
-            #There doesn't seem to be any way to kill getwizpnp from within python
-            #when it is kicked off by pythonw.exe (even tried ctypes.windll.kernel32.TerminateProcess)
-            #other than taskkill/pskill (or manually with task manager -> kill process tree)
-            #Killing with sigint works fine when process is started by python.exe... I'm stumped!
-            #
-            #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
-            #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
-            try:
-                cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
-                killproc=subproc(cmd)
-                exit_code=killproc.wait()
-            except WindowsError,err:
-                try:
-                    cmd = ['taskkill','/F','/t','/PID',str(proc.pid)]
-                    killproc=subproc(cmd)
-                    exit_code=killproc.wait()
-                except WindowsError,err:
-                    if err.winerror==2:
-                        msg= '%s\nYour version of Windows does not include the "taskkill" command, '
-                        msg+='you will need to end all GetWizPnP.exe processess manually using '
-                        msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
-                        msg+='If you wish to make use of the stop and pause functionality, download '
-                        msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
-                        msg+='and copy PsKill.exe to the %s directory\n%s'
-                        raise WindowsError,msg%('#'*10,APPNAME,'#'*10)
-                    else:
-                        raise
-    else:
-        proc.send_signal(signal.SIGINT)
-    time.sleep(0.5)
-    logger.debug('Killed process %s, %s'%(proc.pid,proc.poll()))
-
-def timefromsecs(secs):
-    m, s = divmod(secs, 60)
-    h, m = divmod(m, 60)
-    if h==0:
-        if m==0:return "%02d" % (s)
-        else:return "%02d:%02d" % (m, s)
-    else:return "%02d:%02d:%02d" % (h, m, s)
-
-def version():
-    try:
-        import __version__
-        version=__version__.version
-        display_version=__version__.display_version
-    except ImportError:
-        version=ConfigParser.ConfigParser()
-        version.read(os.path.join(os.path.dirname(sys.argv[0]),'VERSION'))
-        display_version= version.get('Version','DISPLAY_VERSION')
-        version = version.get('Version','VERSION')
-    return version,display_version
-
-def license():
-    try:
-        import __license__
-        license=__license__.license
-    except ImportError:
-        license=open(os.path.join(os.path.dirname(sys.argv[0]),'LICENSE')).read().strip()
-    return license
-
-def data_path():
-    if frozen() and sys.frozen!='macosx_app':
-        return os.path.dirname(sys.executable)
-    return os.path.dirname(__file__)
-
-def centrepos(self,parent):
-    pxsize,pysize=parent.GetSizeTuple()
-    pxmin,pymin=parent.GetPositionTuple()
-    sxsize,sysize=self.GetSizeTuple()
-    pxcen=pxmin+pxsize/2.0
-    pycen=pymin+pysize/2.0
-    sxmin=pxcen-sxsize/2.0
-    symin=pycen-sysize/2.0
-    return sxmin,symin
-
-
-def subproc(cmd):
-    logger.debug(subprocess.list2cmdline(cmd))
-    logger.debug(str(cmd))
-    if 'pythonw.exe' in sys.executable:
-        proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        proc.stdin.close()
-    else:
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-    return proc
-    
 #######################################################################
 #Workarounds for py2exe/py2app
 #######################################################################
