@@ -6,7 +6,7 @@ config=ConfigParser.ConfigParser()
 config.read('VERSION')
 version=config.get('Version','VERSION')                 #N.N.N.N format version number
 display_version=config.get('Version','DISPLAY_VERSION') #Version text string
-short_version=version[:-2]
+short_version='.'.join(version.split('.')[:-1])
 
 def getpaths():
     #fake a setup to get the paths
