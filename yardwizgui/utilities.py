@@ -24,6 +24,23 @@ class ThreadedConnector( threading.Thread ):
         self._stop.clear()
         self.start()
     def run(self):
+        if self.ip:
+            if iswin: cmd=['ping','-n','1',self.ip]
+            else: cmd=['ping','-c','1',self.ip]
+            proc=subproc(cmd)
+            stdout,stderr=proc.communicate()
+            exit_code=proc.wait()
+
+            if exit_code > 0 or 'destination host unreachable' in stdout.lower():
+                evt = Connected(wizEVT_CONNECTED, -1,'Unable to contact the WizPnP server.')
+                try:wx.PostEvent(self.parent, evt)
+                except:pass #we're probably exiting
+                return
+            else:
+                evt = Log(wizEVT_LOG, -1,'The WizPnP server is online')
+                try:wx.PostEvent(self.parent, evt)
+                except:pass #we're probably exiting
+
         if self.quick:
             exit_code,err=self._quicklistprograms()
         else:

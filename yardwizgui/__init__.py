@@ -50,7 +50,7 @@ class GUI( gui.GUI ):
         icons=os.path.join(data_path(),u'icons')
         ico = wx.Icon( os.path.join(icons, u"yardwiz.png"), wx.BITMAP_TYPE_ANY )
         self.SetIcon(ico)
-        self.btnConnect.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"reload.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnConnect.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"reload.png"), wx.BITMAP_TYPE_ANY ))
         self.btnConnect.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"reload_disabled.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnClearQueue.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"clear.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnClearQueue.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"clear_disabled.png"), wx.BITMAP_TYPE_ANY ) )
@@ -336,12 +336,14 @@ class GUI( gui.GUI ):
         self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted, quick=self.quicklisting)
 
     def _Connected(self,event=None):
-        self._connecting=False
-        self.lblProgressText.SetLabelText('')
-        self.gaugeProgressBar.Hide()
 
         if event and event.message:
             self._Log(event.message)
+
+        self._connecting=False
+        self.Stop.clear()
+        self.lblProgressText.SetLabelText('')
+        self.gaugeProgressBar.Hide()
         self.btnConnect.Enable( True )
         self.mitDelete.Enable( True )
         self.lstPrograms.SetSortEnabled(True)
@@ -739,7 +741,7 @@ class GUI( gui.GUI ):
     #Event handlers
     #######################################################################
     def btnConnect_OnClick( self, event ):
-        self._Connect()
+        if not self._connecting:self._Connect()
 
     def btnExit_onClick( self, event):
         self.Close(True)
