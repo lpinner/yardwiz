@@ -19,13 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-APPNAME='YARDWiz'
-
 if __name__=='__main__':
-    try:#Set WM_CLASS on linux
-        import gtk
-        gtk.gdk.set_program_class(APPNAME)
-    except:pass
     import wx,yardwizgui
     wxapp = wx.PySimpleApp(0)
     wizgui = yardwizgui.GUI()

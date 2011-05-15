@@ -737,3 +737,10 @@ if iswin:
 else:
     Popen_kwargs={}
     autosize=wx.LIST_AUTOSIZE #for ListCtrls
+
+if 'linux' in sys.platform:
+    try:#Set WM_CLASS on linux
+        import gtk
+        gtk.gdk.set_program_class(APPNAME)
+    except:pass
+
