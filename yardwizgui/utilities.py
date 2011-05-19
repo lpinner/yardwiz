@@ -408,20 +408,26 @@ class ThreadedDownloader( threading.Thread ):
                     speed=((size-prevsize)/(now-start))
                     speeds.append(speed)
                     n=float(len(speeds))
+                    esttime=''
+                    totaltime=''
                     if n<10:
-                        esttime='Calculating remaining time...'
+                        esttime='calculating...'
+                        totaltime='calculating...'
                     else:
                         try:
                             #avspeed=sorted(speeds)[int(n/2+0.5)] ##Pseudo median
                             avspeed=sum(speeds)/n                 ##Mean
-                            esttime='Time remaining: %s'%timefromsecs((s-size)/avspeed)
-                            if total>s:esttime+=' (%s)'%timefromsecs((total-size)/avspeed)
-                        except ZeroDivisionError:esttime='Unknown time remaining.'
+                            esttime=timefromsecs((s-size)/avspeed)
+                            if total>s:totaltime=timefromsecs((total-size)/avspeed)
+                        except ZeroDivisionError:
+                            esttime='unknown'
+                            totaltime='unknown'
                     progress={'percent':int(size/s*100),
                               'downloaded':round(size/MB, 1),
                               'size':round(program['size'], 1),
                               'total':round(self.total, 1),
                               'time':esttime,
+                              'totaltime':totaltime,
                               'speed':"%0.2f" % (speed/MB)}
                     self._updateprogress(progress,'Downloading %s...'%program['title'])
                     start=time.time()
@@ -442,6 +448,7 @@ class ThreadedDownloader( threading.Thread ):
                       'size':round(program['size']/MB*MiB, 1),
                       'total':self.total,
                       'time':'0',
+                      'totaltime':'',
                       'speed':speed}
             self._updateprogress(progress)
             self._log('Download of %s complete.'%program['filename'])

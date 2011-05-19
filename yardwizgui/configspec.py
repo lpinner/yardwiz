@@ -4,6 +4,7 @@ dateformattooltip='The date format string is as per the python date/time format 
 soundstooltip='Sound files must be 8 bit mono WAV format with no metadata tags.'
 deletetooltip='Confirm that you really wish to delete a recording from your Beyonwiz.'
 quicklistingtooltip='Note: enabling quick listing will show any files that have been deleted from your Wiz and will allow you to attempt to delete recordings that are locked, which will fail.'
+fadetooltip='Use fade in/out effects.'
 configspec={
     'Settings':{
         'device':['Device', 'str', devicetooltip],
@@ -19,10 +20,11 @@ configspec={
         'downloadcomplete':['Sound file (.wav)',  'file', soundstooltip, ['*.wav']]
      },
     'Window':{
+        'fade':['Fade', 'bool',fadetooltip],
         'xsize':['Width', 'str'],
         'ysize':['Height', 'str'],
         'xmin':['Left', 'str'],
-        'ymin':['Top', 'str'],
+        'ymin':['Top', 'str']
      },
     'Debug':{ 
         'debug':['Enable debug messages',  'bool']

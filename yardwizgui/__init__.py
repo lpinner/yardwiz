@@ -115,7 +115,7 @@ class GUI( gui.GUI ):
         self._ReadConfig()
         self._ApplyConfig()
         self._FadeIn(0)
-
+        self.Show()
 
     #######################################################################
     #Methods
@@ -211,6 +211,10 @@ class GUI( gui.GUI ):
             self.SetSize( wx.Size( xsize,ysize ) )
             self.SetPosition(wx.Point(xmin,ymin))
 
+        #Window effects
+        self.fade=self.config.getboolean('Window','fade')
+        if self.CanSetTransparent():self.SetTransparent(255)
+            
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
 
@@ -572,7 +576,7 @@ class GUI( gui.GUI ):
                 self.lstQueue.Enable( True )
 
     def _Fade(self,start,stop,delta,callback):
-        if self.CanSetTransparent():
+        if self.fade and self.CanSetTransparent():
             self.SetTransparent(start)
             self.amount=start
             self.stop=stop
@@ -585,14 +589,12 @@ class GUI( gui.GUI ):
 
     def _FadeIn(self,min,callback=None):
         self._Fade(min,255,5,callback)
-        self.Show()
 
     def _FadeOut(self,max,callback=None):
         self._Fade(255,max,-5,callback)
 
     def _SetTransparent(self):
         self.amount += self.delta
-        self.SetTransparent(self.amount)
         if (self.amount <= self.stop and self.delta<0) or (self.amount >= self.stop and self.delta>0):
             self.SetTransparent(self.stop)
             self.fadetimer.Stop()
@@ -729,12 +731,20 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.SetRange(100)
         if progress:
             self.gaugeProgressBar.SetValue(progress['percent'])
-            self.StatusBar.SetFieldsCount(4)
-            self.StatusBar.SetFields(['Speed %sMB/S'%(progress['speed']),
-                                      progress['time'],
-                                      'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent']),
-                                      'Queued %sMB'%progress['total']
-                                      ])
+            if progress['total']>progress['size']:
+                self.StatusBar.SetFieldsCount(5)
+                self.StatusBar.SetFields(['Speed %sMB/S'%(progress['speed']),
+                                          'Remaining %s'%progress['time'],
+                                          'Total remaining %s'%progress['totaltime'],
+                                          'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent']),
+                                          'Queued %sMB'%progress['total']
+                                          ])
+            else:
+                self.StatusBar.SetFieldsCount(3)
+                self.StatusBar.SetFields(['Speed %sMB/S'%(progress['speed']),
+                                          'Remaining %s'%progress['time'],
+                                          'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent'])
+                                          ])
         else:
             self.gaugeProgressBar.SetValue(0)
             self.StatusBar.SetFieldsCount(1)
