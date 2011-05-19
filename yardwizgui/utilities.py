@@ -371,6 +371,7 @@ class ThreadedDownloader( threading.Thread ):
         MB=1024.0**2
         MiB=1000.0**2
         s=program['size']*MB
+        total=self.total*MB
         start=time.time()
         if os.path.exists(f):prevsize=os.stat(f).st_size
         else:prevsize=0.0
@@ -413,7 +414,8 @@ class ThreadedDownloader( threading.Thread ):
                         try:
                             #avspeed=sorted(speeds)[int(n/2+0.5)] ##Pseudo median
                             avspeed=sum(speeds)/n                 ##Mean
-                            esttime='Estimated time remaining: %s'%timefromsecs((s-size)/avspeed)
+                            esttime='Time remaining: %s'%timefromsecs((s-size)/avspeed)
+                            if total>s:esttime+=' (%s)'%timefromsecs((total-size)/avspeed)
                         except ZeroDivisionError:esttime='Unknown time remaining.'
                     progress={'percent':int(size/s*100),
                               'downloaded':round(size/MB, 1),
@@ -603,12 +605,12 @@ def timefromsecs(secs):
     h, m = divmod(m, 60)
     if h==0:
         if m==0:
-            if s==1:return "%2d second" % (s)
-            else:return "%2d seconds" % (s)
-        elif m==1:return "%2d minute" % (m)
-        else:return "%2d minutes" % (m)
-    elif h==1 and m==0:return "%2d hour" % (h)
-    else:return "%2d:%02d hours" % (h, m)
+            if s==1:return "1 second"
+            else:return "%s seconds" % (s)
+        elif m==1:return "1 minute"
+        else:return "%1d minutes" % (m)
+    elif h==1 and m==0:return "1 hour"
+    else:return "%1d:%02d hours" % (h, m)
 
 def version():
     try:

@@ -114,6 +114,7 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
+        self._FadeIn(0)
 
 
     #######################################################################
@@ -570,6 +571,35 @@ class GUI( gui.GUI ):
                 self.btnDownload.Enable( True )
                 self.lstQueue.Enable( True )
 
+    def _Fade(self,start,stop,delta,callback):
+        if self.CanSetTransparent():
+            self.SetTransparent(start)
+            self.amount=start
+            self.stop=stop
+            self.delta=delta
+            self.callback=callback
+            self.fadetimer = wx.PyTimer(self._SetTransparent)
+            self.fadetimer.Start(0.1)
+        else:
+            if callback:callback()
+
+    def _FadeIn(self,min,callback=None):
+        self._Fade(min,255,5,callback)
+        self.Show()
+
+    def _FadeOut(self,max,callback=None):
+        self._Fade(255,max,-5,callback)
+
+    def _SetTransparent(self):
+        self.amount += self.delta
+        self.SetTransparent(self.amount)
+        if (self.amount <= self.stop and self.delta<0) or (self.amount >= self.stop and self.delta>0):
+            self.SetTransparent(self.stop)
+            self.fadetimer.Stop()
+            if self.callback:self.callback()
+            return
+        self.SetTransparent(self.amount)
+
     def _Hide(self,*args,**kwargs):
         self.progress_timer.Stop()
         self.gaugeProgressBar.SetRange(100)
@@ -823,7 +853,9 @@ class GUI( gui.GUI ):
         self.mitRemove_OnSelect(event)
 
     def mitAbout_OnSelect( self, event ):
+        self._FadeOut(125)
         dlg=AboutDialog(self)
+        self._FadeIn(125)
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
@@ -839,12 +871,14 @@ class GUI( gui.GUI ):
         self._DownloadQueue()
 
     def mitPreferences_OnSelect( self, event ):
+        self._FadeOut(125)
         self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
         settings=SettingsDialog(self,self.config,self.configspec) #so make sure the device name get's updated.
         if settings.saved:
             self.config=settings.config
             self._ApplyConfig()
             self._WriteConfig()
+        self._FadeIn(125)
 
     def mitQueue_onSelect( self, event ):
         self._Queue()
@@ -859,7 +893,10 @@ class GUI( gui.GUI ):
         self._UpdateSize()
         event.Skip()
 
-    def onCloseApp( self, event ):
+    def onCloseApp( self, event=None ):
+        self._FadeOut(0,self._Exit)
+
+    def _Exit( self, event=None ):
         self.Hide()
         self.Stop.set()
         self._WriteConfig()

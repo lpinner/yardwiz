@@ -23,5 +23,4 @@ if __name__=='__main__':
     import wx,yardwizgui
     wxapp = wx.PySimpleApp(0)
     wizgui = yardwizgui.GUI()
-    wizgui.Show()
     wxapp.MainLoop()
