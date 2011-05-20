@@ -583,15 +583,15 @@ class GUI( gui.GUI ):
             self.delta=delta
             self.callback=callback
             self.fadetimer = wx.PyTimer(self._SetTransparent)
-            self.fadetimer.Start(0.1)
+            self.fadetimer.Start(1)
         else:
             if callback:callback()
 
     def _FadeIn(self,min,callback=None):
-        self._Fade(min,255,5,callback)
+        self._Fade(min,255,25,callback)
 
     def _FadeOut(self,max,callback=None):
-        self._Fade(255,max,-5,callback)
+        self._Fade(255,max,-25,callback)
 
     def _SetTransparent(self):
         self.amount += self.delta
