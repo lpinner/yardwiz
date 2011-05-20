@@ -215,7 +215,10 @@ class GUI( gui.GUI ):
         if self.CanSetTransparent():
             self.SetTransparent(255)
             self.fade=self.config.getboolean('Window','fade')
-        else:self.fade=False
+        else:
+            self.fade=False
+            self.config.set('Window','fade',False)
+            del self.configspec['Window']['fade']
             
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
@@ -676,9 +679,6 @@ class GUI( gui.GUI ):
         self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
         self.config.read([defaultconfig,self.userconfig])
         self.configspec=configspec.configspec
-        if not self.CanSetTransparent():
-            self.config.set('Window','fade',False)
-            del self.configspec['Window']['fade']
         self._CleanupConfig()
 
     def _Reset(self):
