@@ -114,8 +114,8 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
-        self.Show()
         self._FadeIn(0)
+        self.Show()
 
     #######################################################################
     #Methods
@@ -319,6 +319,8 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.Show()
         self.gaugeProgressBar.Pulse()
 
+        self.ip,self.port,self.device=(None,None,None)
+        
         device=str(self.cbxDevice.GetValue()).strip()
         if not device:
             self._Discover()
@@ -334,10 +336,10 @@ class GUI( gui.GUI ):
             iponly=re.match(self._regexip,device)
             if ipport:
                 self.ip,self.port=device.split(':')
-                self.device=None
             elif iponly:
                 self.ip,self.port=device,'49152'
-                self.device=None
+            else:
+                self.device=device                
 
         logger.debug('Connecting to %s:%s %s'%(self.ip,self.port,self.device))
         self._Log('Connecting to %s...'%device)
