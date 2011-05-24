@@ -440,7 +440,8 @@ class ThreadedDownloader( threading.Thread ):
             self._log('Error, unable to download %s.'%program['filename'])
             self._log(stdout)
             self._log(stderr)
-            self._downloadcomplete(index=program['index'])
+            os.unlink(program['filename'])
+            self._downloadcomplete(index=program['index'],stopped=True)
         else:
             #Should check filesize v. getwizpnp reported size...
             progress={'percent':100,
