@@ -114,8 +114,8 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
-        self._FadeIn(0)
         self.Show()
+        self._FadeIn(0)
 
     #######################################################################
     #Methods
