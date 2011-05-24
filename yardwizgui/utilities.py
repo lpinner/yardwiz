@@ -137,7 +137,6 @@ class ThreadedConnector( threading.Thread ):
         else:
             cmd=[wizexe,'--device',self.device]
         cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
-        print cmd
         self.proc=subproc(cmd)
         proglines=[]
         index=-1
