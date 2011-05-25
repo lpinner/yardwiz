@@ -212,7 +212,7 @@ class GUI( gui.GUI ):
             self.SetPosition(wx.Point(xmin,ymin))
 
         #Window effects
-        if self.CanSetTransparent():
+        if self.CanSetTransparent() and platform.linux_distribution()!=('Ubuntu', '11.04', 'natty'):#Workaround for http://trac.wxwidgets.org/ticket/13240
             self.SetTransparent(255)
             self.fade=self.config.getboolean('Window','fade')
         else:
