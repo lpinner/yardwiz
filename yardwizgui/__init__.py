@@ -22,7 +22,7 @@
 from utilities import *
 from events import *
 import os,sys,threading,time,ConfigParser,logging
-import re,webbrowser
+import re,webbrowser, platform
 import ordereddict
 import wx
 import gui, configspec
@@ -583,6 +583,8 @@ class GUI( gui.GUI ):
                 self.lstQueue.Enable( True )
 
     def _Fade(self,start,stop,delta,callback):
+        if platform.linux_distribution()==('Ubuntu', '11.04', 'natty'):
+            self.fade=False #Workaround for http://trac.wxwidgets.org/ticket/13240
         if self.fade and self.CanSetTransparent():
             self.SetTransparent(start)
             self.amount=start
