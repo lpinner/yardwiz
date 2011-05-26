@@ -106,6 +106,8 @@ setupargs={'name':'YARDWiz',
 
 if 'linux' in sys.platform and 'install' in sys.argv:
     setupargs['data_files']=[('share/pixmaps',['yardwizgui/icons/yardwiz.png']),('share/applications',['yardwiz.desktop'])]
+    if os.path.exists('getWizPnP'):
+        setupargs['data_files'].append(('bin',['getWizPnP']))
     desktop=open('yardwiz.desktop.in').read()%(short_version,data)
     open('yardwiz.desktop','w').write(desktop)
 
@@ -233,6 +235,9 @@ if 'linux' in sys.platform and 'install' in sys.argv:
     os.chmod(os.path.join(data,'share/applications/yardwiz.desktop'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
     print 'Changing mode of %s/share/pixmaps/yardwiz.png to 744'%data
     os.chmod(os.path.join(data,'share/pixmaps/yardwiz.png'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH)
+    if os.path.exists('%s/bin/getWizPnP'%data):
+        print 'Changing mode of %s/bin/getWizPnP to 755'%data
+        os.chmod(os.path.join(data,'bin/getWizPnP'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
 
 elif sys.platform[0:3]=='win' and 'install' in sys.argv:
     filename='YARDWiz.lnk'
