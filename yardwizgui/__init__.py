@@ -257,7 +257,7 @@ class GUI( gui.GUI ):
                 config.append('  '+section)
                 options = self.config.options(section)
                 for option in options:
-                    config.append('    '+'='.join([option,self.config.get(section, option)]))
+                    config.append('    '+'='.join([option,str(self.config.get(section, option))]))
             logger.debug('\n'.join(config))
 
     def _CleanupConfig(self):
