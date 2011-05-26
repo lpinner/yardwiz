@@ -742,18 +742,23 @@ class GUI( gui.GUI ):
             self.gaugeProgressBar.SetValue(progress['percent'])
             if progress['total']>progress['size']:
                 self.StatusBar.SetFieldsCount(5)
-                self.StatusBar.SetFields(['Speed %sMB/S'%(progress['speed']),
-                                          'Remaining %s'%progress['time'],
-                                          'Total remaining %s'%progress['totaltime'],
-                                          'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent']),
-                                          'Queued %sMB'%progress['total']
-                                          ])
+                fields=['Speed %sMB/S'%(progress['speed']),
+                        'Remaining %s'%progress['time'],
+                        'Total remaining %s'%progress['totaltime'],
+                        'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent']),
+                        'Queued %sMB'%progress['total']
+                       ]
+                self.StatusBar.SetFields(fields)
+                widths=[-2,-3,-4,-5,-2]
+                self.StatusBar.SetStatusWidths(widths)
             else:
                 self.StatusBar.SetFieldsCount(3)
-                self.StatusBar.SetFields(['Speed %sMB/S'%(progress['speed']),
-                                          'Remaining %s'%progress['time'],
-                                          'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent'])
-                                          ])
+                fields=['Speed %sMB/S'%(progress['speed']),
+                        'Remaining %s'%progress['time'],
+                        'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent'])
+                       ]
+                self.StatusBar.SetFields(fields)
+                self.StatusBar.SetStatusWidths([-2,-3,-4])
         else:
             self.gaugeProgressBar.SetValue(0)
             self.StatusBar.SetFieldsCount(1)
