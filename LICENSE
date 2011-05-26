@@ -32,6 +32,6 @@ The function yardwiz.which is from the MetaGETA utilities module which is copyri
 http://www.opensource.org/licenses/mit-license.php
 
 [getwizpnp]
-The Windows version of YARDWiz includes a compiled copy of GetWizPnP.pl which is copyright (c) 2010 prl (http://www.openwiz.org/wiki/GetWizPnP_Release)
+The OS specific versions of YARDWiz include a compiled copy of GetWizPnP.pl which is copyright (c) 2011 prl (http://www.openwiz.org/wiki/GetWizPnP_Release)
 
 
