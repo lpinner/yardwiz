@@ -114,7 +114,7 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
-        self._FadeIn(0)
+        self._FadeIn()
         self.Show()
 
     #######################################################################
@@ -596,11 +596,11 @@ class GUI( gui.GUI ):
         else:
             if callback:callback()
 
-    def _FadeIn(self,min,callback=None):
-        self._Fade(min,255,25,callback)
+    def _FadeIn(self,start=0,stop=255,delta=25,callback=None):
+        self._Fade(start,stop,delta,callback)
 
-    def _FadeOut(self,max,callback=None):
-        self._Fade(255,max,-25,callback)
+    def _FadeOut(self,start=255,stop=0,delta=-25,callback=None):
+        self._Fade(start,stop,delta,callback)
 
     def _SetTransparent(self):
         self.amount += self.delta
@@ -877,9 +877,9 @@ class GUI( gui.GUI ):
         self.mitRemove_OnSelect(event)
 
     def mitAbout_OnSelect( self, event ):
-        self._FadeOut(125)
+        self._FadeOut(stop=125)
         dlg=AboutDialog(self)
-        self._FadeIn(125)
+        self._FadeIn(start=125)
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
@@ -895,14 +895,14 @@ class GUI( gui.GUI ):
         self._DownloadQueue()
 
     def mitPreferences_OnSelect( self, event ):
-        self._FadeOut(125)
+        self._FadeOut(stop=125)
         self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
         settings=SettingsDialog(self,self.config,self.configspec) #so make sure the device name get's updated.
         if settings.saved:
             self.config=settings.config
             self._ApplyConfig()
             self._WriteConfig()
-        self._FadeIn(125)
+        self._FadeIn(start=125)
 
     def mitQueue_onSelect( self, event ):
         self._Queue()
@@ -918,7 +918,7 @@ class GUI( gui.GUI ):
         event.Skip()
 
     def onCloseApp( self, event=None ):
-        self._FadeOut(0,self._Exit)
+        self._FadeOut(callback=self._Exit)
 
     def _Exit( self, event=None ):
         self.Hide()

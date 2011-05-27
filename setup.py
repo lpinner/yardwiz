@@ -213,9 +213,18 @@ elif 'py2exe' in sys.argv:
 
     writelicenseversion(version,display_version)
 
+    #setupargs['windows'] = [{'script':'yardwiz',
+    #                        'icon_resources':[(2, r'yardwizgui/icons/icon.ico')]
+    #                        }]
     setupargs['windows'] = [{'script':'yardwiz',
-                            'icon_resources':[(2, r'yardwizgui/icons/icon.ico')]
+                            'icon_resources':[(2, r'yardwizgui/icons/icon.ico')],
+                            
                             }]
+    setupargs['options']={"py2exe":
+                            {'excludes':['xml','ssl','random','httplib','urllib','xml','_ssl','email','doctest','pdb','unittest','difflib','inspect','pyreadline', 'pickle'],
+                            'compressed':True
+                            }
+                        }
     setupargs['data_files']=[('',['getwizpnp.exe']),
                              ('',['README']),
                              ('',['LICENSE']),
@@ -225,7 +234,8 @@ elif 'py2exe' in sys.argv:
                              ('',glob.glob('msvc*90.dll')),
                              ('sounds', glob.glob('yardwizgui/sounds/*')),
                              ('config', ['yardwizgui/config/defaults.ini']),
-                             ('icons', glob.glob('yardwizgui/icons/*.*'))]
+                             ('icons', glob.glob('yardwizgui/icons/*.png')),
+                             ('icons', glob.glob('yardwizgui/icons/*.ico'))]
 
 s=setup(**setupargs)
 
