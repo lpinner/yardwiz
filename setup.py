@@ -105,6 +105,16 @@ setupargs={'name':'YARDWiz',
     }
 
 if 'linux' in sys.platform and 'install' in sys.argv:
+    try:
+        import wx
+        v=wx.VERSION
+        if not v[0]>=2 and v[1]>=8:
+            print 'wxPython v2.8+ is required, YARDWiz setup can not continue. Install wxPython 2.8 or later and then try again.'
+            sys.exit(1)
+    except:
+        print 'wxPython is not installed or is not configured correctly, YARDWiz setup can not continue. Install wxPython and then try again.'
+        sys.exit(1)
+
     setupargs['data_files']=[('share/pixmaps',['yardwizgui/icons/yardwiz.png']),('share/applications',['yardwiz.desktop'])]
     if os.path.exists('getWizPnP'):
         setupargs['data_files'].append(('bin',['getWizPnP']))
