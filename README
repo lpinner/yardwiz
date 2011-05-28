@@ -15,10 +15,8 @@ YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10
 ===_Windows_===
 A windows installer is now available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
 
-<wiki:comment>
 ===_OSX_===
 An OSX application is now available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
-</wiki:comment>
 
 ===_From source_===
 Before running you will need to install the following software:
@@ -26,17 +24,15 @@ Before running you will need to install the following software:
   * wxpython 2.8+  (http://www.wxpython.org)
   * getWizPnP   (http://www.openwiz.org/wiki/GetWizPnP_Release)
     * Windows: download the pre-compiled Windows executable version and save getWizPnP.exe somewhere in your PATH
-    * Linux & OSX: install the perl package from source as per the installation notes in getWizPnP README.txt
+    * Linux & OSX: install the perl package from source as per the installation notes in getWizPnP README.txt or download the compiled version from http://www.openwiz.org/wiki/GetWizPnP_Release
 
 ==Installation==
 
 ===_Windows_===
 Run the windows installer, this is self contained and doesn't require the prior installation of python, wxpython or getWizPnP.
 
-<wiki:comment>
 ===_OSX_===
 Mount the disk image (.dmg) and drag the YARDWiz app to your applications folder.
-</wiki:comment>
 
 ===_From source_===
 Currently no other OS specific installers have been created, just a simple python setup.py script. To install, unzip the source archive, then:
@@ -49,10 +45,8 @@ For easy access to the application, setup.py creates shortcuts in the Windows St
 ===Uninstalling on Windows===
 Run the windows uninstaller.
 
-<wiki:comment>
 ===Uninstalling on OSX===
 Delete the YARDWiz app from your applications folder.
-</wiki:comment>
 
 ===When installed from source===
 To uninstall (assuming you still have a copy of the source :):
@@ -64,4 +58,4 @@ To uninstall (assuming you still have a copy of the source :):
  * On Windows when running from pythonw.exe, the getwizpnp.exe subprocess has proven troublesome to kill (i.e if you want to pause or stop a download). I've had to fallback to using the taskkill.exe program that is included in most recent versions of Windows (XP and later). Taskkill.exe is _not_ included in Windows XP Home edition and I don't know if it is included in Windows Vista/7 basic/home/starter editions. If this is an issue, an alternative is to download PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 and extract PsKill.exe to somewhere on your PATH. YARDWiz will then attempt to use pskill instead.
  * wx.Sound does not seem to work on Ubuntu 10.10 (that may be my virtual environment though...)
  * The app really should use a lawnmower icon...
- * Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed" when connecting via a device name, even after listing programs succeeded using that device name.  This has only occurred on one Win 7 Ultimate PC that I'm aware of and the issue does not occurr on the same users Win XP PC.  Workaround (thanks to netmask from the Beyonwiz forum): connect using IP or IP:Port syntax.
+ * Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed" when connecting via a device name, even after listing programs succeeded using that device name.  This has only occurred on one Win 7 Ultimate PC that I'm aware of and the issue does not occurr on the same users Win XP PC.  Workaround (thanks to netmask from the Beyonwiz forum): connect using IP or IP:Port syntax. Another workaround has been implemented in 0.3.1, clear the Wiz server text box and click the connect button to let YARDWiz discover your Wiz.

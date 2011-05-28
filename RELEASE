@@ -1,6 +1,27 @@
 #labels Featured
 =Release notes=
 
+==0.3.1==
+===_New in 0.3.1_===
+  * Re-added standalone OSX app
+  * Added a linux version which includes a compiled version of getWizPnP
+  * getWizPnP updated to 0.5.1 in Windows, OSX and Linux
+  * Added estimated download time remaining
+  * Added ability to remember multiple wizzes, not just the last one used.
+  * Added check to see if Wiz is online before attempting to connect. Doesn't work if connecting via typed in device name.
+  * Set WM_CLASS on linux so app name is used by window managers.
+  * Add some transparency bling in open/close and when about/preferences dialogs are shown. Doesn't work on Ubuntu 11.04.
+  * Enable stop button when a download is paused.
+  * Checks for wxPython>=2.8 in setup.py install on linux 
+  
+===_Fixed in 0.3.1_===
+  * Fixed bug setting ip & port 
+  * Fixed device = None bug 
+  * Fixed debug output on OSX 
+  * Fixed ConfigParser issue on Ubuntu 10.04LTS
+  * Fixed hang on application exit in linux when a download is paused.
+  * Worked around [http://code.google.com/p/yardwiz/issues/detail?id=19 Issue 19] - Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed".
+
 ==0.3.0==
 ===_New in 0.3.0_===
   * Added debug output as a preference
