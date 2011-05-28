@@ -170,6 +170,26 @@ class GUI( gui.GUI ):
 
     def _ApplyConfig(self):
 
+        #debug
+        debug=self.config.getboolean('Debug','debug')
+        if debug:
+            logger.setLevel(logging.DEBUG)
+            logger.debug(' '.join([APPNAME,version()[0],sys.executable, sys.platform]))
+            logger.debug(str(which(wizexe)))
+            #logger.debug('\n'.join(['%s: %s'%(e,os.environ[e]) for e in os.environ]))
+            logger.debug('\n\t'.join(['PATH']+os.environ.get("PATH", os.defpath).split(os.pathsep)))
+            sections = self.config.sections()
+            config=['Config:']
+            for section in sections:
+                config.append('  '+section)
+                options = self.config.options(section)
+                for option in options:
+                    val=self.config.get(section, option)
+                    if isinstance(val, unicode):val=val.encode(filesysenc)
+                    else:val=str(val)
+                    config.append('    '+'='.join([option,val]))
+            logger.debug('\n'.join(config))
+
         #write stuff to various controls, eg server & port
         device=self.config.get('Settings','device')
         self.cbxDevice.Clear()
@@ -212,11 +232,40 @@ class GUI( gui.GUI ):
             self.SetPosition(wx.Point(xmin,ymin))
 
         #Window effects
-        if self.CanSetTransparent() and platform.linux_distribution()!=('Ubuntu', '11.04', 'natty'):#Workaround for http://trac.wxwidgets.org/ticket/13240
-            self.SetTransparent(255)
-            self.fade=self.config.getboolean('Window','fade')
+        logger.debug('CanSetTransparent: %s'%self.CanSetTransparent())
+        if self.CanSetTransparent():
+            showfade=True
+            if 'linux' in sys.platform: #Workaround for http://trac.wxwidgets.org/ticket/13240
+                try:
+                    logger.debug('Checking compiz')
+                    proc=subproc(['compiz', '--version'])
+                    stdout,stderr=proc.communicate()
+                    exit_code=proc.wait()
+                    stdout,stderr=stdout.strip(),stderr.strip()
+                    logger.debug('exit_code: %s'%exit_code)
+                    logger.debug('stdout: %s'%stdout)
+                    logger.debug('stderr: %s'%stderr)
+                    if exit_code > 0:
+                        self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
+                    else:
+                        comver=stdout.split()[-1].split('.')
+                        logger.debug('comver: %s'%str(comver))
+                        if int(comver[1])==9 and int(comver[2])<=4:
+                            showfade=False
+                            self.fade=False
+                        else:
+                            self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
+                except Exception,err:
+                    logger.debug('Exception,err: %s'%str(err))
+                    self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
+            else:
+                
+                self.fade=self.config.getboolean('Window','fade')
         else:
+            showfade=False
             self.fade=False
+
+        if not self.fade and not showfade:
             self.config.set('Window','fade',False)
             if 'fade' in self.configspec['Window']:
                 del self.configspec['Window']['fade']
@@ -243,23 +292,6 @@ class GUI( gui.GUI ):
         if not self.downloadcompletesound or self.downloadcompletesound.lower()=='<default>':
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
-
-        #debug
-        debug=self.config.getboolean('Debug','debug')
-        if debug:
-            logger.setLevel(logging.DEBUG)
-            logger.debug(' '.join([APPNAME,version()[0],sys.executable, sys.platform]))
-            logger.debug(str(which(wizexe)))
-            #logger.debug('\n'.join(['%s: %s'%(e,os.environ[e]) for e in os.environ]))
-            logger.debug('\n\t'.join(['PATH']+os.environ.get("PATH", os.defpath).split(os.pathsep)))
-            sections = self.config.sections()
-            config=['Config:']
-            for section in sections:
-                config.append('  '+section)
-                options = self.config.options(section)
-                for option in options:
-                    config.append('    '+'='.join([option,str(self.config.get(section, option))]))
-            logger.debug('\n'.join(config))
 
     def _CleanupConfig(self):
         #Bit of cleanup from previous versions
