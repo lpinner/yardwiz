@@ -218,7 +218,8 @@ class GUI( gui.GUI ):
         else:
             self.fade=False
             self.config.set('Window','fade',False)
-            del self.configspec['Window']['fade']
+            if 'fade' in self.configspec['Window']:
+                del self.configspec['Window']['fade']
             
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
@@ -680,7 +681,7 @@ class GUI( gui.GUI ):
 
         defaultconfig=os.path.join(data_path(),'config','defaults.ini')
         self.userconfig=os.path.join(configdir,'config.ini')
-        self.config=ConfigParser.ConfigParser(dict_type=ordereddict.OrderedDict)
+        self.config=ConfigParser.RawConfigParser(dict_type=ordereddict.OrderedDict)
         self.config.read([defaultconfig,self.userconfig])
         self.configspec=configspec.configspec
         self._CleanupConfig()
@@ -820,7 +821,7 @@ class GUI( gui.GUI ):
     def btnPause_OnClick( self, event ):
         self.btnPlay.Enable( True )
         self.btnPause.Enable( False )
-        self.btnStop.Enable( False )
+        #self.btnStop.Enable( False )
         self.Play.clear()
 
     def btnStop_OnClick( self, event ):

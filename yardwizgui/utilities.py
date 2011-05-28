@@ -397,7 +397,20 @@ class ThreadedDownloader( threading.Thread ):
                     self._log('Unable to pause download.')
                     raise
                 self._log('Download paused.')
-                self.Play.wait() #block until Play is set
+                while True:
+                    self.Play.wait(0.5) #block until Play is set
+                    if self.Stop.isSet():
+                        self._downloadcomplete(index=program['index'],stopped=True)
+                        try:
+                            os.unlink(program['filename'])
+                        except Exception,err:
+                            self._log('Unable to delete %s.'%program['filename'])
+                            self._log(str(err))
+                        else:
+                            self._log('Download cancelled.')
+                        return
+                    elif self.Play.isSet():
+                        break
                 self._download(program)
                 return
             else: #We're still downloading, update the progress
