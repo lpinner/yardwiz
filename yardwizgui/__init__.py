@@ -908,9 +908,9 @@ class GUI( gui.GUI ):
         self.mitRemove_OnSelect(event)
 
     def mitAbout_OnSelect( self, event ):
-        self._FadeOut(stop=125)
+        self._FadeOut(stop=200,delta=-25)
         dlg=AboutDialog(self)
-        self._FadeIn(start=125)
+        self._FadeIn(start=200,delta=25)
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
@@ -926,14 +926,14 @@ class GUI( gui.GUI ):
         self._DownloadQueue()
 
     def mitPreferences_OnSelect( self, event ):
-        self._FadeOut(stop=125)
+        self._FadeOut(stop=200,delta=-25)
         self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
         settings=SettingsDialog(self,self.config,self.configspec) #so make sure the device name get's updated.
         if settings.saved:
             self.config=settings.config
             self._ApplyConfig()
             self._WriteConfig()
-        self._FadeIn(start=125)
+        self._FadeIn(start=200,delta=25)
 
     def mitQueue_onSelect( self, event ):
         self._Queue()
