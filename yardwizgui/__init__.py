@@ -22,7 +22,7 @@
 from utilities import *
 from events import *
 import os,sys,threading,time,ConfigParser,logging
-import re,webbrowser, platform
+import re,webbrowser
 import ordereddict
 import wx
 import gui, configspec
