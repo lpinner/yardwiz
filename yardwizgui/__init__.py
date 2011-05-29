@@ -616,9 +616,7 @@ class GUI( gui.GUI ):
                 self.lstQueue.Enable( True )
 
     def _Fade(self,start,stop,delta,callback):
-        if platform.linux_distribution()==('Ubuntu', '11.04', 'natty'):
-            self.fade=False #Workaround for http://trac.wxwidgets.org/ticket/13240
-        if self.fade and self.CanSetTransparent():
+        if self.fade:
             self.SetTransparent(start)
             self.amount=start
             self.stop=stop
