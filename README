@@ -10,7 +10,7 @@ I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
 ||[http://code.google.com/p/yardwiz/wiki/ScreenshotLinux http://yardwiz.googlecode.com/svn/images/thumbnail-ubuntu.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotWin7 http://yardwiz.googlecode.com/svn/images/thumbnail-win7.png]||[http://code.google.com/p/yardwiz/wiki/ScreenshotOSX http://yardwiz.googlecode.com/svn/images/thumbnail-osx.png]||
 
 ==Requirements==
-YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10.04 and 10.10 and Mac OSX 10.6.2 with python 2.6 & 2.7, wxPython 2.8 and getWizPnP 0.4.3a. It should work on Windows Vista and other linux flavours.
+YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10.04, 10.10 and 11.04, OpenSuse 11.4, Fedora 14 and Mac OSX 10.6.2 with python 2.6 & 2.7, wxPython 2.8 and getWizPnP 0.4.3a and 0.5.1. It should work on Windows Vista and other linux flavours.
 
 ===_Windows_===
 A windows installer is now available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
@@ -36,7 +36,7 @@ Mount the disk image (.dmg) and drag the YARDWiz app to your applications folder
 
 ===_From source_===
 Currently no other OS specific installers have been created, just a simple python setup.py script. To install, unzip the source archive, then:
-  * Windows - run `install.bat` (you _may_ need to run it as Administrator).
+  * Windows - run `python setup.py install` in a command window (you _may_ need to run it as Administrator).
   * Linux & OSX - `sudo python setup.py install`
 
 For easy access to the application, setup.py creates shortcuts in the Windows Start Menu/Linux Gnome Menu. Or on Linux and OSX, you can just type 'yardwiz' in a terminal.
@@ -50,7 +50,7 @@ Delete the YARDWiz app from your applications folder.
 
 ===When installed from source===
 To uninstall (assuming you still have a copy of the source :):
-  * Windows - run `uninstall.bat` (you _may_ need to run it as Administrator).
+  * Windows - run `python setup.py uninstall` in a command window (you _may_ need to run it as Administrator).
   * Linux & OSX - `sudo python setup.py uninstall`
  
 ==Known issues==
