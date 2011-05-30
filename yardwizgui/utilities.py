@@ -11,9 +11,10 @@ APPNAME='YARDWiz'
 #Helper classes
 #######################################################################
 class ThreadedChecker( threading.Thread ):
-    def __init__( self, parent, device, ip, port):
+    def __init__( self, parent, evtStop, device, ip, port):
         threading.Thread.__init__( self )
         self.parent=parent
+        self.Stop=evtStop
         self.device=device
         self.ip=ip
         self.port=port
@@ -24,12 +25,14 @@ class ThreadedChecker( threading.Thread ):
         else:
             cmd=[wizexe,'--device',self.device,'--all','--check']
 
-        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        self._Log('Checking recordings')
-
         try:
             self.proc=subproc(cmd)
-            exit_code=self.proc.wait()
+            while self.proc.poll() is None:
+                time.sleep(0.1)
+                if self.Stop.isSet():
+                    kill(self.proc)
+                    return
+            exit_code=self.proc.poll()
             stdout,stderr=self.proc.communicate()
             stderr=stderr.strip()
             stdout=stdout.strip()
@@ -38,21 +41,19 @@ class ThreadedChecker( threading.Thread ):
                 if stderr:msg=msg+': '+stderr
                 raise Exception,msg
         except Exception,err:
-            self._Log(str(err))
+            checked=False
+            msg=str(err)
         else:
+            checked=True
             msg='Finished checking recordings'
             if stdout:
                 msg=msg+'\n'+stdout
             if stderr:
                 msg=msg+'\n'+stderr
-            self._Log(msg)
 
-        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-
-    def _Log(self,message):
-        evt = Log(wizEVT_LOG, -1,message)
+        evt = CheckComplete(wizEVT_CHECKCOMPLETE, -1,checked,msg)
         try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
+        except:pass
 
 class ThreadedConnector( threading.Thread ):
     def __init__( self, parent, evtStop, device, ip, port, deleted=[], quick=False):
@@ -321,9 +322,10 @@ class ThreadedConnector( threading.Thread ):
         except:pass
 
 class ThreadedDeleter( threading.Thread ):
-    def __init__( self, parent, device, ip, port, programs,indices):
+    def __init__( self, parent, evtStop, device, ip, port, programs,indices):
         threading.Thread.__init__( self )
         self.parent=parent
+        self.Stop=evtStop
         self.device=device
         self.ip=ip
         self.port=port
@@ -336,13 +338,15 @@ class ThreadedDeleter( threading.Thread ):
         else:
             cmd=[wizexe,'--device',self.device,'--all','--BWName']
 
-        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         for idx,program in zip(self.indices,self.programs):
             cmddel=cmd+['--delete',program['index']]
             cmdchk=cmd+['--list',program['index']]
             try:
                 self.proc=subproc(cmddel)
-                exit_code=self.proc.wait()
+                while self.proc.poll() is None:
+                    time.sleep(0.1)
+                    if self.Stop.isSet():return
+                exit_code=self.proc.poll()
                 stdout,stderr=self.proc.communicate()
                 if stderr.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
                 self.proc=subproc(cmdchk)
@@ -356,8 +360,6 @@ class ThreadedDeleter( threading.Thread ):
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
                 try:wx.PostEvent(self.parent, evt)
                 except:pass
-
-        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _Log(self,message):
         evt = Log(wizEVT_LOG, -1,message)

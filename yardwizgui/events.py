@@ -12,6 +12,16 @@ class AddProgram(wx.PyCommandEvent):
         self.program = program
         self.index = index
 
+wizEVT_CHECKCOMPLETE = wx.NewEventType()
+EVT_CHECKCOMPLETE = wx.PyEventBinder(wizEVT_CHECKCOMPLETE, 1)
+class CheckComplete(wx.PyCommandEvent):
+    """Event to signal that we checking the recordings on the Wiz"""
+    def __init__(self, etype, eid, checked, message):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+        self.checked = checked
+        self.message = message
+
 wizEVT_CONNECTED = wx.NewEventType()
 EVT_CONNECTED = wx.PyEventBinder(wizEVT_CONNECTED, 1)
 class Connected(wx.PyCommandEvent):

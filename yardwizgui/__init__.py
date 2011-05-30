@@ -79,9 +79,10 @@ class GUI( gui.GUI ):
         self.Stop=threading.Event()
 
         self.Bind(EVT_ADDPROGRAM, self._AddProgram)
+        self.Bind(EVT_CHECKCOMPLETE, self._CheckComplete)
+        self.Bind(EVT_CONNECTED, self._Connected)
         self.Bind(EVT_DELETEPROGRAM, self._DeleteProgram)
         self.Bind(EVT_UPDATEPROGRAM, self._UpdateProgram)
-        self.Bind(EVT_CONNECTED, self._Connected)
 
         self.Bind(EVT_LOG, self.onLog)
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
@@ -295,8 +296,16 @@ class GUI( gui.GUI ):
 
     def _CheckWiz(self):
             self._ShowTab(self.idxLog)
+            self.mitCheck.Enable( False )
             logger.debug('_CheckWiz')
-            checker=ThreadedChecker(self,self.device,self.ip,self.port)
+            self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+            self._Log('Checking recordings...')
+            checker=ThreadedChecker(self,self.Stop,self.device,self.ip,self.port)
+
+    def _CheckComplete(self,event):
+        if event and event.message:self._Log(event.message)
+        self.mitCheck.Enable( True )
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _CleanupConfig(self):
         #Bit of cleanup from previous versions
@@ -384,6 +393,7 @@ class GUI( gui.GUI ):
         self._Log('Connecting to %s...'%device)
 
         #Connect to the Wiz etc...
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted, quick=self.quicklisting)
 
     def _Connected(self,event=None):
@@ -402,6 +412,8 @@ class GUI( gui.GUI ):
 
         if event and event.connected:
             self.mitCheck.Enable( True )
+
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):
@@ -458,6 +470,7 @@ class GUI( gui.GUI ):
             programs.reverse()
             logger.debug('_DeleteFromWiz, indices: %s'%str(indices))
             logger.debug('_DeleteFromWiz, programs: %s'%str(programs))
+            self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
             deletions=ThreadedDeleter(self,self.device,self.ip,self.port,programs,indices)
 
     def _DeleteProgram(self,event):
@@ -471,7 +484,8 @@ class GUI( gui.GUI ):
         if idx>-1:
             del self.queue[self.queue.index(pidx)]
             self.lstQueue.DeleteItem(idx)
-
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+        
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
@@ -566,7 +580,7 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( False )
         self.mitDownload.Enable( False )
         self._downloading=True
-        self.ThreadedDownloader=ThreadedDownloader(self,self.device,self.ip,self.port,programs,self.Play,self.Stop)
+        self.ThreadedDownloader=ThreadedDownloader(self,self.Stop,self.device,self.ip,self.port,programs,self.Play,self.Stop)
 
     def _DownloadComplete(self,index,stopped):
         pidx=0
@@ -642,15 +656,6 @@ class GUI( gui.GUI ):
     def _FadeOut(self,start=255,stop=0,delta=-25,callback=None):
         self._Fade(start,stop,delta,callback)
 
-    def _SetTransparent(self):
-        self.amount += self.delta
-        if (self.amount <= self.stop and self.delta<0) or (self.amount >= self.stop and self.delta>0):
-            self.SetTransparent(self.stop)
-            self.fadetimer.Stop()
-            if self.callback:self.callback()
-            return
-        self.SetTransparent(self.amount)
-
     def _Hide(self,*args,**kwargs):
         self.progress_timer.Stop()
         self.gaugeProgressBar.SetRange(100)
@@ -713,11 +718,11 @@ class GUI( gui.GUI ):
         elif 'XDG_CONFIG_HOME' in os.environ:
             configdir = os.path.join(os.environ['XDG_CONFIG_HOME'], APPNAME.lower())
         else:
-            confighome = os.path.join(os.environ['HOME'], '.config')
+            confighome = os.path.join(wx.GetHomeDir(), '.config')
             if os.path.exists(confighome) and os.path.isdir(confighome):
                 configdir = os.path.join(confighome, APPNAME.lower())
             else:
-                configdir = os.path.join(os.environ['HOME'], '.'+APPNAME.lower())
+                configdir = os.path.join(wx.GetHomeDir(), '.'+APPNAME.lower())
 
         defaultconfig=os.path.join(data_path(),'config','defaults.ini')
         self.userconfig=os.path.join(configdir,'config.ini')
@@ -729,6 +734,20 @@ class GUI( gui.GUI ):
     def _Reset(self):
         self._ClearQueue()
         self._ClearPrograms()
+
+    def _SetCursor(self,cursor):
+        for cw in self.GetChildren():
+           cw.SetCursor(cursor)
+        self.SetCursor(cursor)
+
+    def _SetTransparent(self):
+        self.amount += self.delta
+        if (self.amount <= self.stop and self.delta<0) or (self.amount >= self.stop and self.delta>0):
+            self.SetTransparent(self.stop)
+            self.fadetimer.Stop()
+            if self.callback:self.callback()
+            return
+        self.SetTransparent(self.amount)
 
     def _ShowInfo(self):
         idx = self.lstPrograms.GetFocusedItem()
