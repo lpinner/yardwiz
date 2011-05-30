@@ -471,7 +471,7 @@ class GUI( gui.GUI ):
             logger.debug('_DeleteFromWiz, indices: %s'%str(indices))
             logger.debug('_DeleteFromWiz, programs: %s'%str(programs))
             self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-            deletions=ThreadedDeleter(self,self.device,self.ip,self.port,programs,indices)
+            deletions=ThreadedDeleter(self,self.Stop,self.device,self.ip,self.port,programs,indices)
 
     def _DeleteProgram(self,event):
         idx=self.lstPrograms.FindItemData(-1,event.index)
