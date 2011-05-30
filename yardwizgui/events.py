@@ -16,9 +16,10 @@ wizEVT_CONNECTED = wx.NewEventType()
 EVT_CONNECTED = wx.PyEventBinder(wizEVT_CONNECTED, 1)
 class Connected(wx.PyCommandEvent):
     """Event to signal that we are connected to the Wiz and all program info has been downloaded"""
-    def __init__(self, etype, eid, message=None):
+    def __init__(self, etype, eid, connected, message):
         """Creates the event object"""
         wx.PyCommandEvent.__init__(self, etype, eid)
+        self.connected = connected
         self.message = message
 
 wizEVT_DELETEPROGRAM = wx.NewEventType()

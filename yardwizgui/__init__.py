@@ -293,6 +293,11 @@ class GUI( gui.GUI ):
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
 
+    def _CheckWiz(self):
+            self._ShowTab(self.idxLog)
+            logger.debug('_CheckWiz')
+            checker=ThreadedChecker(self,self.device,self.ip,self.port)
+
     def _CleanupConfig(self):
         #Bit of cleanup from previous versions
         #configs - format = [oldsection, oldoption] or [oldsection, oldoption, newsection, newoption]
@@ -346,6 +351,7 @@ class GUI( gui.GUI ):
         self._Reset()
         self.Stop.clear()
         self.lstPrograms.SetSortEnabled(False)
+        self.mitCheck.Enable( False )
         self.btnConnect.Enable( False )
         self.mitDelete.Enable( False )
         self.lblProgressText.SetLabelText('Connecting...')
@@ -393,6 +399,9 @@ class GUI( gui.GUI ):
         if not self._downloading:
             self.lblProgressText.SetLabelText('')
             self.gaugeProgressBar.Hide()
+
+        if event and event.connected:
+            self.mitCheck.Enable( True )
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):
@@ -649,11 +658,12 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar._Hide()
 
     def _Log(self,msg):
+        self.txtLog.SetInsertionPointEnd()
         msg=msg.strip()
         if msg:
-          self.txtLog.WriteText(msg+'\n')
-          self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
-          logger.debug(msg)
+            self.txtLog.WriteText(msg+'\n')
+            self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
+            logger.debug(msg)
 
     def _Pulse(self,*args,**kwargs):
         if not self._downloading:
@@ -864,6 +874,7 @@ class GUI( gui.GUI ):
             event.Skip()
 
     def cbxDevice_OnKillFocus( self, event ):
+        self.mitCheck.Enable( False )
         device=str(self.cbxDevice.GetValue())
         if device in self.devices:
             devices=[]
@@ -906,6 +917,9 @@ class GUI( gui.GUI ):
 
     def lstQueue_OnMiddleClick( self, event ):
         self.mitRemove_OnSelect(event)
+
+    def mitCheck_OnSelect( self, event ):
+        self._CheckWiz()
 
     def mitAbout_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)

@@ -214,6 +214,10 @@ class GUI ( wx.Frame ):
 		
 		self.mbrMenu = wx.MenuBar( 0 )
 		self.mnuFile = wx.Menu()
+		self.mitCheck = wx.MenuItem( self.mnuFile, wx.ID_ANY, u"Check recordings", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuFile.AppendItem( self.mitCheck )
+		self.mitCheck.Enable( False )
+		
 		self.mitExit = wx.MenuItem( self.mnuFile, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuFile.AppendItem( self.mitExit )
 		
@@ -269,6 +273,7 @@ class GUI ( wx.Frame ):
 		self.btnPause.Bind( wx.EVT_BUTTON, self.btnPause_OnClick )
 		self.btnStop.Bind( wx.EVT_BUTTON, self.btnStop_OnClick )
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
+		self.Bind( wx.EVT_MENU, self.mitCheck_OnSelect, id = self.mitCheck.GetId() )
 		self.Bind( wx.EVT_MENU, self.btnExit_onClick, id = self.mitExit.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitPreferences_OnSelect, id = self.mitPreferences.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitHelp_OnSelect, id = self.mitHelp.GetId() )
@@ -305,6 +310,7 @@ class GUI ( wx.Frame ):
 		self.btnPause.Unbind( wx.EVT_BUTTON, None )
 		self.btnStop.Unbind( wx.EVT_BUTTON, None )
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
+		self.Unbind( wx.EVT_MENU, id = self.mitCheck.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitExit.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitPreferences.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitHelp.GetId() )
@@ -397,6 +403,9 @@ class GUI ( wx.Frame ):
 		event.Skip()
 	
 	def btnExit_onClick( self, event ):
+		event.Skip()
+	
+	def mitCheck_OnSelect( self, event ):
 		event.Skip()
 	
 	

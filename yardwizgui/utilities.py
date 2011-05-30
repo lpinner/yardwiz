@@ -10,6 +10,50 @@ APPNAME='YARDWiz'
 #######################################################################
 #Helper classes
 #######################################################################
+class ThreadedChecker( threading.Thread ):
+    def __init__( self, parent, device, ip, port):
+        threading.Thread.__init__( self )
+        self.parent=parent
+        self.device=device
+        self.ip=ip
+        self.port=port
+        self.start()
+    def run(self):
+        if self.ip:
+            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--check']
+        else:
+            cmd=[wizexe,'--device',self.device,'--all','--check']
+
+        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        self._Log('Checking recordings')
+
+        try:
+            self.proc=subproc(cmd)
+            exit_code=self.proc.wait()
+            stdout,stderr=self.proc.communicate()
+            stderr=stderr.strip()
+            stdout=stdout.strip()
+            if exit_code:
+                msg='Unable to check recordings'
+                if stderr:msg=msg+': '+stderr
+                raise Exception,msg
+        except Exception,err:
+            self._Log(str(err))
+        else:
+            msg='Finished checking recordings'
+            if stdout:
+                msg=msg+'\n'+stdout
+            if stderr:
+                msg=msg+'\n'+stderr
+            self._Log(msg)
+
+        self.parent.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+    def _Log(self,message):
+        evt = Log(wizEVT_LOG, -1,message)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass #we're probably exiting
+
 class ThreadedConnector( threading.Thread ):
     def __init__( self, parent, evtStop, device, ip, port, deleted=[], quick=False):
         threading.Thread.__init__( self )
@@ -32,7 +76,7 @@ class ThreadedConnector( threading.Thread ):
             exit_code=proc.wait()
 
             if exit_code > 0 or 'destination host unreachable' in stdout.lower():
-                evt = Connected(wizEVT_CONNECTED, -1,'Unable to contact the WizPnP server.')
+                evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.')
                 try:wx.PostEvent(self.parent, evt)
                 except:pass #we're probably exiting
                 return
@@ -46,11 +90,11 @@ class ThreadedConnector( threading.Thread ):
         else:
             exit_code,err=self._listprograms()
         if exit_code > 0:
-            evt = Connected(wizEVT_CONNECTED, -1,'Unable to list programs on the WizPnP server:\n%s'%err)
+            evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to list programs on the WizPnP server:\n%s'%err)
             try:wx.PostEvent(self.parent, evt)
             except:pass #we're probably exiting
         else:
-            evt = Connected(wizEVT_CONNECTED, -1,'Finished listing programs on the WizPnP server')
+            evt = Connected(wizEVT_CONNECTED, -1,True,'Finished listing programs on the WizPnP server')
             try:wx.PostEvent(self.parent, evt)
             except:pass
 
