@@ -580,7 +580,7 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( False )
         self.mitDownload.Enable( False )
         self._downloading=True
-        self.ThreadedDownloader=ThreadedDownloader(self,self.Stop,self.device,self.ip,self.port,programs,self.Play,self.Stop)
+        self.ThreadedDownloader=ThreadedDownloader(self,self.device,self.ip,self.port,programs,self.Play,self.Stop)
 
     def _DownloadComplete(self,index,stopped):
         pidx=0

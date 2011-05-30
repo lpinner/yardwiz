@@ -673,7 +673,7 @@ def timefromsecs(secs):
     if h==0:
         if m==0:
             if s==1:return "1 second"
-            else:return "%s seconds" % (s)
+            else:return "%1d seconds" % (s)
         elif m==1:return "1 minute"
         else:return "%1d minutes" % (m)
     elif h==1 and m==0:return "1 hour"
