@@ -5,7 +5,8 @@
 ===_New in 0.3.1_===
   * getWizPnP updated to 0.5.1 in Windows, OSX and Linux
   * Re-added standalone OSX app
-  * Added a Linux version which includes a compiled version of getWizPnP
+  * Added Linux versions which include a 32 or 64 bit compiled version of getWizPnP
+  * Implemented the getWizPnP --check function
   * Added estimated download time remaining
   * Added ability to remember multiple wizzes, not just the last one used.
   * Added check to see if Wiz is online before attempting to connect. Doesn't work if connecting via typed in device name.
