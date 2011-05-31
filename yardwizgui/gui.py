@@ -41,9 +41,7 @@ class GUI ( wx.Frame ):
 		bSizer81.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.btnConnect = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
-		self.btnConnect.SetToolTipString( u"Connect to the WizPnp server\nand get recording information" )
-		
-		self.btnConnect.SetToolTipString( u"Connect to the WizPnp server\nand get recording information" )
+		self.btnConnect.SetToolTipString( u"Connect to the WizPnP server\nand get recording information" )
 		
 		bSizer81.Add( self.btnConnect, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		

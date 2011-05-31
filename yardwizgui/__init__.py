@@ -89,6 +89,11 @@ class GUI( gui.GUI ):
         self.Bind(EVT_DOWNLOADCOMPLETE, self.onDownloadComplete)
         self.lstPrograms.SetSortEnabled(True)
 
+        self.tooltips={}
+        for cw in self.GetChildren():
+            tt=cw.GetToolTip()
+            if tt:self.tooltips[cw]=tt
+        
         #Workarounds for crossplatform & wxversion issues
         try:self.lblProgressText.SetLabelText('')
         except:
@@ -208,6 +213,19 @@ class GUI( gui.GUI ):
         if self.cbxDevice.GetCount()>0:
             self.cbxDevice.SetSelection(0)
 
+        #tooltips
+        tooltips=self.config.getboolean('Settings','showtooltips')
+        for cw in self.tooltips:
+            if tooltips:self.tooltips[cw].Enable(True)
+            else:self.tooltips[cw].Enable(False)
+        if tooltips:
+            self.configspec=configspec.configspec
+        else:
+            for sec in self.configspec:
+                for opt in sec:
+                    if len(opt)>=3:
+                        opt[2]=''
+            
         xsize=self.config.getint('Window','xsize')
         ysize=self.config.getint('Window','ysize')
         xmin=self.config.getint('Window','xmin')
@@ -270,7 +288,8 @@ class GUI( gui.GUI ):
             self.config.set('Window','fade',False)
             if 'fade' in self.configspec['Window']:
                 del self.configspec['Window']['fade']
-            
+
+           
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
 

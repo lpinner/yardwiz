@@ -13,7 +13,8 @@ configspec={
         'display_dateformat':['Date format for display','str', dateformattooltip],
         'filename_dateformat':['Date format for filenames', 'str', dateformattooltip],
         'confirmdelete':['Confirm delete', 'bool'],
-        'quicklisting':['Enable quick listing', 'bool',quicklistingtooltip ]
+        'quicklisting':['Enable quick listing', 'bool',quicklistingtooltip ],
+        'showtooltips':['Show ToolTips', 'bool']
         },
     'Sounds':{ #This will need to be rewritten if we add more sounds...
         'playsounds':['Play sound after download', 'bool'],
