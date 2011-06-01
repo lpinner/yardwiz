@@ -755,8 +755,14 @@ class GUI( gui.GUI ):
         self._ClearPrograms()
 
     def _SetCursor(self,cursor):
+        self.SetCursor(cursor)
         for cw in self.GetChildren():
-           cw.SetCursor(cursor)
+            cw.SetCursor(cursor)
+            for cw in cw.GetChildren():
+                cw.SetCursor(cursor)
+                for cw in cw.GetChildren():
+                    cw.SetCursor(cursor)
+           
         self.SetCursor(cursor)
 
     def _SetTransparent(self):
