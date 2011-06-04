@@ -43,6 +43,8 @@ class GUI ( wx.Frame ):
 		self.btnConnect = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnConnect.SetToolTipString( u"Connect to the WizPnP server\nand get recording information" )
 		
+		self.btnConnect.SetToolTipString( u"Connect to the WizPnP server\nand get recording information" )
+		
 		bSizer81.Add( self.btnConnect, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		
 		bSizer4.Add( bSizer81, 0, wx.EXPAND, 5 )
@@ -129,7 +131,7 @@ class GUI ( wx.Frame ):
 		gSizer21 = wx.GridSizer( 2, 1, 0, 0 )
 		
 		gSizer21.SetMinSize( wx.Size( -1,25 ) ) 
-		gSizer2 = wx.GridSizer( 1, 6, 0, 0 )
+		gSizer2 = wx.GridSizer( 1, 8, 0, 0 )
 		
 		self.btnClearQueue = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnClearQueue.Enable( False )
@@ -178,6 +180,18 @@ class GUI ( wx.Frame ):
 		self.btnStop.SetToolTipString( u"Cancel download and\ndelete downloaded file" )
 		
 		gSizer2.Add( self.btnStop, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 5 )
+		
+		
+		gSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		
+		self.btnVLC = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
+		self.btnVLC.Enable( False )
+		self.btnVLC.SetToolTipString( u"Play in VLC" )
+		
+		self.btnVLC.Enable( False )
+		self.btnVLC.SetToolTipString( u"Play in VLC" )
+		
+		gSizer2.Add( self.btnVLC, 0, wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
 		gSizer21.Add( gSizer2, 1, 0, 5 )
 		
@@ -270,6 +284,7 @@ class GUI ( wx.Frame ):
 		self.btnPlay.Bind( wx.EVT_BUTTON, self.btnPlay_OnClick )
 		self.btnPause.Bind( wx.EVT_BUTTON, self.btnPause_OnClick )
 		self.btnStop.Bind( wx.EVT_BUTTON, self.btnStop_OnClick )
+		self.btnVLC.Bind( wx.EVT_BUTTON, self.btnVLC_OnClick )
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
 		self.Bind( wx.EVT_MENU, self.mitCheck_OnSelect, id = self.mitCheck.GetId() )
 		self.Bind( wx.EVT_MENU, self.btnExit_onClick, id = self.mitExit.GetId() )
@@ -307,6 +322,7 @@ class GUI ( wx.Frame ):
 		self.btnPlay.Unbind( wx.EVT_BUTTON, None )
 		self.btnPause.Unbind( wx.EVT_BUTTON, None )
 		self.btnStop.Unbind( wx.EVT_BUTTON, None )
+		self.btnVLC.Unbind( wx.EVT_BUTTON, None )
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
 		self.Unbind( wx.EVT_MENU, id = self.mitCheck.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitExit.GetId() )
@@ -398,6 +414,9 @@ class GUI ( wx.Frame ):
 		event.Skip()
 	
 	def btnStop_OnClick( self, event ):
+		event.Skip()
+	
+	def btnVLC_OnClick( self, event ):
 		event.Skip()
 	
 	def btnExit_onClick( self, event ):

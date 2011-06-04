@@ -61,6 +61,15 @@ class Log(wx.PyCommandEvent):
         wx.PyCommandEvent.__init__(self, etype, eid)
         self.message = message
 
+
+wizEVT_PLAYCOMPLETE = wx.NewEventType()
+EVT_PLAYCOMPLETE = wx.PyEventBinder(wizEVT_PLAYCOMPLETE, 1)
+class PlayComplete(wx.PyCommandEvent):
+    """Event to signal that VLC has finished playing"""
+    def __init__(self, etype, eid):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+
 wizEVT_UPDATEPROGRAM = wx.NewEventType()
 EVT_UPDATEPROGRAM = wx.PyEventBinder(wizEVT_UPDATEPROGRAM, 1)
 class UpdateProgram(wx.PyCommandEvent):

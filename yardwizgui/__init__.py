@@ -62,6 +62,8 @@ class GUI( gui.GUI ):
         self.btnPause.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"pause_disabled.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnStop.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"stop.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnVLC.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"vlc.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnVLC.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"vlc_disabled.png"), wx.BITMAP_TYPE_ANY ) )
 
         self.version,self.display_version=version()
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
@@ -69,6 +71,7 @@ class GUI( gui.GUI ):
 
         self._downloading=False
         self._connecting=False
+        self.player=None
         self.total=0
         self.deleted=[]
         self.devices=odict()
@@ -84,9 +87,10 @@ class GUI( gui.GUI ):
         self.Bind(EVT_DELETEPROGRAM, self._DeleteProgram)
         self.Bind(EVT_UPDATEPROGRAM, self._UpdateProgram)
 
-        self.Bind(EVT_LOG, self.onLog)
-        self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.Bind(EVT_DOWNLOADCOMPLETE, self.onDownloadComplete)
+        self.Bind(EVT_LOG, self.onLog)
+        self.Bind(EVT_PLAYCOMPLETE, self.onPlayComplete)
+        self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.lstPrograms.SetSortEnabled(True)
 
         self.tooltips={}
@@ -110,7 +114,8 @@ class GUI( gui.GUI ):
             self.Bind(wx.EVT_TIMER, self._Pulse,self.progress_timer)
 
         self.gaugeProgressBar.Hide()
-
+        self.btnVLC.Hide()
+                
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires getWizPnP to communicate with your Beyonwiz.\n\nPlease install getWizPnP from: http://www.openwiz.org/wiki/GetWizPnP_Release'''
         if not wizexe:
@@ -289,6 +294,13 @@ class GUI( gui.GUI ):
             if 'fade' in self.configspec['Window']:
                 del self.configspec['Window']['fade']
 
+        #VLC Player
+        logger.debug('VLC path: %s'%vlcexe)
+        if vlcexe:
+            self.vlcargs=self.config.get('Settings','vlcargs').split()
+        else:
+            if 'vlcargs' in self.configspec['Settings']:
+                del self.configspec['Settings']['vlcargs']
            
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
@@ -648,6 +660,7 @@ class GUI( gui.GUI ):
             self.mitQueue.Enable(True)
             self.mitExit.Enable( True )
             self.mitDownload.Enable( True )
+            self.btnVLC.Hide()
             if len(self.queue)==0:
                 self.btnClearQueue.Enable( False )
                 self.btnDownload.Enable( False )
@@ -688,6 +701,9 @@ class GUI( gui.GUI ):
             self.txtLog.WriteText(msg+'\n')
             self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
             logger.debug(msg)
+
+    def _Play(self,*args,**kwargs):
+        self.player=ThreadedPlayer(self, self.Stop, self.Play,self.filename,self.vlcargs)
 
     def _Pulse(self,*args,**kwargs):
         if not self._downloading:
@@ -844,6 +860,13 @@ class GUI( gui.GUI ):
                        ]
                 self.StatusBar.SetFields(fields)
                 self.StatusBar.SetStatusWidths([-2,-3,-4])
+
+            self.filename=progress['filename']
+            if vlcexe and self.filename and self.player is None:
+                self.btnVLC.Enable(True)
+                self.btnVLC.Show()
+            else:self.btnVLC.Hide()
+
         else:
             self.gaugeProgressBar.SetValue(0)
             self.StatusBar.SetFieldsCount(1)
@@ -905,11 +928,13 @@ class GUI( gui.GUI ):
     def btnPause_OnClick( self, event ):
         self.btnPlay.Enable( True )
         self.btnPause.Enable( False )
-        #self.btnStop.Enable( False )
         self.Play.clear()
 
     def btnStop_OnClick( self, event ):
         self.Stop.set()
+
+    def btnVLC_OnClick( self, event ):
+        self._Play()
 
     def cbxDevice_OnKeyDown( self, event ):
         if event.GetKeyCode() == wx.WXK_F5:
@@ -1031,6 +1056,11 @@ class GUI( gui.GUI ):
 
     def onLog( self, event ):
         self._Log(event.message)
+
+    def onPlayComplete( self, event ):
+        self.btnVLC.Hide()
+        del self.player
+        self.player=None
 
     def onUpdateProgress( self, event ):
         self._UpdateProgress(event.progress,event.message)

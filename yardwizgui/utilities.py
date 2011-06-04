@@ -1,5 +1,5 @@
 import os,sys,threading,time,signal,ctypes,copy,logging,logging.handlers
-import subprocess,re,ConfigParser
+import subprocess,re,ConfigParser,socket
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
@@ -428,6 +428,7 @@ class ThreadedDownloader( threading.Thread ):
                 self._downloadcomplete(index=program['index'],stopped=True)
                 try:
                     self._stopdownload()
+                    time.sleep(1)
                     os.unlink(program['filename'])
                 except Exception,err:
                     self._log('Unable to stop download or delete %s.'%program['filename'])
@@ -481,7 +482,8 @@ class ThreadedDownloader( threading.Thread ):
                         except ZeroDivisionError:
                             esttime='unknown'
                             totaltime='unknown'
-                    progress={'percent':int(size/s*100),
+                    progress={'filename':f,
+                              'percent':int(size/s*100),
                               'downloaded':round(size/MB, 1),
                               'size':round(program['size'], 1),
                               'total':round(self.total, 1),
@@ -503,7 +505,8 @@ class ThreadedDownloader( threading.Thread ):
             self._downloadcomplete(index=program['index'],stopped=True)
         else:
             #Should check filesize v. getwizpnp reported size...
-            progress={'percent':100,
+            progress={'filename':'',
+                      'percent':100,
                       'downloaded':round(program['size']/MB*MiB, 1),
                       'size':round(program['size']/MB*MiB, 1),
                       'total':self.total,
@@ -538,6 +541,101 @@ class ThreadedDownloader( threading.Thread ):
             kill(self.proc)
             del self.proc
         except:pass
+
+class ThreadedPlayer( threading.Thread ):
+    def __init__( self, parent, evtStop, evtPlay,filename,args=None):
+        threading.Thread.__init__( self )
+        self.parent=parent
+        self.Stop=evtStop
+        self.Play=evtPlay
+        self.filename=filename
+        self.args=args
+        self.port=9876
+        self.start()
+
+    def run(self):
+        cmd=[vlcexe,'--extraintf=rc','--rc-host=localhost:%s'%self.port,'--quiet','--verbose=0']
+        if not iswin:cmd.append('--rc-fake-tty')
+        if self.args:
+            cmd=cmd+self.args
+        cmd=cmd+[self.filename.encode(filesysenc)]
+
+        try:
+            self.proc=subproc(cmd)
+            time.sleep(0.5)
+            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket.settimeout(0.1)
+            self.socket.connect(('localhost', self.port))
+            data=self.getdata()
+            while self.proc.poll() is None:
+                time.sleep(0.1)
+                if self.Stop.isSet():
+                    self.quit()
+                    return
+                elif not self.Play.isSet():#We're paused
+                    self.cmd('pause')
+                    while True:
+                        self.Play.wait(0.1) #wait until Play is set
+                        if self.Stop.isSet():
+                            self.quit()
+                            return
+                        elif self.Play.isSet():
+                            self.cmd('pause')
+                            break
+
+            exit_code=self.proc.poll()
+            stdout,stderr=self.proc.communicate()
+            stderr=stderr.strip()
+            stdout=stdout.strip()
+            if exit_code:
+                msg='Unable to play recording'
+                if stderr:msg=msg+': '+stderr
+                raise Exception,msg
+        except Exception,err:
+            msg=str(err)
+        else:
+            msg='Finished playing recording'
+            if stdout:
+                msg=msg+'\n'+stdout
+            if stderr:
+                msg=msg+'\n'+stderr
+
+        evt = Log(wizEVT_LOG, -1,msg)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass #we're probably exiting
+        self.quit()
+    def quit(self):
+        try:
+            self.cmd('shutdown')
+            self.cmd('quit')
+            time.sleep(0.1)
+            kill(self.proc)
+        except:pass
+        evt = PlayComplete(wizEVT_PLAYCOMPLETE, -1)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass #we're probably exiting
+
+    def getdata(self):
+        data=''
+        while True:
+            try:part=self.socket.recv(1024)
+            except socket.timeout:part=''
+            if part:data+=part.strip()
+            else:break
+        return data
+
+    def cmd(self,cmd):
+        self.socket.sendall(cmd+os.linesep)
+        print self.getdata()
+
+    def cmd(self,cmd):
+        self.socket.sendall(cmd+os.linesep)
+        print self.getdata()
+
+    def is_playing(self):
+        self.socket.send('is_playing'+os.linesep)
+        data=self.getdata()
+        return data.strip('>').strip()=='1'
 
 class Stderr(object):
     #This is modified from py2exe class Stderr
@@ -657,14 +755,17 @@ def license():
         license=open(os.path.join(os.path.dirname(sys.argv[0]),'LICENSE')).read().strip()
     return license
 
-def subproc(cmd):
+def subproc(cmd,stdin=False):
     logger.debug(subprocess.list2cmdline(cmd))
     logger.debug(str(cmd))
-    if 'pythonw.exe' in sys.executable:
-        proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
-        proc.stdin.close()
+    if stdin:
+            proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
     else:
-        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        if 'pythonw.exe' in sys.executable:
+            proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+            proc.stdin.close()
+        else:
+            proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
     return proc
     
 def timefromsecs(secs):
@@ -792,6 +893,20 @@ if not iswin:del getwizpnp[0]
 for f in getwizpnp:
     if which(f):
         wizexe=f
+        break
+
+vlc=['vlc']
+vlcexe=''
+if iswin:
+    p=r'C:\Program Files\VideoLAN\VLC'
+    if not p in path.split(os.pathsep):path=p+os.pathsep+path
+    os.environ['PATH']=path
+    vlc.append('vlc.exe')
+else:del vlc[0]
+
+for f in vlc:
+    if which(f):
+        vlcexe=f
         break
 
 if iswin:
