@@ -254,6 +254,8 @@ class GUI( gui.GUI ):
             ysize=min([ysize,yres])
             self.SetSize( wx.Size( xsize,ysize ) )
             self.SetPosition(wx.Point(xmin,ymin))
+        logger.debug('Window size: xmin %s, ymin %s, xsize %s, ysize %s'%(xmin,ymin,xsize,ysize))
+        logger.debug('Window resolution: xres %s, yres %s'%(xres,yres))
 
         #Window effects
         logger.debug('CanSetTransparent: %s'%self.CanSetTransparent())

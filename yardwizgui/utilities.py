@@ -428,8 +428,15 @@ class ThreadedDownloader( threading.Thread ):
                 self._downloadcomplete(index=program['index'],stopped=True)
                 try:
                     self._stopdownload()
-                    time.sleep(1)
-                    os.unlink(program['filename'])
+                    for i in range(3):#Try to delete the file 3 times
+                        try:
+                            time.sleep(1)
+                            os.unlink(program['filename'])
+                        except:
+                            if i==2:raise
+                            else:continue
+                        else:break
+                        
                 except Exception,err:
                     self._log('Unable to stop download or delete %s.'%program['filename'])
                     self._log(str(err))
@@ -550,10 +557,11 @@ class ThreadedPlayer( threading.Thread ):
         self.Play=evtPlay
         self.filename=filename
         self.args=args
-        self.port=9876
         self.start()
-
+        
     def run(self):
+
+        self.port=self.getfreeport()
         cmd=[vlcexe,'--extraintf=rc','--rc-host=localhost:%s'%self.port,'--quiet','--verbose=0']
         if not iswin:cmd.append('--rc-fake-tty')
         if self.args:
@@ -563,14 +571,14 @@ class ThreadedPlayer( threading.Thread ):
         try:
             self.proc=subproc(cmd)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.settimeout(0.1)
+            self.socket.settimeout(0.5)
             for i in range(3):
                 try:
                     time.sleep(0.5)
                     self.socket.connect(('localhost', self.port))
                 except:
                     if i==2:raise
-                    else:pass
+                    else:continue
                 else:break
             data=self.getdata()
             while self.proc.poll() is None:
@@ -610,6 +618,14 @@ class ThreadedPlayer( threading.Thread ):
         try:wx.PostEvent(self.parent, evt)
         except:pass #we're probably exiting
         self.quit()
+
+    def getfreeport(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind(('localhost',0))
+        port=s.getsockname()[1]
+        s.close()
+        return port
+
     def quit(self):
         try:
             self.cmd('shutdown')
@@ -629,10 +645,6 @@ class ThreadedPlayer( threading.Thread ):
             if part:data+=part.strip()
             else:break
         return data
-
-    def cmd(self,cmd):
-        self.socket.sendall(cmd+os.linesep)
-        print self.getdata()
 
     def cmd(self,cmd):
         self.socket.sendall(cmd+os.linesep)
