@@ -562,10 +562,16 @@ class ThreadedPlayer( threading.Thread ):
 
         try:
             self.proc=subproc(cmd)
-            time.sleep(0.5)
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.socket.settimeout(0.1)
-            self.socket.connect(('localhost', self.port))
+            for i in range(3):
+                try:
+                    time.sleep(0.5)
+                    self.socket.connect(('localhost', self.port))
+                except:
+                    if i==2:raise
+                    else:pass
+                else:break
             data=self.getdata()
             while self.proc.poll() is None:
                 time.sleep(0.1)
@@ -902,7 +908,6 @@ if iswin:
     if not p in path.split(os.pathsep):path=p+os.pathsep+path
     os.environ['PATH']=path
     vlc.append('vlc.exe')
-else:del vlc[0]
 
 for f in vlc:
     if which(f):
