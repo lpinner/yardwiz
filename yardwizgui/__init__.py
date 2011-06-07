@@ -100,6 +100,8 @@ class GUI( gui.GUI ):
                 cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
                 for cw in cw.GetChildren():
                     cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
+	#Set focus so the F5 can get fired, doesn't work on startup when the frame has focus
+        self.cbxDevice.SetFocus()
 
         self.tooltips={}
         for cw in self.GetChildren():
