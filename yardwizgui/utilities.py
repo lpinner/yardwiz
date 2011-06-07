@@ -396,6 +396,16 @@ class ThreadedDownloader( threading.Thread ):
             self.total-=program['size']
             if self.Stop.isSet():break
 
+    def _delete(self, f,n=5):
+        for i in range(n):#Try to delete the file 3 times
+            try:
+                time.sleep(1)
+                os.unlink(f)
+            except:
+                if i==n-1:raise
+                else:continue
+            else:return
+
     def _download(self,program):
         self._log('Downloading %s...'%program['title'])
         fd=program['filename'].encode(filesysenc)
@@ -431,7 +441,7 @@ class ThreadedDownloader( threading.Thread ):
                     for i in range(3):#Try to delete the file 3 times
                         try:
                             time.sleep(1)
-                            os.unlink(program['filename'])
+                            self._delete(program['filename'])
                         except:
                             if i==2:raise
                             else:continue
@@ -456,7 +466,7 @@ class ThreadedDownloader( threading.Thread ):
                     if self.Stop.isSet():
                         self._downloadcomplete(index=program['index'],stopped=True)
                         try:
-                            os.unlink(program['filename'])
+                            self._delete(program['filename'])
                         except Exception,err:
                             self._log('Unable to delete %s.'%program['filename'])
                             self._log(str(err))
@@ -570,16 +580,7 @@ class ThreadedPlayer( threading.Thread ):
 
         try:
             self.proc=subproc(cmd)
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.settimeout(0.5)
-            for i in range(3):
-                try:
-                    time.sleep(0.5)
-                    self.socket.connect(('localhost', self.port))
-                except:
-                    if i==2:raise
-                    else:continue
-                else:break
+            self.socket=self.getsocket(self.port)
             data=self.getdata()
             while self.proc.poll() is None:
                 time.sleep(0.1)
@@ -588,7 +589,7 @@ class ThreadedPlayer( threading.Thread ):
                     return
                 elif not self.Play.isSet():#We're paused
                     self.cmd('pause')
-                    while True:
+                    while self.proc.poll() is None:
                         self.Play.wait(0.1) #wait until Play is set
                         if self.Stop.isSet():
                             self.quit()
@@ -606,6 +607,7 @@ class ThreadedPlayer( threading.Thread ):
                 if stderr:msg=msg+': '+stderr
                 raise Exception,msg
         except Exception,err:
+            self.quit()
             msg=str(err)
         else:
             msg='Finished playing recording'
@@ -623,15 +625,29 @@ class ThreadedPlayer( threading.Thread ):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind(('localhost',0))
         port=s.getsockname()[1]
-        s.close()
+        s.close();del s
         return port
+
+    def getsocket(self,port,attempts=5):
+        for i in range(attempts):
+            try:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                s.settimeout(0.5)
+                time.sleep(0.5)
+                s.connect(('localhost', port))
+            except Exception,err:
+                del s
+                if i==attempts-1:raise
+                else:continue
+            else:return s
 
     def quit(self):
         try:
             self.cmd('shutdown')
             self.cmd('quit')
             time.sleep(0.1)
-            kill(self.proc)
+        except:pass
+        try:kill(self.proc)
         except:pass
         evt = PlayComplete(wizEVT_PLAYCOMPLETE, -1)
         try:wx.PostEvent(self.parent, evt)
