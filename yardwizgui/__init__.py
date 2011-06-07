@@ -93,6 +93,14 @@ class GUI( gui.GUI ):
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.lstPrograms.SetSortEnabled(True)
 
+	#Bind F5 to connect
+        for cw in self.GetChildren():
+            cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
+            for cw in cw.GetChildren():
+                cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
+                for cw in cw.GetChildren():
+                    cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
+
         self.tooltips={}
         for cw in self.GetChildren():
             tt=cw.GetToolTip()
@@ -937,12 +945,6 @@ class GUI( gui.GUI ):
 
     def btnVLC_OnClick( self, event ):
         self._Play()
-
-    def cbxDevice_OnKeyDown( self, event ):
-        if event.GetKeyCode() == wx.WXK_F5:
-            self._Connect()
-        else:
-            event.Skip()
 
     def cbxDevice_OnKillFocus( self, event ):
         self.mitCheck.Enable( False )

@@ -280,7 +280,7 @@ class ThreadedConnector( threading.Thread ):
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         else:
             cmd=[wizexe,'--device',self.device]
-        cmd.extend(['-vvv','--all','-l','--episode','--index','--sort=fatd'])
+        cmd.extend(['-vv','--all','-l','--episode','--index','--sort=fatd'])
         proc=subproc(cmd)
         proglines=[]
         index=-1

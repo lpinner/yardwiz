@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Nov 17 2010)
+## Python code generated with wxFormBuilder (version Mar 22 2011)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -41,8 +41,6 @@ class GUI ( wx.Frame ):
 		bSizer81.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.btnConnect = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
-		self.btnConnect.SetToolTipString( u"Connect to the WizPnP server\nand get recording information" )
-		
 		self.btnConnect.SetToolTipString( u"Connect to the WizPnP server\nand get recording information" )
 		
 		bSizer81.Add( self.btnConnect, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
@@ -137,15 +135,9 @@ class GUI ( wx.Frame ):
 		self.btnClearQueue.Enable( False )
 		self.btnClearQueue.SetToolTipString( u"Clear all in queue" )
 		
-		self.btnClearQueue.Enable( False )
-		self.btnClearQueue.SetToolTipString( u"Clear all in queue" )
-		
 		gSizer2.Add( self.btnClearQueue, 0, wx.TOP|wx.BOTTOM|wx.LEFT, 5 )
 		
 		self.btnDownload = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
-		self.btnDownload.Enable( False )
-		self.btnDownload.SetToolTipString( u"Download all in queue" )
-		
 		self.btnDownload.Enable( False )
 		self.btnDownload.SetToolTipString( u"Download all in queue" )
 		
@@ -158,15 +150,9 @@ class GUI ( wx.Frame ):
 		self.btnPlay.Enable( False )
 		self.btnPlay.SetToolTipString( u"Resume download" )
 		
-		self.btnPlay.Enable( False )
-		self.btnPlay.SetToolTipString( u"Resume download" )
-		
 		gSizer2.Add( self.btnPlay, 0, wx.TOP|wx.BOTTOM|wx.LEFT, 5 )
 		
 		self.btnPause = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
-		self.btnPause.Enable( False )
-		self.btnPause.SetToolTipString( u"Pause download" )
-		
 		self.btnPause.Enable( False )
 		self.btnPause.SetToolTipString( u"Pause download" )
 		
@@ -176,18 +162,12 @@ class GUI ( wx.Frame ):
 		self.btnStop.Enable( False )
 		self.btnStop.SetToolTipString( u"Cancel download and\ndelete downloaded file" )
 		
-		self.btnStop.Enable( False )
-		self.btnStop.SetToolTipString( u"Cancel download and\ndelete downloaded file" )
-		
 		gSizer2.Add( self.btnStop, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 5 )
 		
 		
 		gSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
 		self.btnVLC = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
-		self.btnVLC.Enable( False )
-		self.btnVLC.SetToolTipString( u"Play in VLC" )
-		
 		self.btnVLC.Enable( False )
 		self.btnVLC.SetToolTipString( u"Play in VLC" )
 		
@@ -262,7 +242,6 @@ class GUI ( wx.Frame ):
 		self.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_UPDATE_UI, self.OnUpdateUI )
-		self.cbxDevice.Bind( wx.EVT_KEY_DOWN, self.cbxDevice_OnKeyDown )
 		self.cbxDevice.Bind( wx.EVT_KILL_FOCUS, self.cbxDevice_OnKillFocus )
 		self.cbxDevice.Bind( wx.EVT_TEXT_ENTER, self.cbxDevice_OnTextEnter )
 		self.btnConnect.Bind( wx.EVT_BUTTON, self.btnConnect_OnClick )
@@ -300,7 +279,6 @@ class GUI ( wx.Frame ):
 		self.Unbind( wx.EVT_KEY_DOWN )
 		self.Unbind( wx.EVT_SIZE )
 		self.Unbind( wx.EVT_UPDATE_UI )
-		self.cbxDevice.Unbind( wx.EVT_KEY_DOWN, None )
 		self.cbxDevice.Unbind( wx.EVT_KILL_FOCUS, None )
 		self.cbxDevice.Unbind( wx.EVT_TEXT_ENTER, None )
 		self.btnConnect.Unbind( wx.EVT_BUTTON, None )
@@ -348,9 +326,6 @@ class GUI ( wx.Frame ):
 		event.Skip()
 	
 	def OnUpdateUI( self, event ):
-		event.Skip()
-	
-	def cbxDevice_OnKeyDown( self, event ):
 		event.Skip()
 	
 	def cbxDevice_OnKillFocus( self, event ):
