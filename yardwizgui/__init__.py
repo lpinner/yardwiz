@@ -93,15 +93,13 @@ class GUI( gui.GUI ):
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.lstPrograms.SetSortEnabled(True)
 
-	#Bind F5 to connect
+        #Bind F5 to connect
         for cw in self.GetChildren():
             cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
             for cw in cw.GetChildren():
                 cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
                 for cw in cw.GetChildren():
                     cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
-	#Set focus so the F5 can get fired, doesn't work on startup when the frame has focus
-        self.cbxDevice.SetFocus()
 
         self.tooltips={}
         for cw in self.GetChildren():
@@ -135,6 +133,8 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
+        #Set focus so the F5 can get fired, doesn't work on startup when the frame has focus
+        self.cbxDevice.SetFocus()
         self._FadeIn()
         self.Show()
 
@@ -333,7 +333,10 @@ class GUI( gui.GUI ):
         #postdownload sound
         self.playsounds=self.config.getboolean('Sounds','playsounds')
         self.downloadcompletesound=self.config.get('Sounds','downloadcomplete')
-        if not self.downloadcompletesound or self.downloadcompletesound.lower()=='<default>':
+        if not self.downloadcompletesound \
+        or self.downloadcompletesound.lower()=='<default>' \
+        or not self.downloadcompletesound.lower()[-4]=='.wav' \
+        or not os.path.exists(self.downloadcompletesound):
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
 
@@ -398,7 +401,7 @@ class GUI( gui.GUI ):
         self.btnDownload.Enable( False )
 
     def _Connect(self):
-        if self._connecting:return
+        if self._connecting or self._downloading:return
         self._connecting=True
         self._Reset()
         self.Stop.clear()
@@ -638,11 +641,13 @@ class GUI( gui.GUI ):
                     self.lstPrograms.Select(item, 0) #Deselect
                 except:pass
                 if self.playsounds:
-                    sound = wx.Sound(self.downloadcompletesound)
-                    try:sound.Play(wx.SOUND_SYNC)
+                    try:
+                        if not os.path.exists(self.downloadcompletesound):
+                            raise IOError, '[Errno 2] No such file or directory: %f'%self.downloadcompletesound
+                        sound = wx.Sound(self.downloadcompletesound)
+                        sound.Play(wx.SOUND_ASYNC)
                     except Exception, err:
                         self._Log(err)
-
 
         cmd=self.postcmd.split('#')[0].strip()
         if not stopped and pidx and cmd:
@@ -708,7 +713,7 @@ class GUI( gui.GUI ):
 
     def _Log(self,msg):
         self.txtLog.SetInsertionPointEnd()
-        msg=msg.strip()
+        msg=str(msg).strip()
         if msg:
             self.txtLog.WriteText(msg+'\n')
             self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
