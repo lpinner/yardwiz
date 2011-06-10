@@ -4,6 +4,12 @@ import glob
 import ConfigParser
 import googlecode_upload
 
+try:
+    ok=raw_input('Are you sure you want to upload to googlecode? [y/N]')
+    if ok.upper()=='Y':pass
+    else:sys.exit(0)
+except:sys.exit(0)
+
 config=ConfigParser.ConfigParser()
 config.read('VERSION')
 version=config.get('Version','VERSION')#N.N.N.N format version number
