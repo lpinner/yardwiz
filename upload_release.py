@@ -26,10 +26,7 @@ uploads={'YARDWiz-%s-OSX-10.6.dmg':{'--summary':'YARDWiz %s (OSX App)'%short_ver
                      '--description':'YARDWiz Windows installer)',
                      '--labels':'Featured,Type-Installer,OpSys-Windows'}
          }
-uploads={'YARDWiz-%s.zip':{'--summary':'YARDWiz %s (Source)'%short_version,
-                     '--description':'YARDWiz source archive',
-                     '--labels':'Deprecated,Type-Source,OpSys-All'}
-        }
+
 for f in uploads:
     if len(sys.argv)>1:del sys.argv[1:]
     filename=os.path.join('dist',f%short_version)
