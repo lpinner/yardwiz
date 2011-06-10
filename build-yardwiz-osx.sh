@@ -14,7 +14,7 @@ rm -rf YARDWiz-0.*
 cp $YWDIR/dist/YARDWiz-[0-9].[0-9].[0-9].zip .
 unzip YARDWiz-0.*.zip
 cd YARDWiz-[0-9].[0-9].[0-9]
-cp $YWDIR/buildfiles/getWizPnP-osx getWizPnP
+cp $YWDIR/buildfiles/getWizPnP-OSX getWizPnP	
 chmod +x getWizPnP
-python setup.py py2app
+/Library/Frameworks/Python.framework/Versions/2.6/bin/python setup.py py2app
 cp dist/YARDWiz-0.*.dmg $YWDIR/dist/
