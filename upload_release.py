@@ -1,6 +1,5 @@
 import sys
 import os
-import glob
 import ConfigParser
 import googlecode_upload
 
