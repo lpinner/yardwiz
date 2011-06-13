@@ -1,6 +1,17 @@
 #labels Featured
 =Release notes=
 
+==0.3.2==
+===_New in 0.3.2_===
+  * getWizPnP updated to 0.5.2 in Windows, OSX and Linux
+  * Added functionality to play currently downloading recording in VLC (http://www.videolan.org/vlc).Requires VLC to be installed separately.
+  
+===_Fixed in 0.3.1_===
+  * Fixed bug with 9 decimal places after seconds in estimated download time remaining.
+  * Worked around [http://code.google.com/p/yardwiz/issues/detail?id=20 Issue 20] - YARDWiz <=v3.1 never finishes listing recordings
+  * Worked around [http://code.google.com/p/yardwiz/issues/detail?id=19 Issue 21] - YARDWiz hangs on completion of downloads on OSX
+  * Other minor bug fixes.
+
 ==0.3.1==
 ===_New in 0.3.1_===
   * getWizPnP updated to 0.5.1 in Windows, OSX and Linux
