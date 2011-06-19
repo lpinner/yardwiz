@@ -730,8 +730,6 @@ def errordialog(message, caption):
     dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
     dlg.ShowModal()
     dlg.Destroy()
-def frozen():
-    return hasattr(sys, "frozen")
 
 def centrepos(self,parent):
     pxsize,pysize=parent.GetSizeTuple()
@@ -742,6 +740,9 @@ def centrepos(self,parent):
     sxmin=pxcen-sxsize/2.0
     symin=pycen-sysize/2.0
     return sxmin,symin
+
+def frozen():
+    return hasattr(sys, "frozen")
 
 def kill(proc):
     if iswin:

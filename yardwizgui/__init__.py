@@ -854,6 +854,11 @@ class GUI( gui.GUI ):
 
     def _UpdateProgress(self,progress,message):
         self.gaugeProgressBar.Show()
+        #make sure the text doesn't overwrite the exit button
+        mw=self.GetClientSizeTuple()[0]-self.btnExit.GetClientSizeTuple()[0]-self.gaugeProgressBar.GetClientSizeTuple()[0]
+        tw=self.lblProgressText.GetTextExtent(message)[0]
+        cw=int(tw/len(message))
+        if tw>mw:message=message[0:int(mw/cw - 3*cw)]+'...'
         self.lblProgressText.SetLabelText(message)
         self.gaugeProgressBar.SetRange(100)
         if progress:
