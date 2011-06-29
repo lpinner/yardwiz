@@ -9,8 +9,10 @@
 
 from widgets import SortableListCtrl
 from widgets import PropertyScrolledPanel
+from widgets import AutoWidthListCtrl
 import wx
 import wx.combo
+from widgets import DateTimeCtrl
 
 ###########################################################################
 ## Class GUI
@@ -48,18 +50,21 @@ class GUI ( wx.Frame ):
 		bSizer4.Add( bSizer81, 0, wx.EXPAND, 5 )
 		
 		self.lstPrograms = SortableListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
-		self.lstPrograms.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
+		self.lstPrograms.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
 		self.lstPrograms.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
 		self.lstPrograms.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 		
 		self.mnuPrograms = wx.Menu()
+		self.mitDownload = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Download now", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuPrograms.AppendItem( self.mitDownload )
+		self.mitDownload.Enable( False )
+		
 		self.mitQueue = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Queue for download", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuPrograms.AppendItem( self.mitQueue )
 		self.mitQueue.Enable( False )
 		
-		self.mitDownload = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Download now", wx.EmptyString, wx.ITEM_NORMAL )
-		self.mnuPrograms.AppendItem( self.mitDownload )
-		self.mitDownload.Enable( False )
+		self.mitScheduler = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Schedule for dowload...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuPrograms.AppendItem( self.mitScheduler )
 		
 		self.mnuPrograms.AppendSeparator()
 		
@@ -215,11 +220,14 @@ class GUI ( wx.Frame ):
 		
 		self.mbrMenu.Append( self.mnuFile, u"File" ) 
 		
-		self.mnuSettings = wx.Menu()
-		self.mitPreferences = wx.MenuItem( self.mnuSettings, wx.ID_ANY, u"Preferences...", wx.EmptyString, wx.ITEM_NORMAL )
-		self.mnuSettings.AppendItem( self.mitPreferences )
+		self.mnuTools = wx.Menu()
+		self.mitScheduled = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Scheduled Downloads...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuTools.AppendItem( self.mitScheduled )
 		
-		self.mbrMenu.Append( self.mnuSettings, u"Settings" ) 
+		self.mitPreferences = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Preferences...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuTools.AppendItem( self.mitPreferences )
+		
+		self.mbrMenu.Append( self.mnuTools, u"Tools" ) 
 		
 		self.mnuHelp = wx.Menu()
 		self.mitHelp = wx.MenuItem( self.mnuHelp, wx.ID_ANY, u"Online Help...", wx.EmptyString, wx.ITEM_NORMAL )
@@ -250,8 +258,9 @@ class GUI ( wx.Frame ):
 		self.lstPrograms.Bind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, self.lstPrograms_OnMiddleClick )
 		self.lstPrograms.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.lstPrograms_OnRightClick )
 		self.lstPrograms.Bind( wx.EVT_LIST_ITEM_SELECTED, self.lstPrograms_OnSelect )
-		self.Bind( wx.EVT_MENU, self.mitQueue_onSelect, id = self.mitQueue.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitDownload_onSelect, id = self.mitDownload.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitQueue_onSelect, id = self.mitQueue.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitScheduler_OnSelect, id = self.mitScheduler.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitDelete_OnSelect, id = self.mitDelete.GetId() )
 		self.lstQueue.Bind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, self.lstQueue_OnMiddleClick )
 		self.lstQueue.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.lstQueue_OnRightClick )
@@ -267,6 +276,7 @@ class GUI ( wx.Frame ):
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
 		self.Bind( wx.EVT_MENU, self.mitCheck_OnSelect, id = self.mitCheck.GetId() )
 		self.Bind( wx.EVT_MENU, self.btnExit_onClick, id = self.mitExit.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitScheduled_OnSelect, id = self.mitScheduled.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitPreferences_OnSelect, id = self.mitPreferences.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitHelp_OnSelect, id = self.mitHelp.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitAbout_OnSelect, id = self.mitAbout.GetId() )
@@ -287,8 +297,9 @@ class GUI ( wx.Frame ):
 		self.lstPrograms.Unbind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, None )
 		self.lstPrograms.Unbind( wx.EVT_LIST_ITEM_RIGHT_CLICK, None )
 		self.lstPrograms.Unbind( wx.EVT_LIST_ITEM_SELECTED, None )
-		self.Unbind( wx.EVT_MENU, id = self.mitQueue.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitDownload.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitQueue.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitScheduler.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitDelete.GetId() )
 		self.lstQueue.Unbind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, None )
 		self.lstQueue.Unbind( wx.EVT_LIST_ITEM_RIGHT_CLICK, None )
@@ -304,6 +315,7 @@ class GUI ( wx.Frame ):
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
 		self.Unbind( wx.EVT_MENU, id = self.mitCheck.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitExit.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitScheduled.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitPreferences.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitHelp.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitAbout.GetId() )
@@ -352,10 +364,13 @@ class GUI ( wx.Frame ):
 	def lstPrograms_OnSelect( self, event ):
 		event.Skip()
 	
+	def mitDownload_onSelect( self, event ):
+		event.Skip()
+	
 	def mitQueue_onSelect( self, event ):
 		event.Skip()
 	
-	def mitDownload_onSelect( self, event ):
+	def mitScheduler_OnSelect( self, event ):
 		event.Skip()
 	
 	def mitDelete_OnSelect( self, event ):
@@ -400,6 +415,9 @@ class GUI ( wx.Frame ):
 	def mitCheck_OnSelect( self, event ):
 		event.Skip()
 	
+	
+	def mitScheduled_OnSelect( self, event ):
+		event.Skip()
 	
 	def mitPreferences_OnSelect( self, event ):
 		event.Skip()
@@ -624,6 +642,79 @@ class SettingsDialog ( wx.Dialog ):
 		event.Skip()
 	
 	def OnSave( self, event ):
+		event.Skip()
+	
+
+###########################################################################
+## Class SchedulerDialog
+###########################################################################
+
+class SchedulerDialog ( wx.Dialog ):
+	
+	def __init__( self, parent ):
+		wx.Dialog.__init__ ( self, parent, id = wx.ID_ANY, title = u"Download Schedule", pos = wx.DefaultPosition, size = wx.DefaultSize, style = wx.DEFAULT_DIALOG_STYLE|wx.RESIZE_BORDER )
+		
+		self.SetSizeHintsSz( wx.Size( 300,-1 ), wx.DefaultSize )
+		
+		bSizer9 = wx.BoxSizer( wx.VERTICAL )
+		
+		self.dtcSchedule=DateTimeCtrl(self)
+		bSizer9.Add( self.dtcSchedule, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.lstSchedule = AutoWidthListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT|wx.NO_BORDER )
+		self.lstSchedule.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
+		self.lstSchedule.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
+		
+		bSizer9.Add( self.lstSchedule, 1, wx.EXPAND, 5 )
+		
+		bSizer10 = wx.BoxSizer( wx.HORIZONTAL )
+		
+		self.btnCancel = wx.Button( self, wx.ID_ANY, u"Cancel schedule", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.btnCancel.SetToolTipString( u"Cancel all scheduled downloads" )
+		
+		bSizer10.Add( self.btnCancel, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		
+		bSizer10.AddSpacer( ( 100, 0), 1, wx.ALIGN_CENTER|wx.EXPAND, 5 )
+		
+		self.btnSchedule = wx.Button( self, wx.ID_ANY, u"Schedule", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.btnSchedule.SetToolTipString( u"Schedule new downloads or update existing schedule" )
+		
+		bSizer10.Add( self.btnSchedule, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		self.btnClose = wx.Button( self, wx.ID_ANY, u"Close", wx.DefaultPosition, wx.DefaultSize, 0 )
+		self.btnClose.SetToolTipString( u"Close without making changes" )
+		
+		bSizer10.Add( self.btnClose, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
+		bSizer9.Add( bSizer10, 1, wx.ALIGN_CENTER|wx.EXPAND, 5 )
+		
+		self.SetSizer( bSizer9 )
+		self.Layout()
+		bSizer9.Fit( self )
+		
+		self.Centre( wx.BOTH )
+		
+		# Connect Events
+		self.btnCancel.Bind( wx.EVT_BUTTON, self.OnCancel )
+		self.btnSchedule.Bind( wx.EVT_BUTTON, self.OnApply )
+		self.btnClose.Bind( wx.EVT_BUTTON, self.OnClose )
+	
+	def __del__( self ):
+		# Disconnect Events
+		self.btnCancel.Unbind( wx.EVT_BUTTON, None )
+		self.btnSchedule.Unbind( wx.EVT_BUTTON, None )
+		self.btnClose.Unbind( wx.EVT_BUTTON, None )
+	
+	
+	# Virtual event handlers, overide them in your derived class
+	def OnCancel( self, event ):
+		event.Skip()
+	
+	def OnApply( self, event ):
+		event.Skip()
+	
+	def OnClose( self, event ):
 		event.Skip()
 	
 

@@ -26,6 +26,67 @@ locale.setlocale(locale.LC_ALL,'')
 
 from wx.lib.mixins.listctrl import ColumnSorterMixin,ListCtrlAutoWidthMixin
 from wx.lib.scrolledpanel import ScrolledPanel
+from wx.lib.masked import TimeCtrl,EVT_TIMEUPDATE
+from events import *
+import datetime
+
+class DateTimeCtrl(wx.Panel):
+    def __init__(self, parent=None, id=wx.ID_ANY, value=None):
+
+        wx.Panel.__init__(self, parent, id)
+
+        if value is None:value=wx.DateTime_Now()
+
+        sizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.SetSizer(sizer)
+
+        self.dpc = wx.GenericDatePickerCtrl(self,  dt=value,
+                                                 style = wx.DP_DROPDOWN|
+                                                 wx.DP_SHOWCENTURY|
+                                                 wx.DP_ALLOWNONE )
+
+        self.dpc.SetSizeHintsSz( wx.Size( 120,-1 ), wx.DefaultSize )
+        h = self.dpc.GetSize().height
+        self.tc = wx.lib.masked.TimeCtrl( self, -1,display_seconds=False, value=value,useFixedWidthFont=False, size=(-1,h) )
+        self.tc.SetFont(self.dpc.GetFont())
+        sb = wx.SpinButton( self, -1, wx.DefaultPosition, (-1,h), wx.SP_VERTICAL )
+        self.tc.BindSpinButton( sb )
+
+        sizer.Add(self.dpc, 0, wx.ALIGN_CENTER)
+        sizer.Add(self.tc, 0, wx.ALIGN_CENTER)
+        sizer.Add(sb, 0, wx.ALIGN_CENTER)
+
+        self.Bind(wx.EVT_DATE_CHANGED, self._OnDateTimeChanged, self.dpc)
+        self.Bind(wx.lib.masked.EVT_TIMEUPDATE, self._OnDateTimeChanged, self.tc )
+
+        self._OnDateTimeChanged()
+
+    def GetValue( self):
+        return self._dt
+
+    def SetValue( self,dt):
+        self._dt=dt
+        self.dpc.SetValue(dt)
+        self.tc.SetValue(dt)
+
+    def _OnDateTimeChanged( self, *args,**kwargs):
+        dt=self.dpc.GetValue()
+        ti=self.tc.GetValue(as_wxDateTime=True)
+        dt.Hour=ti.Hour
+        dt.Minute=ti.Minute
+        dt.Second=ti.Second
+        self._dt=dt
+        evt = DateTimeUpdated(wizEVT_DATETIMEUPDATED, -1, self._dt)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass #we're probably exiting
+
+class AutoWidthListCtrl(wx.ListCtrl, ListCtrlAutoWidthMixin):
+    """A wx.ListCtrl that auto-sizes the last column"""
+    def __init__(self, *args, **kwargs):
+        self._args=args
+        self._kwargs=kwargs
+        wx.ListCtrl.__init__(self,*args,**kwargs)
+        ListCtrlAutoWidthMixin.__init__(self)
 
 class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     """A sortable wx.ListCtrl"""
@@ -41,7 +102,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
 
     #So we can disable sorting if required
     _sortenabled=True
-    
+
     def __init__(self, *args, **kwargs):
         self._args=args
         self._kwargs=kwargs
@@ -61,16 +122,29 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
         wx.ListCtrl.InsertColumn(self,*args,**kwargs)
         self.SetColumnCount(self.GetColumnCount())
 
+    def Append(self,values):
+        self.itemDataMap[self.GetItemCount()]=values
+        wx.ListCtrl.Append(self,values)
+
+        for j in range(self.GetColumnCount()):
+            cwidth=self.GetColumnWidth(j)
+            hwidth=self.HeaderWidths[j]
+            twidth = self.GetTextExtent(values[j])[0]+10
+
+            self.SetColumnWidth(j,max([cwidth,hwidth,twidth]))
+
     def SetStringItem(self,item,col,value):
         self.itemDataMap[self.itemDataMap.keys()[item]][col]=value
         wx.ListCtrl.SetStringItem(self,item,col,value)
 
+        cwidth=self.GetColumnWidth(col)
+        hwidth=self.HeaderWidths[col]
+        twidth = self.GetTextExtent(value)[0]+15
+
+        self.SetColumnWidth(col,max([cwidth,hwidth,twidth]))
+
     def GetListCtrl(self):
         return self
-
-    def Append(self,values):
-        self.itemDataMap[self.GetItemCount()]=values
-        wx.ListCtrl.Append(self,values)
 
     def GetColumnSorter(self):
         return self.CustomSorter
@@ -162,7 +236,7 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
 
     def __OnColClickSortDisabled(self, evt):
         pass
-    
+
 class PropertyScrolledPanel(ScrolledPanel):
     def __init__(self, *args, **kwargs):
         self._config={}

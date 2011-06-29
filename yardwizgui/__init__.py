@@ -21,7 +21,7 @@
 '''Subclass of gui.GUI'''
 from utilities import *
 from events import *
-import os,sys,threading,time,ConfigParser,logging
+import os,sys,threading,time,ConfigParser,logging,Queue
 import re,webbrowser
 import ordereddict
 import wx
@@ -64,7 +64,8 @@ class GUI( gui.GUI ):
         self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnVLC.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"vlc.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnVLC.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"vlc_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-
+        self.mitScheduled.Enable(False)
+        
         self.version,self.display_version=version()
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
         self.StatusBar.SetFieldsCount(1)
@@ -75,9 +76,14 @@ class GUI( gui.GUI ):
         self.total=0
         self.deleted=[]
         self.devices=odict()
+        self.schedulelist=[]
+        self.schedulequeue=Queue.Queue()
+        self.scheduletime=None
 
         self.ThreadedConnector=None
         self.ThreadedDownloader=None
+        self.ThreadedScheduler=None
+
         self.Play=threading.Event()
         self.Stop=threading.Event()
 
@@ -105,7 +111,7 @@ class GUI( gui.GUI ):
         for cw in self.GetChildren():
             tt=cw.GetToolTip()
             if tt:self.tooltips[cw]=tt
-        
+
         #Workarounds for crossplatform & wxversion issues
         try:self.lblProgressText.SetLabelText('')
         except:
@@ -123,7 +129,7 @@ class GUI( gui.GUI ):
 
         self.gaugeProgressBar.Hide()
         self.btnVLC.Hide()
-                
+
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires getWizPnP to communicate with your Beyonwiz.\n\nPlease install getWizPnP from: http://www.openwiz.org/wiki/GetWizPnP_Release'''
         if not wizexe:
@@ -177,12 +183,6 @@ class GUI( gui.GUI ):
             self.StatusBar.SetFieldsCount(1)
             self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
 
-        for j in range(self.lstPrograms.GetColumnCount()):
-            self.lstPrograms.SetColumnWidth(j, autosize)
-            if not iswin:
-                c=self.lstPrograms.GetColumnWidth(j)
-                h=self.lstPrograms.HeaderWidths[j]
-                if h>c:self.lstPrograms.SetColumnWidth(j,h)
         self.lstPrograms.resizeLastColumn(self.mincolwidth)
 
         if event:self._Log('Added %s - %s'%(program['title'],display_date))
@@ -228,6 +228,9 @@ class GUI( gui.GUI ):
         if self.cbxDevice.GetCount()>0:
             self.cbxDevice.SetSelection(0)
 
+        #TS or TVWIZ
+        self.tsformat=self.config.getboolean('Settings','tsformat')
+
         #tooltips
         tooltips=self.config.getboolean('Settings','showtooltips')
         for cw in self.tooltips:
@@ -240,7 +243,7 @@ class GUI( gui.GUI ):
                 for opt in sec:
                     if len(opt)>=3:
                         opt[2]=''
-            
+
         xsize=self.config.getint('Window','xsize')
         ysize=self.config.getint('Window','ysize')
         xmin=self.config.getint('Window','xmin')
@@ -295,7 +298,7 @@ class GUI( gui.GUI ):
                     logger.debug('Exception,err: %s'%str(err))
                     self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
             else:
-                
+
                 self.fade=self.config.getboolean('Window','fade')
         else:
             showfade=False
@@ -313,7 +316,7 @@ class GUI( gui.GUI ):
         else:
             if 'vlcargs' in self.configspec['Settings']:
                 del self.configspec['Settings']['vlcargs']
-           
+
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
 
@@ -334,19 +337,19 @@ class GUI( gui.GUI ):
         self.playsounds=self.config.getboolean('Sounds','playsounds')
         self.downloadcompletesound=self.config.get('Sounds','downloadcomplete')
         if not self.downloadcompletesound \
-        or self.downloadcompletesound.lower()=='<default>' \
-        or not self.downloadcompletesound.lower()[-4]=='.wav' \
-        or not os.path.exists(self.downloadcompletesound):
+           or self.downloadcompletesound.lower()=='<default>' \
+           or not self.downloadcompletesound.lower()[-4]=='.wav' \
+           or not os.path.exists(self.downloadcompletesound):
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
 
     def _CheckWiz(self):
-            self._ShowTab(self.idxLog)
-            self.mitCheck.Enable( False )
-            logger.debug('_CheckWiz')
-            self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-            self._Log('Checking recordings...')
-            checker=ThreadedChecker(self,self.Stop,self.device,self.ip,self.port)
+        self._ShowTab(self.idxLog)
+        self.mitCheck.Enable( False )
+        logger.debug('_CheckWiz')
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
+        self._Log('Checking recordings...')
+        checker=ThreadedChecker(self,self.Stop,self.device,self.ip,self.port)
 
     def _CheckComplete(self,event):
         if event and event.message:self._Log(event.message)
@@ -363,7 +366,7 @@ class GUI( gui.GUI ):
                  ('Settings','xmin','Window','xmin'),
                  ('Settings','ymin','Window','ymin'),
                  ('Settings','dateformat','Settings', 'display_dateformat')
-                ]
+                 ]
         for config in configs:
             if len(config)==4:
                 try:
@@ -414,7 +417,7 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.Pulse()
 
         self.ip,self.port,self.device=(None,None,None)
-        
+
         device=str(self.cbxDevice.GetValue()).strip()
         if not device:
             self._Discover()
@@ -433,7 +436,7 @@ class GUI( gui.GUI ):
             elif iponly:
                 self.ip,self.port=device,'49152'
             else:
-                self.device=device                
+                self.device=device
 
         logger.debug('Connecting to %s:%s %s'%(self.ip,self.port,self.device))
         self._Log('Connecting to %s...'%device)
@@ -531,7 +534,7 @@ class GUI( gui.GUI ):
             del self.queue[self.queue.index(pidx)]
             self.lstQueue.DeleteItem(idx)
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-        
+
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
@@ -578,20 +581,9 @@ class GUI( gui.GUI ):
         size=0
         for pidx in self.queue:
             program = self.programs[pidx]
-            filename = program.get('filename',None)
+            filename = self._GetFileName(program)
 
-            if not filename:
-                filename_date=time.strftime(self.filename_dateformat,program['date'])
-                filename=self._sanitize('%s %s'%(program['title'],filename_date))
-                dlg = wx.FileDialog(self, "Open", self.config.get('Settings','lastdir'), filename,"TS Files (*.ts)|*.ts|All Files|*.*", wx.FD_SAVE)
-                if (dlg.ShowModal() == wx.ID_OK):
-                    f=dlg.Filename#.encode(filesysenc)
-                    d=dlg.Directory#.encode(filesysenc)
-                    if d[-1]==':':d+=os.path.sep
-                    if not f[-3:].lower()=='.ts':f+='.ts'
-                    self.config.set('Settings','lastdir',d)
-                    filename=os.path.join(d,f)
-                else:return #Stop showing file dialogs if queue download is cancelled
+            if not filename:return #Stop showing file dialogs if queue download is cancelled
 
             program['filename']=filename
             self.programs[pidx]['filename']=filename
@@ -705,6 +697,35 @@ class GUI( gui.GUI ):
     def _FadeOut(self,start=255,stop=0,delta=-25,callback=None):
         self._Fade(start,stop,delta,callback)
 
+    def _GetFileName(self,program):
+            filename = program.get('filename',None)
+
+            if not filename:
+                filename_date=time.strftime(self.filename_dateformat,program['date'])
+                filename=program['title'].split('/')[-1]
+                filename=self._sanitize('%s %s'%(filename,filename_date)).strip('_')
+            else:
+                filename=os.path.splitext(os.path.basename(filename))[0]
+            tsspec='TS Files (*.ts)|*.ts'
+            twspec='TVWIZ format (*.tvwiz)|*.tvwiz'
+            if self.tsformat:
+                filespec='|'.join([tsspec,twspec])
+                ext=['.ts','.tvwiz']
+            else:
+                filespec='|'.join([twspec,tsspec])
+                ext=['.tvwiz','.ts']
+            dlg = wx.FileDialog(self, "Open", self.config.get('Settings','lastdir'), filename,filespec, wx.FD_SAVE)
+            if (dlg.ShowModal() == wx.ID_OK):
+                f=dlg.Filename#.encode(filesysenc)
+                d=dlg.Directory#.encode(filesysenc)
+                if d[-1]==':':d+=os.path.sep
+                ext=ext[dlg.GetFilterIndex()]
+                if not os.path.splitext(f)[1].lower()==ext:f+=ext
+                self.config.set('Settings','lastdir',d)
+                filename=os.path.join(d,f)
+                return filename
+            else:return #Stop showing file dialogs if queue download is cancelled
+
     def _Hide(self,*args,**kwargs):
         self.progress_timer.Stop()
         self.gaugeProgressBar.SetRange(100)
@@ -787,6 +808,80 @@ class GUI( gui.GUI ):
         self._ClearQueue()
         self._ClearPrograms()
 
+    def _ScheduleDownload(self):
+        schedulelist=self.schedulelist[:]
+        showcancel=len(schedulelist)>0
+        
+        idx = self.lstPrograms.GetFirstSelected()
+
+        while idx != -1:
+            qidx = self.lstPrograms.GetItem(idx).Data
+            pidx=self.programs.keys()[qidx]
+            program = self.programs[pidx]
+            if '*RECORDING' in program['title']:
+                self._Log('Unable to schedule %s as it is currently recording.'%program['title'])
+                self._ShowTab(self.idxLog)
+            elif pidx not in self.schedulelist:
+                filename = self._GetFileName(program)
+                if filename:
+                    self.programs[pidx]['filename']=filename
+                    schedulelist.append(pidx)
+                else:return
+
+            idx = self.lstPrograms.GetNextSelected(idx)
+
+        programs=[self.programs[pidx]['title'] for pidx in schedulelist]
+        sd=SchedulerDialog(self, programs, self.scheduletime, showcancel)
+        
+        if sd.saved:
+            for pidx in schedulelist:
+                if pidx not in self.schedulelist:
+                    program=self.programs[pidx]
+                    program['ip']=self.ip #In case of multiple Wizzes
+                    program['port']=self.port
+                    program['device']=self.device
+                    self.schedulelist.append(pidx)
+                    self.schedulequeue.put(program)
+
+            scheduletime=sd.GetValue()
+
+            if self.ThreadedScheduler is None:
+                self.scheduletime=scheduletime
+                self.ThreadedScheduler = ThreadedScheduler(self, scheduletime,self.schedulequeue)
+
+            elif scheduletime!=self.scheduletime:
+                self.scheduletime=scheduletime
+                self.ThreadedScheduler.reset(scheduletime)
+
+            self.mitScheduled.Enable(len(self.schedulelist)>0)
+
+        elif sd.cancelled:
+            self.ThreadedScheduler.stop()
+            self.ThreadedScheduler=None
+            self.schedulelist=[]
+            self.schedulequeue=Queue.Queue()
+            self.scheduletime=None
+            
+            
+
+    def _ScheduledDownloads(self):
+        programs=[self.programs[pidx]['title'] for pidx in self.schedulelist]
+        showcancel=len(programs)>0
+
+        sd=SchedulerDialog(self, programs, self.scheduletime,showcancel)
+
+        if sd.saved:
+            scheduletime=sd.GetValue()
+            if self.ThreadedScheduler and scheduletime!=self.scheduletime:
+                self.scheduletime=scheduletime
+                self.ThreadedScheduler.reset(scheduletime)
+        elif sd.cancelled:
+            self.ThreadedScheduler.stop()
+            self.ThreadedScheduler=None
+            self.schedulelist=[]
+            self.schedulequeue=Queue.Queue()
+            self.scheduletime=None
+            
     def _SetCursor(self,cursor):
         self.SetCursor(cursor)
         for cw in self.GetChildren():
@@ -795,7 +890,7 @@ class GUI( gui.GUI ):
                 cw.SetCursor(cursor)
                 for cw in cw.GetChildren():
                     cw.SetCursor(cursor)
-           
+
         self.SetCursor(cursor)
 
     def _SetTransparent(self):
@@ -843,26 +938,22 @@ class GUI( gui.GUI ):
             self.lstPrograms.SetStringItem(idx,3,"%0.1f" % program['size'])
             self.lstPrograms.SetStringItem(idx,4,program['length'])
         except:return #we're probably exiting
-        self._Log('Updated episode info for %s.'%program['title'])
-        for j in range(self.lstPrograms.GetColumnCount()):
-            self.lstPrograms.SetColumnWidth(j, autosize)
-            if not iswin:
-                c=self.lstPrograms.GetColumnWidth(j)
-                h=self.lstPrograms.HeaderWidths[j]
-                if h>c:self.lstPrograms.SetColumnWidth(j,h)
+
         self.lstPrograms.resizeLastColumn(self.mincolwidth)
+
+        self._Log('Updated episode info for %s.'%program['title'])
 
     def _UpdateProgress(self,progress,message):
         self.gaugeProgressBar.Show()
-	self.lblProgressText.SetToolTipString( message)
-        
+        self.lblProgressText.SetToolTipString( message)
+
         #make sure lblProgressText doesn't overwrite the exit button
-	if len(message)>0:
-	    mw=self.GetClientSizeTuple()[0]-self.btnExit.GetClientSizeTuple()[0]-self.gaugeProgressBar.GetClientSizeTuple()[0]
-	    tw=self.lblProgressText.GetTextExtent(message)[0]
-	    cw=int(tw/len(message))
-	    if tw>mw:message=message[0:int(mw/cw - 3*cw)]+'...'
-        
+        if len(message)>0:
+            mw=self.GetClientSizeTuple()[0]-self.btnExit.GetClientSizeTuple()[0]-self.gaugeProgressBar.GetClientSizeTuple()[0]
+            tw=self.lblProgressText.GetTextExtent(message)[0]
+            cw=int(tw/len(message))
+            if tw>mw:message=message[0:int(mw/cw - 3*cw)]+'...'
+
         self.lblProgressText.SetLabelText(message)
         self.gaugeProgressBar.SetRange(100)
         if progress:
@@ -874,7 +965,7 @@ class GUI( gui.GUI ):
                         'Total remaining %s'%progress['totaltime'],
                         'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent']),
                         'Queued %sMB'%progress['total']
-                       ]
+                        ]
                 self.StatusBar.SetFields(fields)
                 widths=[-2,-3,-4,-5,-2]
                 self.StatusBar.SetStatusWidths(widths)
@@ -883,7 +974,7 @@ class GUI( gui.GUI ):
                 fields=['Speed %sMB/S'%(progress['speed']),
                         'Remaining %s'%progress['time'],
                         'Downloaded %sMB/%sMB (%s%%)'%(progress['downloaded'],progress['size'],progress['percent'])
-                       ]
+                        ]
                 self.StatusBar.SetFields(fields)
                 self.StatusBar.SetStatusWidths([-2,-3,-4])
 
@@ -996,6 +1087,7 @@ class GUI( gui.GUI ):
 
     def lstPrograms_OnSelect( self, event, showinfo=True ):
         if showinfo:self._ShowInfo()
+        self.lstPrograms.SetFocus()
 
     def lstQueueOnContextMenu( self, event ):
         self.mitRemove.Enable( False )
@@ -1028,6 +1120,9 @@ class GUI( gui.GUI ):
     def mitDownloadAll_OnSelect( self, event ):
         self._DownloadQueue()
 
+    def mitHelp_OnSelect( self, event ):
+        webbrowser.open_new_tab('http://code.google.com/p/yardwiz/wiki/Help')
+
     def mitPreferences_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)
         self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
@@ -1044,8 +1139,11 @@ class GUI( gui.GUI ):
     def mitRemove_OnSelect( self, event ):
         self._DeleteFromQueue()
 
-    def mitHelp_OnSelect( self, event ):
-        webbrowser.open_new_tab('http://code.google.com/p/yardwiz/wiki/Help')
+    def mitScheduler_OnSelect( self, event ):
+        self._ScheduleDownload()
+
+    def mitScheduled_OnSelect( self, event ):
+        self._ScheduledDownloads()
 
     def onActivate( self, event ):
         self._UpdateSize()
@@ -1061,6 +1159,8 @@ class GUI( gui.GUI ):
         try:del self.ThreadedConnector
         except:pass
         try:del self.ThreadedDownloader
+        except:pass
+        try:self.ThreadedScheduler.stop()
         except:pass
         self.Destroy()
         sys.exit(0)
@@ -1120,6 +1220,38 @@ class AboutDialog( gui.AboutDialog ):
 
     def btnLicense_OnClick( self, event ):
         self.LicenseDialog.ShowModal()
+
+class SchedulerDialog ( gui.SchedulerDialog ):
+    cancelled=False
+    saved=False
+    def __init__( self, parent, programs , wxDateTime=None, showcancel=False):
+        gui.SchedulerDialog.__init__(self, parent)
+        if wxDateTime:self.dtcSchedule.SetValue(wxDateTime)
+        if programs:
+            self.lstSchedule.InsertColumn(0,u'')
+            for program in programs:
+                self.lstSchedule.Append([program])
+    
+            self.GetValue=self.dtcSchedule.GetValue
+            self.btnCancel.Show(showcancel)
+        else:
+            self.btnSchedule.Show(False)
+            self.btnCancel.Show(False)
+            
+        self.ShowModal()
+
+    def OnCancel( self, event ):
+        self.cancelled=True
+        self.saved=False
+        self.EndModal(0)
+
+    def OnClose( self, event ):
+        self.saved=False
+        self.EndModal(0)
+
+    def OnApply( self, event ):
+        self.saved=True
+        self.EndModal(0)
 
 class SettingsDialog( gui.SettingsDialog ):
     def __init__( self, parent, config,  specs ):
@@ -1185,4 +1317,3 @@ class ConfirmDelete( gui.ConfirmDelete ):
             self.DialogButtonsNo.Enable(True)
             self.chkShowAgain.Fit()
             self.Fit()
-

@@ -32,6 +32,15 @@ class Connected(wx.PyCommandEvent):
         self.connected = connected
         self.message = message
 
+wizEVT_DATETIMEUPDATED= wx.NewEventType()
+EVT_DATETIMEUPDATED = wx.PyEventBinder(wizEVT_DATETIMEUPDATED, 1)
+class DateTimeUpdated(wx.PyCommandEvent):
+    """Event to signal that the DateTime has been updated"""
+    def __init__(self, etype, eid, DateTime):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+        self.DateTime = DateTime
+
 wizEVT_DELETEPROGRAM = wx.NewEventType()
 EVT_DELETEPROGRAM = wx.PyEventBinder(wizEVT_DELETEPROGRAM, 1)
 class DeleteProgram(wx.PyCommandEvent):
@@ -60,7 +69,6 @@ class Log(wx.PyCommandEvent):
         """Creates the event object"""
         wx.PyCommandEvent.__init__(self, etype, eid)
         self.message = message
-
 
 wizEVT_PLAYCOMPLETE = wx.NewEventType()
 EVT_PLAYCOMPLETE = wx.PyEventBinder(wizEVT_PLAYCOMPLETE, 1)

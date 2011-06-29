@@ -84,7 +84,7 @@ setupargs={'name':'YARDWiz',
       'version':short_version,
       'description':'Yet Another Recording Downloader for the Wiz',
       'long_description':'YARDWiz is a simple GUI front end for prl\'s getWizPnP prgram. getWizPnP is a command line program allows that you (among other things) to list and download recordings from a Beyonwiz DP series PVR over the network using the WizPnP interface.',
-      'platforms':['linux','windows'],
+      'platforms':['linux','windows','darwin'],
       'author':'Luke Pinner',
       'author_email':'tiliqua_au@yahoo.com.au',
       'url':'http://code.google.com/p/yardwiz',
@@ -132,7 +132,7 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
                   ('',['VERSION'])]
     OPTIONS = {'extension': '.app', 'packages': 'yardwizgui',
                'iconfile': 'yardwizgui/icons/yardwiz.icns',
-               'excludes':['doctest','pdb','difflib','encodings.big5','encodings.big5hkscs','encodings.cp037',
+               'excludes':['doctest','pdb','encodings.big5','encodings.big5hkscs','encodings.cp037',
                'encodings.cp1006','encodings.cp1026','encodings.cp1140','encodings.cp1250','encodings.cp1251',
                'encodings.cp1252','encodings.cp1253','encodings.cp1254','encodings.cp1255','encodings.cp1256',
                'encodings.cp1257','encodings.cp1258','encodings.cp424','encodings.cp437','encodings.cp500',
@@ -231,7 +231,7 @@ elif 'py2exe' in sys.argv:
                             
                             }]
     setupargs['options']={"py2exe":
-                            {'excludes':['xml','ssl','random','httplib','urllib','xml','_ssl','email','doctest','pdb','unittest','difflib','inspect','pyreadline', 'pickle'],
+                            {'excludes':['xml','ssl','random','httplib','urllib','xml','_ssl','email','doctest','pdb','unittest','inspect','pyreadline', 'pickle'],
                             'compressed':True
                             }
                         }

@@ -1,8 +1,12 @@
-import os,sys,threading,time,signal,ctypes,copy,logging,logging.handlers
+import os,sys,time,signal,ctypes,copy,logging,logging.handlers
 import subprocess,re,ConfigParser,socket
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
+from Queue import Queue
+from threading import Thread,Event,Timer
+from datetime import datetime, timedelta
+
 from events import *
 
 APPNAME='YARDWiz'
@@ -10,9 +14,9 @@ APPNAME='YARDWiz'
 #######################################################################
 #Helper classes
 #######################################################################
-class ThreadedChecker( threading.Thread ):
+class ThreadedChecker( Thread ):
     def __init__( self, parent, evtStop, device, ip, port):
-        threading.Thread.__init__( self )
+        Thread.__init__( self )
         self.parent=parent
         self.Stop=evtStop
         self.device=device
@@ -55,9 +59,9 @@ class ThreadedChecker( threading.Thread ):
         try:wx.PostEvent(self.parent, evt)
         except:pass
 
-class ThreadedConnector( threading.Thread ):
+class ThreadedConnector( Thread ):
     def __init__( self, parent, evtStop, device, ip, port, deleted=[], quick=False):
-        threading.Thread.__init__( self )
+        Thread.__init__( self )
         self.device=device
         self.ip=ip
         self.port=port
@@ -193,7 +197,7 @@ class ThreadedConnector( threading.Thread ):
             line=line.strip()
             logger.debug(line)
             if line[0:13]=='Connecting to':
-                self.thread=threading.Thread(target=self._getinfo)
+                self.thread=Thread(target=self._getinfo)
                 self.thread.start()
             else:
                 if not line:#Start of next program in list
@@ -321,9 +325,9 @@ class ThreadedConnector( threading.Thread ):
             del self.proc
         except:pass
 
-class ThreadedDeleter( threading.Thread ):
+class ThreadedDeleter( Thread ):
     def __init__( self, parent, evtStop, device, ip, port, programs,indices):
-        threading.Thread.__init__( self )
+        Thread.__init__( self )
         self.parent=parent
         self.Stop=evtStop
         self.device=device
@@ -365,10 +369,10 @@ class ThreadedDeleter( threading.Thread ):
         evt = Log(wizEVT_LOG, -1,message)
         try:wx.PostEvent(self.parent, evt)
         except:pass #we're probably exiting
-        
-class ThreadedDownloader( threading.Thread ):
+
+class ThreadedDownloader( Thread ):
     def __init__(self, parent, device, ip, port, programs, evtPlay, evtStop):
-        threading.Thread.__init__( self )
+        Thread.__init__( self )
 
         self.parent=parent
         self.device=device
@@ -389,7 +393,7 @@ class ThreadedDownloader( threading.Thread ):
 
     def run(self):
         for program in self.programs:
-            self._updateprogress([],'Downloading %s...'%program['title'])
+            self._updateprogress({},'Downloading %s...'%program['title'])
             self.Play.set()
             self.Stop.clear()
             self._download(program)
@@ -410,13 +414,13 @@ class ThreadedDownloader( threading.Thread ):
         self._log('Downloading %s...'%program['title'])
         fd=program['filename'].encode(filesysenc)
         d=os.path.dirname(fd)
-        f=os.path.splitext(os.path.basename(fd))[0]#strip extension
+        f,e=os.path.splitext(os.path.basename(fd))
         if self.ip:
             cmd=[wizexe,'-H',self.ip,'-p',self.port]
         else:
             cmd=[wizexe,'--device',self.device]
-        cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
-
+        if 'ts' in e.lower():cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
+        else:cmd.extend(['--all','-q','-R','--BWName','-O',d,'-T',f,program['index']])
         try:
             self.proc=subproc(cmd)
         except Exception,err:
@@ -429,7 +433,7 @@ class ThreadedDownloader( threading.Thread ):
         s=program['size']*MB
         total=self.total*MB
         start=time.time()
-        if os.path.exists(f):prevsize=os.stat(f).st_size
+        if os.path.exists(f):prevsize=filesize(f)
         else:prevsize=0.0
         speeds=deque([],maxlen=120)
         while self.proc.poll() is None:
@@ -446,7 +450,7 @@ class ThreadedDownloader( threading.Thread ):
                             if i==2:raise
                             else:continue
                         else:break
-                        
+
                 except Exception,err:
                     self._log('Unable to stop download or delete %s.'%program['filename'])
                     self._log(str(err))
@@ -480,7 +484,10 @@ class ThreadedDownloader( threading.Thread ):
             else: #We're still downloading, update the progress
                 time.sleep(1)
                 if os.path.exists(f):#getwizpnp might not be going yet...
-                    size=os.stat(f).st_size
+                    size=filesize(f)
+                    try:percent=int(size/s*100)
+                    except ZeroDivisionError:percent=0
+
                     now=time.time()
                     speed=((size-prevsize)/(now-start))
                     speeds.append(speed)
@@ -499,8 +506,9 @@ class ThreadedDownloader( threading.Thread ):
                         except ZeroDivisionError:
                             esttime='unknown'
                             totaltime='unknown'
+
                     progress={'filename':f,
-                              'percent':int(size/s*100),
+                              'percent':percent,
                               'downloaded':round(size/MB, 1),
                               'size':round(program['size'], 1),
                               'total':round(self.total, 1),
@@ -559,16 +567,16 @@ class ThreadedDownloader( threading.Thread ):
             del self.proc
         except:pass
 
-class ThreadedPlayer( threading.Thread ):
+class ThreadedPlayer( Thread ):
     def __init__( self, parent, evtStop, evtPlay,filename,args=None):
-        threading.Thread.__init__( self )
+        Thread.__init__( self )
         self.parent=parent
         self.Stop=evtStop
         self.Play=evtPlay
         self.filename=filename
         self.args=args
         self.start()
-        
+
     def run(self):
 
         self.port=self.getfreeport()
@@ -664,12 +672,89 @@ class ThreadedPlayer( threading.Thread ):
 
     def cmd(self,cmd):
         self.socket.sendall(cmd+os.linesep)
-        print self.getdata()
+        data=self.getdata()
 
     def is_playing(self):
         self.socket.send('is_playing'+os.linesep)
         data=self.getdata()
         return data.strip('>').strip()=='1'
+
+class ThreadedScheduler( Thread , wx.EvtHandler):
+    def __init__( self, parent, startDateTime, prgQueue):
+        Thread.__init__( self )
+        wx.EvtHandler.__init__( self )
+
+        self.parent=parent
+        self.startDateTime=wxdatetime_to_datetime(startDateTime)
+        self.Queue=prgQueue
+        self.evtStop=Event()
+        self.evtPlay=Event()
+        self.downloading=False
+        self.timeremaining=None
+
+        self.Bind(EVT_DOWNLOADCOMPLETE, self._ondownloadcomplete)
+        self.Bind(EVT_LOG, self._onlog)
+        self.Bind(EVT_UPDATEPROGRESS, self._onupdateprogress)
+
+        self.start()
+
+    def reset(self,startDateTime):
+        if self.downloading:
+            self._log('Can\'t reschedule once downloading')
+        else:
+            self.timer.cancel()
+            self.startDateTime=wxdatetime_to_datetime(startDateTime)
+            self.start()
+
+    def stop(self):
+        if self.downloading:
+            self.evtStop.set()
+        else:
+            self.timer.cancel()
+
+    def run(self):
+        td=(self.startDateTime-datetime.now())
+        try: start=td.total_seconds() #python 2.7
+        except: start=(td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
+        if start<=0:start=0
+        self.timer = Timer(start,self.downloadqueue)
+        self.timer.start()
+
+    def downloadqueue(self):
+        self.downloading=True
+
+        while not self.Queue.empty():
+            if self.evtStop.is_set():return
+            program = self.Queue.get()
+            td= ThreadedDownloader( self, program['device'], program['ip'], program['port'], [program], self.evtPlay, self.evtStop)
+            td.join()#Block until  download is complete
+            self.Queue.task_done()
+
+    def _ondownloadcomplete(self,event):
+        self.timeremaining=None
+
+    def _onupdateprogress(self,event):
+        progress = event.progress
+
+        if progress.get('time',None)!=self.timeremaining \
+           and 'second' not in progress['time']  \
+           and 'calculating' not in progress['time']:
+            self.timeremaining=progress['time']
+            f=os.path.basename(progress['filename'])
+            msg='Downloaded %s%% (%s MB) of %s, %s remaining.'
+            msg=msg%(progress['percent'],progress['downloaded'],f,progress['time'])
+            self._log(msg)
+            
+    def _onlog(self,event):
+        wx.PostEvent(self.parent,event)
+
+    def _log(self,message):
+        evt = Log(wizEVT_LOG, -1,message)
+        wx.PostEvent(self.parent, evt)
+
+    def __del__( self):
+        try:self.stop()
+        except:pass
 
 class Stderr(object):
     #This is modified from py2exe class Stderr
@@ -712,11 +797,11 @@ class Stderr(object):
             #                "See the logfile '%s' for details" % logfile,
             #                "Errors occurred")
             self.errordialog("Errors occurred, see the logfile '%s' for details" % logfile, "Errors occurred")
-                            
+
         logger.error(text.strip())
     def flush(self):
         pass
-    
+
 
 #######################################################################
 #Utility helper functions
@@ -740,6 +825,21 @@ def centrepos(self,parent):
     sxmin=pxcen-sxsize/2.0
     symin=pycen-sysize/2.0
     return sxmin,symin
+
+def datetime_to_wxdatetime(pydatetime):
+    return wx.DateTimeFromTimeT(time.mktime(pydatetime.timetuple()))
+
+def wxdatetime_to_datetime(wxdatetime):
+    return datetime.fromtimestamp(wxdatetime.GetTicks())
+
+def filesize(path):
+    if os.path.isfile(path):return os.path.getsize(path)
+    elif os.path.isdir(path):
+        s=0
+        for f in os.listdir(path):
+            f=os.path.join(path,f)
+            if os.path.isfile(f): s+=os.path.getsize(f)
+        return s
 
 def frozen():
     return hasattr(sys, "frozen")
@@ -802,7 +902,7 @@ def subproc(cmd,stdin=False):
         else:
             proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
     return proc
-    
+
 def timefromsecs(secs):
     m, s = divmod(secs, 60)
     h, m = divmod(m, 60)
