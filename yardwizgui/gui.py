@@ -224,7 +224,7 @@ class GUI ( wx.Frame ):
 		self.mitScheduled = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Scheduled Downloads...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuTools.AppendItem( self.mitScheduled )
 		
-		self.mitPreferences = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Preferences...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mitPreferences = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Options...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuTools.AppendItem( self.mitPreferences )
 		
 		self.mbrMenu.Append( self.mnuTools, u"Tools" ) 
@@ -687,7 +687,7 @@ class SchedulerDialog ( wx.Dialog ):
 		
 		bSizer10.Add( self.btnClose, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
-		bSizer9.Add( bSizer10, 1, wx.ALIGN_CENTER|wx.EXPAND, 5 )
+		bSizer9.Add( bSizer10, 0, wx.ALIGN_CENTER|wx.EXPAND, 5 )
 		
 		self.SetSizer( bSizer9 )
 		self.Layout()

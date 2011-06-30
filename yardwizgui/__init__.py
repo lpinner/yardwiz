@@ -881,6 +881,8 @@ class GUI( gui.GUI ):
             self.schedulelist=[]
             self.schedulequeue=Queue.Queue()
             self.scheduletime=None
+
+        self.mitScheduled.Enable(len(self.schedulelist)>0)
             
     def _SetCursor(self,cursor):
         self.SetCursor(cursor)

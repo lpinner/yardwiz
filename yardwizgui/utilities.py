@@ -717,10 +717,10 @@ class ThreadedScheduler( Thread , wx.EvtHandler):
         try: start=td.total_seconds() #python 2.7
         except: start=(td.microseconds + (td.seconds + td.days * 24 * 3600) * 10**6) / 10**6
         if start<=0:start=0
-        self.timer = Timer(start,self.downloadqueue)
+        self.timer = Timer(start,self._downloadqueue)
         self.timer.start()
 
-    def downloadqueue(self):
+    def _downloadqueue(self):
         self.downloading=True
 
         while not self.Queue.empty():
