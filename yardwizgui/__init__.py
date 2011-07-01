@@ -92,9 +92,9 @@ class GUI( gui.GUI ):
         self.Bind(EVT_CONNECTED, self._Connected)
         self.Bind(EVT_DELETEPROGRAM, self._DeleteProgram)
         self.Bind(EVT_UPDATEPROGRAM, self._UpdateProgram)
-
         self.Bind(EVT_DOWNLOADCOMPLETE, self.onDownloadComplete)
         self.Bind(EVT_LOG, self.onLog)
+        self.Bind(EVT_SCHEDULERCOMPLETE, self.onSchedulerComplete)
         self.Bind(EVT_PLAYCOMPLETE, self.onPlayComplete)
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.lstPrograms.SetSortEnabled(True)
@@ -862,8 +862,6 @@ class GUI( gui.GUI ):
             self.schedulequeue=Queue.Queue()
             self.scheduletime=None
             
-            
-
     def _ScheduledDownloads(self):
         programs=[self.programs[pidx]['title'] for pidx in self.schedulelist]
         showcancel=len(programs)>0
@@ -1186,6 +1184,11 @@ class GUI( gui.GUI ):
 
     def onUpdateProgress( self, event ):
         self._UpdateProgress(event.progress,event.message)
+
+    def onSchedulerComplete( self, event ):
+        self.schedulelist=[]
+        self.schedulequeue=Queue.Queue()
+        self.scheduletime=None
 
     def OnSize( self, event ):
         self._UpdateSize()

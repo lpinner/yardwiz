@@ -78,6 +78,14 @@ class PlayComplete(wx.PyCommandEvent):
         """Creates the event object"""
         wx.PyCommandEvent.__init__(self, etype, eid)
 
+wizEVT_SCHEDULERCOMPLETE = wx.NewEventType()
+EVT_SCHEDULERCOMPLETE = wx.PyEventBinder(wizEVT_SCHEDULERCOMPLETE, 1)
+class SchedulerComplete(wx.PyCommandEvent):
+    """Event to signal that all scheduled downloads are complete"""
+    def __init__(self, etype, eid):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+
 wizEVT_UPDATEPROGRAM = wx.NewEventType()
 EVT_UPDATEPROGRAM = wx.PyEventBinder(wizEVT_UPDATEPROGRAM, 1)
 class UpdateProgram(wx.PyCommandEvent):
