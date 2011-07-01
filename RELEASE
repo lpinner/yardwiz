@@ -1,6 +1,15 @@
 #labels Featured
 =Release notes=
 
+==0.3.3==
+===_New in 0.3.3_===
+  * Added basic download scheduler.
+  * Enabled downloads in .tvwiz format [http://code.google.com/p/yardwiz/issues/detail?id=20 Issue 23].
+  
+===_Fixed in 0.3.3_===
+  * Removed Beyonwiz subfolder names from downloaded filenames [http://code.google.com/p/yardwiz/issues/detail?id=20 Issue 24].
+  * Worked around column autosize bug truncating long titles on Win XP [http://code.google.com/p/yardwiz/issues/detail?id=20 Issue 25].
+
 ==0.3.2==
 ===_New in 0.3.2_===
   * getWizPnP updated to 0.5.2 in Windows, OSX and Linux
