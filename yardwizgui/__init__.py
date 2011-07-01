@@ -836,7 +836,9 @@ class GUI( gui.GUI ):
             idx = self.lstPrograms.GetNextSelected(idx)
 
         programs=[self.programs[pidx]['title'] for pidx in schedulelist]
+        self._FadeOut(stop=200,delta=-25)
         sd=SchedulerDialog(self, programs, self.scheduletime, showcancel)
+        self._FadeIn(start=200,delta=25)
         
         if sd.saved:
             for pidx in schedulelist:
@@ -1148,7 +1150,9 @@ class GUI( gui.GUI ):
         self._ScheduleDownload()
 
     def mitScheduled_OnSelect( self, event ):
+        self._FadeOut(stop=200,delta=-25)
         self._ScheduledDownloads()
+        self._FadeIn(start=200,delta=25)
 
     def onActivate( self, event ):
         self._UpdateSize()
