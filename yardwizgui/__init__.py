@@ -94,6 +94,7 @@ class GUI( gui.GUI ):
         self.Bind(EVT_UPDATEPROGRAM, self._UpdateProgram)
         self.Bind(EVT_DOWNLOADCOMPLETE, self.onDownloadComplete)
         self.Bind(EVT_LOG, self.onLog)
+        self.Bind(EVT_SCHEDULEDDWONLOADCOMPLETE, self.onScheduledDownloadComplete)
         self.Bind(EVT_SCHEDULERCOMPLETE, self.onSchedulerComplete)
         self.Bind(EVT_PLAYCOMPLETE, self.onPlayComplete)
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
@@ -641,17 +642,9 @@ class GUI( gui.GUI ):
                     except Exception, err:
                         self._Log(err)
 
-        cmd=self.postcmd.split('#')[0].strip()
-        if not stopped and pidx and cmd:
+        if not stopped and pidx:
             program=self.programs[pidx]
-            cmd=cmd.replace('%F', '"%s"'%program['filename'])
-            cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
-            logger.debug('Postdownload command: %s'%cmd)
-            try:
-                pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
-            except Exception,err:
-                self._Log('Can\'t run post download command on %s'%program['filename'])
-                self._Log(str(err))
+            self._PostDownloadCommand(program)
 
         if len(self.queue)==0 or stopped:
             self._downloading=False
@@ -742,6 +735,18 @@ class GUI( gui.GUI ):
 
     def _Play(self,*args,**kwargs):
         self.player=ThreadedPlayer(self, self.Stop, self.Play,self.filename,self.vlcargs)
+
+    def _PostDownloadCommand(self,program):
+        cmd=self.postcmd.split('#')[0].strip()
+        if cmd:
+            cmd=cmd.replace('%F', '"%s"'%program['filename'])
+            cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
+            logger.debug('Postdownload command: %s'%cmd)
+            try:
+                pid = subprocess.Popen(cmd).pid #Don't wait, nor check the output, leave that up to the user
+            except Exception,err:
+                self._Log('Can\'t run post download command on %s'%program['filename'])
+                self._Log(str(err))
 
     def _Pulse(self,*args,**kwargs):
         if not self._downloading:
@@ -1185,6 +1190,9 @@ class GUI( gui.GUI ):
     def onUpdateProgress( self, event ):
         self._UpdateProgress(event.progress,event.message)
 
+    def onScheduledDownloadComplete( self, event ):
+        self._PostDownloadCommand(event.program)
+        
     def onSchedulerComplete( self, event ):
         self.schedulelist=[]
         self.schedulequeue=Queue.Queue()

@@ -86,6 +86,15 @@ class SchedulerComplete(wx.PyCommandEvent):
         """Creates the event object"""
         wx.PyCommandEvent.__init__(self, etype, eid)
 
+wizEVT_SCHEDULEDDWONLOADCOMPLETE = wx.NewEventType()
+EVT_SCHEDULEDDWONLOADCOMPLETE = wx.PyEventBinder(wizEVT_SCHEDULEDDWONLOADCOMPLETE, 1)
+class ScheduledDownloadComplete(wx.PyCommandEvent):
+    """Event to signal that a scheduled download is complete"""
+    def __init__(self, etype, eid, program):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+        self.program = program
+
 wizEVT_UPDATEPROGRAM = wx.NewEventType()
 EVT_UPDATEPROGRAM = wx.PyEventBinder(wizEVT_UPDATEPROGRAM, 1)
 class UpdateProgram(wx.PyCommandEvent):
