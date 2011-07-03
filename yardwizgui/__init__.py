@@ -1162,16 +1162,20 @@ class GUI( gui.GUI ):
         self._FadeOut(callback=self._Exit)
 
     def _Exit( self, event=None ):
-        self.Hide()
-        self.Stop.set()
-        self._WriteConfig()
+        try:self.Hide()
+        except:pass
+        try:self.Stop.set()
+        except:pass
+        try:self._WriteConfig()
+        except:pass
         try:del self.ThreadedConnector
         except:pass
         try:del self.ThreadedDownloader
         except:pass
         try:self.ThreadedScheduler.stop()
         except:pass
-        self.Destroy()
+        try:self.Destroy()
+        except:pass
         sys.exit(0)
 
     def onDownloadComplete( self, event ):

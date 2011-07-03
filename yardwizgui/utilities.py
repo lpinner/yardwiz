@@ -401,14 +401,16 @@ class ThreadedDownloader( Thread ):
             if self.Stop.isSet():break
 
     def _delete(self, f,n=5):
-        for i in range(n):#Try to delete the file 3 times
-            try:
-                time.sleep(1)
-                os.unlink(f)
-            except:
-                if i==n-1:raise
-                else:continue
-            else:return
+        if os.path.exists(f):
+            for i in range(n):#Try to delete the file 3 times
+                try:
+                    time.sleep(1)
+                    os.unlink(f)
+                except:
+                    if i==n-1:raise
+                    else:continue
+                else:return
+        else:return
 
     def _download(self,program):
         self._log('Downloading %s...'%program['title'])
@@ -526,7 +528,7 @@ class ThreadedDownloader( Thread ):
             self._log('Error, unable to download %s.'%program['filename'])
             self._log(stdout)
             self._log(stderr)
-            os.unlink(program['filename'])
+            self._delete(program['filename'])
             self._downloadcomplete(index=program['index'],stopped=True)
         else:
             #Should check filesize v. getwizpnp reported size...
