@@ -83,6 +83,8 @@ class GUI ( wx.Frame ):
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtLog = wx.TextCtrl( self.nbtabLog, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
+		self.txtLog.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		
 		bSizer7.Add( self.txtLog, 1, wx.EXPAND, 0 )
 		
 		self.nbtabLog.SetSizer( bSizer7 )
@@ -93,6 +95,8 @@ class GUI ( wx.Frame ):
 		bSizer8 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtInfo = wx.TextCtrl( self.nbtabInfo, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.VSCROLL )
+		self.txtInfo.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		
 		bSizer8.Add( self.txtInfo, 1, wx.EXPAND, 0 )
 		
 		self.nbtabInfo.SetSizer( bSizer8 )
@@ -103,6 +107,7 @@ class GUI ( wx.Frame ):
 		bSizer5 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.lstQueue = wx.ListCtrl( self.nbtabQueue, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT|wx.NO_BORDER )
+		self.lstQueue.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
 		self.lstQueue.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
 		self.lstQueue.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 		
