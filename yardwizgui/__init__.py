@@ -128,8 +128,8 @@ class GUI( gui.GUI ):
             self.progress_timer = wx.Timer(self)
             self.Bind(wx.EVT_TIMER, self._Pulse,self.progress_timer)
 
-        self.gaugeProgressBar.Hide()
-        self.btnVLC.Hide()
+        #self.gaugeProgressBar.Hide()
+        #self.btnVLC.Hide()
 
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires getWizPnP to communicate with your Beyonwiz.\n\nPlease install getWizPnP from: http://www.openwiz.org/wiki/GetWizPnP_Release'''
@@ -140,8 +140,14 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
+        
         #Set focus so the F5 can get fired, doesn't work on startup when the frame has focus
         self.cbxDevice.SetFocus()
+
+        self.lblProgressText.Hide()
+        self.gaugeProgressBar.Hide()
+        self.btnVLC.Hide()
+        
         self._FadeIn()
         self.Show()
 
@@ -413,9 +419,10 @@ class GUI( gui.GUI ):
         self.mitCheck.Enable( False )
         self.btnConnect.Enable( False )
         self.mitDelete.Enable( False )
-        self.lblProgressText.SetLabelText('Connecting...')
         self.gaugeProgressBar.Show()
         self.gaugeProgressBar.Pulse()
+        self.lblProgressText.Show()
+        self.lblProgressText.SetLabelText('Connecting...')
 
         self.ip,self.port,self.device=(None,None,None)
 
@@ -458,6 +465,7 @@ class GUI( gui.GUI ):
         self.lstPrograms.SetSortEnabled(True)
         if not self._downloading:
             self.lblProgressText.SetLabelText('')
+            self.lblProgressText.Hide()
             self.gaugeProgressBar.Hide()
 
         if event and event.connected:
@@ -655,6 +663,7 @@ class GUI( gui.GUI ):
             self.StatusBar.SetFieldsCount(1)
             self.StatusBar.SetFields([''])
             self.lblProgressText.SetLabelText('')
+            self.lblProgressText.Hide()
             self.btnPlay.Enable( False )
             self.btnPause.Enable( False )
             self.btnStop.Enable( False )
@@ -952,6 +961,7 @@ class GUI( gui.GUI ):
 
     def _UpdateProgress(self,progress,message):
         self.gaugeProgressBar.Show()
+        self.lblProgressText.Show()
         self.lblProgressText.SetToolTipString( message)
 
         #make sure lblProgressText doesn't overwrite the exit button

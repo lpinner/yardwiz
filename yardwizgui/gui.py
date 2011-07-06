@@ -136,77 +136,68 @@ class GUI ( wx.Frame ):
 		
 		bSizer4.Add( self.nbTabArea, 1, wx.ALL|wx.EXPAND, 5 )
 		
-		gSizer21 = wx.GridSizer( 2, 1, 0, 0 )
-		
-		gSizer21.SetMinSize( wx.Size( -1,25 ) ) 
-		gSizer2 = wx.GridSizer( 1, 8, 0, 0 )
+		bSizer11 = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.btnClearQueue = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnClearQueue.Enable( False )
 		self.btnClearQueue.SetToolTipString( u"Clear all in queue" )
 		
-		gSizer2.Add( self.btnClearQueue, 0, wx.TOP|wx.BOTTOM|wx.LEFT, 5 )
+		bSizer11.Add( self.btnClearQueue, 0, wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
 		self.btnDownload = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnDownload.Enable( False )
 		self.btnDownload.SetToolTipString( u"Download all in queue" )
 		
-		gSizer2.Add( self.btnDownload, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 5 )
-		
-		
-		gSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		bSizer11.Add( self.btnDownload, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 5 )
 		
 		self.btnPlay = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnPlay.Enable( False )
 		self.btnPlay.SetToolTipString( u"Resume download" )
 		
-		gSizer2.Add( self.btnPlay, 0, wx.TOP|wx.BOTTOM|wx.LEFT, 5 )
+		bSizer11.Add( self.btnPlay, 0, wx.TOP|wx.BOTTOM|wx.LEFT, 5 )
 		
 		self.btnPause = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnPause.Enable( False )
 		self.btnPause.SetToolTipString( u"Pause download" )
 		
-		gSizer2.Add( self.btnPause, 0, wx.TOP|wx.BOTTOM, 5 )
+		bSizer11.Add( self.btnPause, 0, wx.TOP|wx.BOTTOM, 5 )
 		
 		self.btnStop = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnStop.Enable( False )
 		self.btnStop.SetToolTipString( u"Cancel download and\ndelete downloaded file" )
 		
-		gSizer2.Add( self.btnStop, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 5 )
-		
-		
-		gSizer2.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		bSizer11.Add( self.btnStop, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 5 )
 		
 		self.btnVLC = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
 		self.btnVLC.Enable( False )
 		self.btnVLC.SetToolTipString( u"Play in VLC" )
 		
-		gSizer2.Add( self.btnVLC, 0, wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
+		bSizer11.Add( self.btnVLC, 0, wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
-		gSizer21.Add( gSizer2, 1, 0, 5 )
+		gSizer3 = wx.GridSizer( 1, 2, 0, 0 )
 		
-		gSizer3 = wx.GridSizer( 1, 4, 0, 0 )
-		
-		self.gaugeProgressBar = wx.Gauge( self, wx.ID_ANY, 150, wx.DefaultPosition, wx.DefaultSize, wx.GA_HORIZONTAL )
+		gSizer3.SetMinSize( wx.Size( 200,-1 ) ) 
+		self.gaugeProgressBar = wx.Gauge( self, wx.ID_ANY, 150, wx.DefaultPosition, wx.Size( -1,-1 ), wx.GA_HORIZONTAL )
 		self.gaugeProgressBar.SetMinSize( wx.Size( 100,-1 ) )
 		
-		gSizer3.Add( self.gaugeProgressBar, 2, wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.BOTTOM|wx.EXPAND|wx.LEFT|wx.TOP, 5 )
+		gSizer3.Add( self.gaugeProgressBar, 1, wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL|wx.BOTTOM|wx.EXPAND, 5 )
 		
 		self.lblProgressText = wx.StaticText( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
 		self.lblProgressText.Wrap( -1 )
-		self.lblProgressText.SetMinSize( wx.Size( 50,-1 ) )
+		self.lblProgressText.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		self.lblProgressText.SetMinSize( wx.Size( 100,-1 ) )
 		
-		gSizer3.Add( self.lblProgressText, 1, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.TOP|wx.LEFT, 10 )
+		gSizer3.Add( self.lblProgressText, 1, wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.EXPAND|wx.TOP, 10 )
+		
+		bSizer11.Add( gSizer3, 1, wx.ALIGN_BOTTOM|wx.ALIGN_LEFT|wx.EXPAND, 0 )
 		
 		
-		gSizer3.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
+		bSizer11.AddSpacer( ( 0, 0), 1, wx.EXPAND, 5 )
 		
 		self.btnExit = wx.Button( self, wx.ID_ANY, u"Exit", wx.DefaultPosition, wx.DefaultSize, wx.BU_EXACTFIT )
-		gSizer3.Add( self.btnExit, 2, wx.ALIGN_BOTTOM|wx.ALIGN_RIGHT|wx.ALL, 5 )
+		bSizer11.Add( self.btnExit, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL, 5 )
 		
-		gSizer21.Add( gSizer3, 1, wx.EXPAND, 5 )
-		
-		bSizer4.Add( gSizer21, 0, wx.EXPAND, 5 )
+		bSizer4.Add( bSizer11, 0, wx.EXPAND, 0 )
 		
 		self.SetSizer( bSizer4 )
 		self.Layout()
