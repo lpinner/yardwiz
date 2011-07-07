@@ -38,12 +38,13 @@ class GUI ( wx.Frame ):
 		
 		bSizer81.Add( self.lblServerCombo, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
-		self.cbxDevice = wx.combo.BitmapComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,-1 ), "", wx.TE_PROCESS_ENTER ) 
+		self.cbxDevice = wx.combo.BitmapComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,24 ), "", wx.TE_PROCESS_ENTER ) 
 		self.cbxDevice.SetFont( wx.Font( 12, 70, 90, 90, False, wx.EmptyString ) )
 		self.cbxDevice.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave this field blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
-		self.cbxDevice.SetMinSize( wx.Size( 250,-1 ) )
+		self.cbxDevice.SetMinSize( wx.Size( 250,24 ) )
+		self.cbxDevice.SetMaxSize( wx.Size( -1,24 ) )
 		
-		bSizer81.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
+		bSizer81.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND, 5 )
 		
 		self.btnConnect = wx.BitmapButton( self, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnConnect.SetToolTipString( u"Connect to the WizPnP server\nand get recording information" )
@@ -52,8 +53,8 @@ class GUI ( wx.Frame ):
 		
 		bSizer4.Add( bSizer81, 0, wx.EXPAND, 0 )
 		
-		self.lstPrograms = SortableListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT|wx.SIMPLE_BORDER )
-		self.lstPrograms.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		self.lstPrograms = SortableListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
+		self.lstPrograms.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		self.lstPrograms.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
 		self.lstPrograms.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 		
@@ -86,7 +87,7 @@ class GUI ( wx.Frame ):
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtLog = wx.TextCtrl( self.nbtabLog, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.NO_BORDER|wx.VSCROLL )
-		self.txtLog.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		self.txtLog.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer7.Add( self.txtLog, 1, wx.EXPAND, 0 )
 		
@@ -98,7 +99,7 @@ class GUI ( wx.Frame ):
 		bSizer8 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtInfo = wx.TextCtrl( self.nbtabInfo, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.NO_BORDER|wx.VSCROLL )
-		self.txtInfo.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		self.txtInfo.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer8.Add( self.txtInfo, 1, wx.EXPAND, 0 )
 		
@@ -110,7 +111,7 @@ class GUI ( wx.Frame ):
 		bSizer5 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.lstQueue = wx.ListCtrl( self.nbtabQueue, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_NO_HEADER|wx.LC_REPORT|wx.NO_BORDER )
-		self.lstQueue.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		self.lstQueue.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		self.lstQueue.SetForegroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOWTEXT ) )
 		self.lstQueue.SetBackgroundColour( wx.SystemSettings.GetColour( wx.SYS_COLOUR_WINDOW ) )
 		
@@ -144,37 +145,37 @@ class GUI ( wx.Frame ):
 		self.m_panel4 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer12 = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.btnDownload = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
+		self.btnDownload = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 24,24 ), wx.BU_AUTODRAW )
 		self.btnDownload.Enable( False )
 		self.btnDownload.SetToolTipString( u"Download all in queue" )
 		
-		bSizer12.Add( self.btnDownload, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.RIGHT|wx.TOP, 5 )
+		bSizer12.Add( self.btnDownload, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
-		self.btnClearQueue = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
+		self.btnClearQueue = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 24,24 ), wx.BU_AUTODRAW )
 		self.btnClearQueue.Enable( False )
 		self.btnClearQueue.SetToolTipString( u"Clear all in queue" )
 		
-		bSizer12.Add( self.btnClearQueue, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
+		bSizer12.Add( self.btnClearQueue, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.RIGHT|wx.TOP, 5 )
 		
-		self.btnPlay = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
+		self.btnPlay = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 24,24 ), wx.BU_AUTODRAW )
 		self.btnPlay.Enable( False )
 		self.btnPlay.SetToolTipString( u"Resume download" )
 		
 		bSizer12.Add( self.btnPlay, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
-		self.btnPause = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
+		self.btnPause = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 24,24 ), wx.BU_AUTODRAW )
 		self.btnPause.Enable( False )
 		self.btnPause.SetToolTipString( u"Pause download" )
 		
 		bSizer12.Add( self.btnPause, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.TOP, 5 )
 		
-		self.btnStop = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
+		self.btnStop = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 24,24 ), wx.BU_AUTODRAW )
 		self.btnStop.Enable( False )
 		self.btnStop.SetToolTipString( u"Cancel download and\ndelete downloaded file" )
 		
 		bSizer12.Add( self.btnStop, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.RIGHT|wx.TOP, 5 )
 		
-		self.btnVLC = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.DefaultSize, wx.BU_AUTODRAW )
+		self.btnVLC = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( 24,24 ), wx.BU_AUTODRAW )
 		self.btnVLC.Enable( False )
 		self.btnVLC.SetToolTipString( u"Play in VLC" )
 		
@@ -188,15 +189,15 @@ class GUI ( wx.Frame ):
 		self.m_panel5 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
 		bSizer13 = wx.BoxSizer( wx.HORIZONTAL )
 		
-		self.gaugeProgressBar = wx.Gauge( self.m_panel5, wx.ID_ANY, 100, wx.DefaultPosition, wx.Size( -1,21 ), wx.GA_HORIZONTAL )
-		self.gaugeProgressBar.SetMinSize( wx.Size( 150,21 ) )
-		self.gaugeProgressBar.SetMaxSize( wx.Size( -1,21 ) )
+		self.gaugeProgressBar = wx.Gauge( self.m_panel5, wx.ID_ANY, 100, wx.DefaultPosition, wx.Size( -1,20 ), wx.GA_HORIZONTAL )
+		self.gaugeProgressBar.SetMinSize( wx.Size( 150,20 ) )
+		self.gaugeProgressBar.SetMaxSize( wx.Size( -1,24 ) )
 		
 		bSizer13.Add( self.gaugeProgressBar, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		
 		self.lblProgressText = wx.StaticText( self.m_panel5, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
 		self.lblProgressText.Wrap( -1 )
-		self.lblProgressText.SetFont( wx.Font( 10, 74, 90, 90, False, "Arial" ) )
+		self.lblProgressText.SetFont( wx.Font( 10, 70, 90, 90, False, "Tahoma" ) )
 		self.lblProgressText.SetMinSize( wx.Size( 50,-1 ) )
 		
 		bSizer13.Add( self.lblProgressText, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL|wx.FIXED_MINSIZE|wx.LEFT|wx.TOP, 5 )
