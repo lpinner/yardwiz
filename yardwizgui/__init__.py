@@ -65,7 +65,8 @@ class GUI( gui.GUI ):
         self.btnVLC.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"vlc.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnVLC.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"vlc_disabled.png"), wx.BITMAP_TYPE_ANY ) )
         self.mitScheduled.Enable(False)
-        
+        self.btnVLC.Disable()
+
         self.version,self.display_version=version()
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
         self.StatusBar.SetFieldsCount(1)
@@ -128,9 +129,6 @@ class GUI( gui.GUI ):
             self.progress_timer = wx.Timer(self)
             self.Bind(wx.EVT_TIMER, self._Pulse,self.progress_timer)
 
-        #self.gaugeProgressBar.Hide()
-        #self.btnVLC.Hide()
-
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires getWizPnP to communicate with your Beyonwiz.\n\nPlease install getWizPnP from: http://www.openwiz.org/wiki/GetWizPnP_Release'''
         if not wizexe:
@@ -140,14 +138,13 @@ class GUI( gui.GUI ):
 
         self._ReadConfig()
         self._ApplyConfig()
-        
+
         #Set focus so the F5 can get fired, doesn't work on startup when the frame has focus
         self.cbxDevice.SetFocus()
 
         self.lblProgressText.Hide()
         self.gaugeProgressBar.Hide()
-        self.btnVLC.Hide()
-        
+
         self._FadeIn()
         self.Show()
 
@@ -320,9 +317,11 @@ class GUI( gui.GUI ):
         logger.debug('VLC path: %s'%vlcexe)
         if vlcexe:
             self.vlcargs=self.config.get('Settings','vlcargs').split()
+            self.btnVLC.Disable()
         else:
             if 'vlcargs' in self.configspec['Settings']:
                 del self.configspec['Settings']['vlcargs']
+            self.btnVLC.Hide()
 
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
@@ -671,7 +670,7 @@ class GUI( gui.GUI ):
             self.mitQueue.Enable(True)
             self.mitExit.Enable( True )
             self.mitDownload.Enable( True )
-            self.btnVLC.Hide()
+            self.btnVLC.Disable()
             if len(self.queue)==0:
                 self.btnClearQueue.Enable( False )
                 self.btnDownload.Enable( False )
@@ -825,7 +824,7 @@ class GUI( gui.GUI ):
     def _ScheduleDownload(self):
         schedulelist=self.schedulelist[:]
         showcancel=len(schedulelist)>0
-        
+
         idx = self.lstPrograms.GetFirstSelected()
 
         while idx != -1:
@@ -848,7 +847,7 @@ class GUI( gui.GUI ):
         self._FadeOut(stop=200,delta=-25)
         sd=SchedulerDialog(self, programs, self.scheduletime, showcancel)
         self._FadeIn(start=200,delta=25)
-        
+
         if sd.saved:
             for pidx in schedulelist:
                 if pidx not in self.schedulelist:
@@ -877,7 +876,7 @@ class GUI( gui.GUI ):
             self.schedulelist=[]
             self.schedulequeue=Queue.Queue()
             self.scheduletime=None
-            
+
     def _ScheduledDownloads(self):
         programs=[self.programs[pidx]['title'] for pidx in self.schedulelist]
         showcancel=len(programs)>0
@@ -897,7 +896,7 @@ class GUI( gui.GUI ):
             self.scheduletime=None
 
         self.mitScheduled.Enable(len(self.schedulelist)>0)
-            
+
     def _SetCursor(self,cursor):
         self.SetCursor(cursor)
         for cw in self.GetChildren():
@@ -998,8 +997,6 @@ class GUI( gui.GUI ):
             self.filename=progress['filename']
             if vlcexe and self.filename and self.player is None:
                 self.btnVLC.Enable(True)
-                self.btnVLC.Show()
-            else:self.btnVLC.Hide()
 
         else:
             self.gaugeProgressBar.SetValue(0)
@@ -1069,6 +1066,7 @@ class GUI( gui.GUI ):
 
     def btnVLC_OnClick( self, event ):
         self._Play()
+        self.btnVLC.Disable()
 
     def cbxDevice_OnKillFocus( self, event ):
         self.mitCheck.Enable( False )
@@ -1201,7 +1199,7 @@ class GUI( gui.GUI ):
         self._Log(event.message)
 
     def onPlayComplete( self, event ):
-        self.btnVLC.Hide()
+        self.btnVLC.Disable()
         del self.player
         self.player=None
 
@@ -1210,7 +1208,7 @@ class GUI( gui.GUI ):
 
     def onScheduledDownloadComplete( self, event ):
         self._PostDownloadCommand(event.program)
-        
+
     def onSchedulerComplete( self, event ):
         self.schedulelist=[]
         self.schedulequeue=Queue.Queue()
@@ -1262,13 +1260,13 @@ class SchedulerDialog ( gui.SchedulerDialog ):
             self.lstSchedule.InsertColumn(0,u'')
             for program in programs:
                 self.lstSchedule.Append([program])
-    
+
             self.GetValue=self.dtcSchedule.GetValue
             self.btnCancel.Show(showcancel)
         else:
             self.btnSchedule.Show(False)
             self.btnCancel.Show(False)
-            
+
         self.ShowModal()
 
     def OnCancel( self, event ):
