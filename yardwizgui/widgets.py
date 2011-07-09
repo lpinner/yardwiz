@@ -49,6 +49,7 @@ class DateTimeCtrl(wx.Panel):
         h = self.dpc.GetSize().height
         self.tc = wx.lib.masked.TimeCtrl( self, -1,display_seconds=False, value=value,useFixedWidthFont=False, size=(-1,h) )
         self.tc.SetFont(self.dpc.GetFont())
+
         sb = wx.SpinButton( self, -1, wx.DefaultPosition, (-1,h), wx.SP_VERTICAL )
         self.tc.BindSpinButton( sb )
 

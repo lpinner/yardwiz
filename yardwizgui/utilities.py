@@ -74,21 +74,18 @@ class ThreadedConnector( Thread ):
         self.start()
     def run(self):
         if self.ip:
-            if iswin: cmd=['ping','-n','1',self.ip]
-            else: cmd=['ping','-c','1',self.ip]
-            proc=subproc(cmd)
-            stdout,stderr=proc.communicate()
-            exit_code=proc.wait()
-
-            if exit_code > 0 or 'destination host unreachable' in stdout.lower():
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                s.connect((self.ip, int(self.port)))
+                s.shutdown(2)
+                evt = Log(wizEVT_LOG, -1,'The WizPnP server is online.')
+                try:wx.PostEvent(self.parent, evt)
+                except:pass #we're probably exiting
+            except Exception as err:
                 evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.')
                 try:wx.PostEvent(self.parent, evt)
                 except:pass #we're probably exiting
                 return
-            else:
-                evt = Log(wizEVT_LOG, -1,'The WizPnP server is online')
-                try:wx.PostEvent(self.parent, evt)
-                except:pass #we're probably exiting
 
         if self.quick:
             exit_code,err=self._quicklistprograms()
@@ -111,6 +108,8 @@ class ThreadedConnector( Thread ):
         cmd.extend(['--all','--sort=fatd'])
         self.proc=subproc(cmd+['-q','--List'])
         programs=[]
+        import time
+
         for index,line in enumerate(iter(self.proc.stdout.readline, "")):
             if self._stop.isSet():
                 logger.debug('_stop.isSet')
