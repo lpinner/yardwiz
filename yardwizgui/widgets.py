@@ -47,8 +47,13 @@ class DateTimeCtrl(wx.Panel):
 
         self.dpc.SetSizeHintsSz( wx.Size( 120,-1 ), wx.DefaultSize )
         h = self.dpc.GetSize().height
-        self.tc = wx.lib.masked.TimeCtrl( self, -1,display_seconds=False, value=value,useFixedWidthFont=False, size=(-1,h) )
+        
+        self.tc = wx.lib.masked.TimeCtrl( self, -1,value, wx.DefaultPosition , (-1,h), 
+                                          wx.TE_PROCESS_TAB|self.dpc.GetBorder(), 
+                                          display_seconds=False, useFixedWidthFont=False)
+
         self.tc.SetFont(self.dpc.GetFont())
+        self.tc.SetForegroundColour(self.dpc.GetForegroundColour())
 
         sb = wx.SpinButton( self, -1, wx.DefaultPosition, (-1,h), wx.SP_VERTICAL )
         self.tc.BindSpinButton( sb )
