@@ -191,14 +191,14 @@ class GUI ( wx.Frame ):
 		self.gaugeProgressBar.SetMinSize( wx.Size( 150,21 ) )
 		self.gaugeProgressBar.SetMaxSize( wx.Size( -1,30 ) )
 		
-		bSizer13.Add( self.gaugeProgressBar, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
+		bSizer13.Add( self.gaugeProgressBar, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL|wx.EXPAND, 5 )
 		
 		self.lblProgressText = wx.StaticText( self.m_panel5, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
 		self.lblProgressText.Wrap( -1 )
 		self.lblProgressText.SetFont( wx.Font( 10, 70, 90, 90, False, "Tahoma" ) )
 		self.lblProgressText.SetMinSize( wx.Size( 50,-1 ) )
 		
-		bSizer13.Add( self.lblProgressText, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL|wx.FIXED_MINSIZE|wx.LEFT|wx.TOP, 5 )
+		bSizer13.Add( self.lblProgressText, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL|wx.EXPAND, 5 )
 		
 		
 		bSizer13.AddSpacer( ( 5, 0), 1, wx.EXPAND, 5 )
