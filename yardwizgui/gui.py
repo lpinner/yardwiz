@@ -185,30 +185,30 @@ class GUI ( wx.Frame ):
 		self.bSizer.Add( self.m_panel4, 0, wx.EXPAND, 0 )
 		
 		self.m_panel5 = wx.Panel( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.TAB_TRAVERSAL )
-		bSizer13 = wx.BoxSizer( wx.HORIZONTAL )
+		self.bProgressSizer = wx.BoxSizer( wx.HORIZONTAL )
 		
 		self.gaugeProgressBar = wx.Gauge( self.m_panel5, wx.ID_ANY, 100, wx.DefaultPosition, wx.Size( -1,-1 ), wx.GA_HORIZONTAL )
 		self.gaugeProgressBar.SetMinSize( wx.Size( 150,21 ) )
 		self.gaugeProgressBar.SetMaxSize( wx.Size( -1,30 ) )
 		
-		bSizer13.Add( self.gaugeProgressBar, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL|wx.EXPAND, 5 )
+		self.bProgressSizer.Add( self.gaugeProgressBar, 2, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 		
 		self.lblProgressText = wx.StaticText( self.m_panel5, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_LEFT )
 		self.lblProgressText.Wrap( -1 )
 		self.lblProgressText.SetFont( wx.Font( 10, 70, 90, 90, False, "Tahoma" ) )
 		self.lblProgressText.SetMinSize( wx.Size( 50,-1 ) )
 		
-		bSizer13.Add( self.lblProgressText, 1, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL|wx.EXPAND, 5 )
+		self.bProgressSizer.Add( self.lblProgressText, 3, wx.ALIGN_CENTER_VERTICAL|wx.ALL, 5 )
 		
 		
-		bSizer13.AddSpacer( ( 5, 0), 1, wx.EXPAND, 5 )
+		self.bProgressSizer.AddSpacer( ( 5, 0), 1, wx.EXPAND, 5 )
 		
 		self.btnExit = wx.Button( self.m_panel5, wx.ID_ANY, u"Exit", wx.DefaultPosition, wx.DefaultSize, wx.BU_EXACTFIT )
-		bSizer13.Add( self.btnExit, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL|wx.RIGHT, 5 )
+		self.bProgressSizer.Add( self.btnExit, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL|wx.RIGHT, 5 )
 		
-		self.m_panel5.SetSizer( bSizer13 )
+		self.m_panel5.SetSizer( self.bProgressSizer )
 		self.m_panel5.Layout()
-		bSizer13.Fit( self.m_panel5 )
+		self.bProgressSizer.Fit( self.m_panel5 )
 		self.bSizer.Add( self.m_panel5, 1, wx.EXPAND, 5 )
 		
 		bSizer4.Add( self.bSizer, 0, wx.EXPAND, 5 )

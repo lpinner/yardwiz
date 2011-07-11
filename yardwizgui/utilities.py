@@ -76,13 +76,14 @@ class ThreadedConnector( Thread ):
         if self.ip:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
+                s.settimeout(10.0)
                 s.connect((self.ip, int(self.port)))
                 s.shutdown(2)
                 evt = Log(wizEVT_LOG, -1,'The WizPnP server is online.')
                 try:wx.PostEvent(self.parent, evt)
                 except:pass #we're probably exiting
             except Exception as err:
-                evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.')
+                evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.\n'+str(err))
                 try:wx.PostEvent(self.parent, evt)
                 except:pass #we're probably exiting
                 return
@@ -1020,6 +1021,8 @@ del tmp,formatter,handler
 #Workarounds for crossplatform issues
 #######################################################################
 iswin=sys.platform[0:3] == "win"
+isnix='linux' in sys.platform
+isosx=sys.platform == "darwin"
 
 filesysenc=sys.getfilesystemencoding()
 

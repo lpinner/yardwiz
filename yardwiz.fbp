@@ -1285,11 +1285,11 @@
                         <property name="name">self.bSizer</property>
                         <property name="orient">wxHORIZONTAL</property>
                         <property name="permission">none</property>
-                        <object class="sizeritem" expanded="0">
+                        <object class="sizeritem" expanded="1">
                             <property name="border">0</property>
                             <property name="flag">wxEXPAND</property>
                             <property name="proportion">0</property>
-                            <object class="wxPanel" expanded="0">
+                            <object class="wxPanel" expanded="1">
                                 <property name="BottomDockable">1</property>
                                 <property name="LeftDockable">1</property>
                                 <property name="RightDockable">1</property>
@@ -2017,13 +2017,13 @@
                                 <event name="OnUpdateUI"></event>
                                 <object class="wxBoxSizer" expanded="1">
                                     <property name="minimum_size"></property>
-                                    <property name="name">bSizer13</property>
+                                    <property name="name">self.bProgressSizer</property>
                                     <property name="orient">wxHORIZONTAL</property>
                                     <property name="permission">none</property>
                                     <object class="sizeritem" expanded="0">
                                         <property name="border">5</property>
-                                        <property name="flag">wxALIGN_CENTER_VERTICAL|wxALIGN_LEFT|wxALL|wxEXPAND</property>
-                                        <property name="proportion">1</property>
+                                        <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
+                                        <property name="proportion">2</property>
                                         <object class="wxGauge" expanded="0">
                                             <property name="BottomDockable">1</property>
                                             <property name="LeftDockable">1</property>
@@ -2109,8 +2109,8 @@
                                     </object>
                                     <object class="sizeritem" expanded="0">
                                         <property name="border">5</property>
-                                        <property name="flag">wxALIGN_CENTER_VERTICAL|wxALIGN_LEFT|wxALL|wxEXPAND</property>
-                                        <property name="proportion">1</property>
+                                        <property name="flag">wxALIGN_CENTER_VERTICAL|wxALL</property>
+                                        <property name="proportion">3</property>
                                         <object class="wxStaticText" expanded="0">
                                             <property name="BottomDockable">1</property>
                                             <property name="LeftDockable">1</property>

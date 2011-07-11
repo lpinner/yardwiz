@@ -129,6 +129,12 @@ class GUI( gui.GUI ):
             self.progress_timer = wx.Timer(self)
             self.Bind(wx.EVT_TIMER, self._Pulse,self.progress_timer)
 
+        if isosx:
+            for item in (self.gaugeProgressBar,self.lblProgressText):
+                bs=self.bProgressSizer.GetItem(item)
+                bs.SetFlag(wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP|wx.EXPAND)
+                bs.SetBorder(bs.GetBorder()+5)
+        
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires getWizPnP to communicate with your Beyonwiz.\n\nPlease install getWizPnP from: http://www.openwiz.org/wiki/GetWizPnP_Release'''
         if not wizexe:
