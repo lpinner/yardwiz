@@ -1,8 +1,11 @@
 #labels Featured
 =Release notes=
 
+==0.3.5==
+===_Fixed in 0.3.5_===
+  * Fix the positioning of the progress bar and text.
+
 ==0.3.4==
-  
 ===_Fixed in 0.3.4_===
   * Clean up the GUI including standardising application fonts and moving the progress bar to the same level as the buttons.
   * Handle NoPyApp exception on close.

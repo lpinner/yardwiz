@@ -1020,9 +1020,9 @@ del tmp,formatter,handler
 #######################################################################
 #Workarounds for crossplatform issues
 #######################################################################
-iswin=sys.platform[0:3] == "win"
+iswin=sys.platform[0:3] == 'win'
 isnix='linux' in sys.platform
-isosx=sys.platform == "darwin"
+isosx=sys.platform == 'darwin'
 
 filesysenc=sys.getfilesystemencoding()
 
