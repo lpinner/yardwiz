@@ -129,12 +129,15 @@ class GUI( gui.GUI ):
             self.progress_timer = wx.Timer(self)
             self.Bind(wx.EVT_TIMER, self._Pulse,self.progress_timer)
 
+        self.txtLog.SetForegroundColour(self.lstPrograms.GetForegroundColour())
+        self.txtInfo.SetForegroundColour(self.lstPrograms.GetForegroundColour())
+
         if isosx:
             for item in (self.gaugeProgressBar,self.lblProgressText):
                 bs=self.bProgressSizer.GetItem(item)
                 bs.SetFlag(wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM|wx.LEFT|wx.TOP|wx.EXPAND)
                 bs.SetBorder(bs.GetBorder()+5)
-        
+
         #check for GetWizPnP
         errmsg='''Error: YARDWiz requires getWizPnP to communicate with your Beyonwiz.\n\nPlease install getWizPnP from: http://www.openwiz.org/wiki/GetWizPnP_Release'''
         if not wizexe:
@@ -537,12 +540,16 @@ class GUI( gui.GUI ):
             deletions=ThreadedDeleter(self,self.Stop,self.device,self.ip,self.port,programs,indices)
 
     def _DeleteProgram(self,event):
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         idx=self.lstPrograms.FindItemData(-1,event.index)
         if idx>-1:
             pidx=self.programs.keys()[event.index]
             if pidx not in self.deleted:self.deleted.append(pidx)
             self.lstPrograms.DeleteItem(idx)
-
+            self.total-=self.programs[pidx]['size']
+            if not self._downloading:
+                self.StatusBar.SetFieldsCount(1)
+                self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
         idx=self.lstQueue.FindItemData(-1,event.index)
         if idx>-1:
             del self.queue[self.queue.index(pidx)]
