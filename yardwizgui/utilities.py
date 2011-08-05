@@ -275,7 +275,10 @@ class ThreadedConnector( Thread ):
             else:
                 datetime=line.split('-')[0].strip()
         if info:
-            program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
+            program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title.decode('UTF-8'),info.decode('UTF-8'),datetime,playtime)
+            
+        program['title']=program['title'].decode('UTF-8')
+
         return program
 
     def _getinfo(self):
@@ -303,7 +306,7 @@ class ThreadedConnector( Thread ):
                         tmp=list(proglines)
                         proglines=[]
                         program=self._parseprogram(tmp)
-                        program['info']='\n'.join(tmp)
+                        program['info']='\n'.join(tmp).decode('UTF-8')
                         if program['index'] not in self.deleted:
                             index+=1
                             evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)

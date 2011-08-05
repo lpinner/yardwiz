@@ -748,9 +748,10 @@ class GUI( gui.GUI ):
 
     def _Log(self,msg):
         self.txtLog.SetInsertionPointEnd()
-        msg=str(msg).strip()
+        msg=msg.strip()
         if msg:
-            self.txtLog.WriteText(msg+'\n')
+            try:self.txtLog.WriteText(msg+'\n')
+            except:self.txtLog.WriteText(str(msg)+'\n')
             self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
             logger.debug(msg)
 
