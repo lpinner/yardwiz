@@ -1,6 +1,14 @@
 #labels Featured
 =Release notes=
 
+==0.3.6==
+===_New in 0.3.6_===
+  * Remember deletions and downloads between sessions.
+  
+===_Fixed in 0.3.6_===
+  * Fixed unicode [http://www.beyonwiz.com.au/phpbb2/viewtopic.php?p=92374#92374 issue].
+  * Make sure font colour in various widgets is the same when using a dark Linux theme.
+
 ==0.3.5==
 ===_Fixed in 0.3.5_===
   * Fix the positioning of the progress bar and text.
