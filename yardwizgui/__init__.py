@@ -22,7 +22,7 @@
 from utilities import *
 from events import *
 import os,sys,threading,time,ConfigParser,logging,Queue
-import re,webbrowser
+import re,webbrowser,pickle
 import ordereddict
 import wx
 import gui, configspec
@@ -75,7 +75,6 @@ class GUI( gui.GUI ):
         self._connecting=False
         self.player=None
         self.total=0
-        self.deleted=[]
         self.devices=odict()
         self.schedulelist=[]
         self.schedulequeue=Queue.Queue()
@@ -178,6 +177,9 @@ class GUI( gui.GUI ):
         else:
             self.programs[program['index']]=program
 
+        if  program['index'] in self.deleted:
+            return
+
         iidx=event.index
         lidx=self.lstPrograms.FindItemData(-1,iidx)
         if lidx>-1:
@@ -191,6 +193,9 @@ class GUI( gui.GUI ):
             self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
             self.lstPrograms.SetItemData(lidx,iidx)
             self.total+=program['size']
+
+        if  program['index'] in self.downloaded:
+            self.lstPrograms.SetItemTextColour(lidx, wx.Colour(45,83,164))
 
         if self.total>0 and not self._downloading:
             self.StatusBar.SetFieldsCount(1)
@@ -459,7 +464,7 @@ class GUI( gui.GUI ):
 
         #Connect to the Wiz etc...
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, deleted=self.deleted, quick=self.quicklisting)
+        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, quick=self.quicklisting)
 
     def _Connected(self,event=None):
 
@@ -475,6 +480,11 @@ class GUI( gui.GUI ):
             self.lblProgressText.SetLabelText('')
             self.lblProgressText.Hide()
             self.gaugeProgressBar.Hide()
+
+        for pidx in self.downloaded:
+            if pidx not in self.programs:del self.downloaded.index[pidx]
+        for pidx in self.deleted:
+            if pidx not in self.programs:del self.deleted.index[pidx]
 
         if event and event.connected:
             self.mitCheck.Enable( True )
@@ -649,6 +659,7 @@ class GUI( gui.GUI ):
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
             if not stopped:
+                self.downloaded.append(pidx)
                 try:
                     self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
                     self.lstPrograms.Select(item, 0) #Deselect
@@ -830,6 +841,16 @@ class GUI( gui.GUI ):
         self.config.read([defaultconfig,self.userconfig])
         self.configspec=configspec.configspec
         self._CleanupConfig()
+
+        #Already downloaded recordings
+        self.downloadedcache=os.path.join(configdir,'downloaded.cache')
+        try:self.downloaded=pickle.load( open(self.downloadedcache))
+        except:self.downloaded=[]
+
+        #Already deleted recordings
+        self.deletedcache=os.path.join(configdir,'deleted.cache')
+        try:self.deleted=pickle.load( open(self.deletedcache))
+        except:self.deleted=[]
 
     def _Reset(self):
         self._ClearQueue()
@@ -1041,6 +1062,9 @@ class GUI( gui.GUI ):
         if not os.path.exists(os.path.dirname(self.userconfig)):
             os.mkdir(os.path.dirname(self.userconfig))
         self.config.write(open(self.userconfig,'w'))
+
+        pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
+        pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
 
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']

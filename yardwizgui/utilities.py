@@ -60,13 +60,12 @@ class ThreadedChecker( Thread ):
         except:pass
 
 class ThreadedConnector( Thread ):
-    def __init__( self, parent, evtStop, device, ip, port, deleted=[], quick=False):
+    def __init__( self, parent, evtStop, device, ip, port, quick=False):
         Thread.__init__( self )
         self.device=device
         self.ip=ip
         self.port=port
         self.parent=parent
-        self.deleted=deleted
         self.quick=quick
         self.thread=None
         self._stop = evtStop
@@ -152,12 +151,11 @@ class ThreadedConnector( Thread ):
                         proglines=[]
                         program=self._parseprogram(tmp)
                         program['info']='\n'.join(tmp)
-                        if program['index'] not in self.deleted:
-                            idx=programs.index(program['index'])
-                            exists.append(program['index'])
-                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
-                            try:wx.PostEvent(self.parent, evt)
-                            except:pass #we're probably exiting
+                        idx=programs.index(program['index'])
+                        exists.append(program['index'])
+                        evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
+                        try:wx.PostEvent(self.parent, evt)
+                        except:pass #we're probably exiting
                 else:
                     proglines.append(line)
 
@@ -205,11 +203,10 @@ class ThreadedConnector( Thread ):
                         tmp=list(proglines)
                         proglines=[]
                         program=self._parseprogram(tmp)
-                        if program['index'] not in self.deleted:
-                            index+=1
-                            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program, index)
-                            try:wx.PostEvent(self.parent, evt)
-                            except:pass #we're probably exiting
+                        index+=1
+                        evt = AddProgram(wizEVT_ADDPROGRAM, -1, program, index)
+                        try:wx.PostEvent(self.parent, evt)
+                        except:pass #we're probably exiting
                 else:
                     proglines.append(line)
         exit_code=1
@@ -224,6 +221,7 @@ class ThreadedConnector( Thread ):
             return exit_code,str(err)#We're probably exiting
 
         return exit_code,''
+
     def _quickparseprogram(self,index):
         program=index.split()
         datetime=program[-1]
@@ -279,7 +277,7 @@ class ThreadedConnector( Thread ):
                                                      unicode(title,'UTF-8',errors='ignore'),
                                                      unicode(info,'UTF-8',errors='ignore'),
                                                      datetime,playtime)
-            
+
         program['title']=unicode(program['title'],'UTF-8',errors='ignore')
 
         return program
@@ -310,11 +308,10 @@ class ThreadedConnector( Thread ):
                         proglines=[]
                         program=self._parseprogram(tmp)
                         program['info']=unicode('\n'.join(tmp),'UTF-8',errors='ignore')
-                        if program['index'] not in self.deleted:
-                            index+=1
-                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
-                            try:wx.PostEvent(self.parent, evt)
-                            except:pass #we're probably exiting
+                        index+=1
+                        evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
+                        try:wx.PostEvent(self.parent, evt)
+                        except:pass #we're probably exiting
                 else:
                     proglines.append(line)
 
@@ -739,7 +736,7 @@ class ThreadedScheduler( Thread , wx.EvtHandler):
             self.Queue.task_done()
             evt = ScheduledDownloadComplete(wizEVT_SCHEDULEDDWONLOADCOMPLETE, -1,program)
             wx.PostEvent(self.parent, evt)
-            
+
         evt = SchedulerComplete(wizEVT_SCHEDULERCOMPLETE, -1)
         wx.PostEvent(self.parent, evt)
 
@@ -757,7 +754,7 @@ class ThreadedScheduler( Thread , wx.EvtHandler):
             msg='Downloaded %s%% (%s MB) of %s, %s remaining.'
             msg=msg%(progress['percent'],progress['downloaded'],f,progress['time'])
             self._log(msg)
-            
+
     def _onlog(self,event):
         wx.PostEvent(self.parent,event)
 
