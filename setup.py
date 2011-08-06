@@ -231,7 +231,7 @@ elif 'py2exe' in sys.argv:
                             
                             }]
     setupargs['options']={"py2exe":
-                            {'excludes':['xml','ssl','random','httplib','urllib','xml','_ssl','email','doctest','pdb','unittest','inspect','pyreadline', 'pickle'],
+                            {'excludes':['xml','ssl','random','httplib','urllib','xml','_ssl','email','doctest','pdb','unittest','inspect','pyreadline'],
                             'compressed':True
                             }
                         }
