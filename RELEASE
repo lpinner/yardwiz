@@ -1,6 +1,10 @@
 #labels Featured
 =Release notes=
 
+==0.3.7==  
+===_Fixed in 0.3.6_===
+  * Fixed bug in downloads/deletions tracking.
+  
 ==0.3.6==
 ===_New in 0.3.6_===
   * Remember deletions and downloads between sessions.
