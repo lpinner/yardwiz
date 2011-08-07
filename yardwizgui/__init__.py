@@ -481,10 +481,11 @@ class GUI( gui.GUI ):
             self.lblProgressText.Hide()
             self.gaugeProgressBar.Hide()
 
-        for pidx in self.downloaded:
-            if pidx not in self.programs:del self.downloaded.index[pidx]
+        downloaded,deleted=self.downloaded,self.deleted
+        for pidx in downloaded:
+            if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
         for pidx in self.deleted:
-            if pidx not in self.programs:del self.deleted.index[pidx]
+            if pidx not in self.programs:del self.deleted[self.deleted.index(pidx)]
 
         if event and event.connected:
             self.mitCheck.Enable( True )
