@@ -15,19 +15,14 @@ APPNAME='YARDWiz'
 #Helper classes
 #######################################################################
 class ThreadedChecker( Thread ):
-    def __init__( self, parent, evtStop, device, ip, port):
+    def __init__( self, parent, evtStop, device):
         Thread.__init__( self )
         self.parent=parent
         self.Stop=evtStop
         self.device=device
-        self.ip=ip
-        self.port=port
         self.start()
     def run(self):
-        if self.ip:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--check']
-        else:
-            cmd=[wizexe,'--device',self.device,'--all','--check']
+        cmd=[wizexe,'--all','--check']+self.device.args
 
         try:
             self.proc=subproc(cmd)
@@ -60,11 +55,9 @@ class ThreadedChecker( Thread ):
         except:pass
 
 class ThreadedConnector( Thread ):
-    def __init__( self, parent, evtStop, device, ip, port, quick=False):
+    def __init__( self, parent, evtStop, device, quick=False):
         Thread.__init__( self )
         self.device=device
-        self.ip=ip
-        self.port=port
         self.parent=parent
         self.quick=quick
         self.thread=None
@@ -72,11 +65,11 @@ class ThreadedConnector( Thread ):
         self._stop.clear()
         self.start()
     def run(self):
-        if self.ip:
+        if self.device.ip:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 s.settimeout(10.0)
-                s.connect((self.ip, int(self.port)))
+                s.connect((self.device.ip, int(self.device.port)))
                 s.shutdown(2)
                 evt = Log(wizEVT_LOG, -1,'The WizPnP server is online.')
                 try:wx.PostEvent(self.parent, evt)
@@ -101,12 +94,9 @@ class ThreadedConnector( Thread ):
             except:pass
 
     def _quicklistprograms(self):
-        if self.ip:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        else:
-            cmd=[wizexe,'--device',self.device]
-        cmd.extend(['--all','--sort=fatd'])
+        cmd=[wizexe,'--all','--sort=fatd']+self.device.args
         self.proc=subproc(cmd+['-q','--List'])
+
         programs=[]
         import time
 
@@ -179,11 +169,7 @@ class ThreadedConnector( Thread ):
 
     def _listprograms(self):
         self.thread=None
-        if self.ip:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        else:
-            cmd=[wizexe,'--device',self.device]
-        cmd.extend(['--all','-v','-l','--episode','--index','--sort=fatd'])
+        cmd=[wizexe,'--all','-v','-l','--episode','--index','--sort=fatd']+self.device.args
         self.proc=subproc(cmd)
         proglines=[]
         index=-1
@@ -284,11 +270,7 @@ class ThreadedConnector( Thread ):
 
     def _getinfo(self):
         time.sleep(0.25)
-        if self.ip:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        else:
-            cmd=[wizexe,'--device',self.device]
-        cmd.extend(['-vv','--all','-l','--episode','--index','--sort=fatd'])
+        cmd=[wizexe,'-vv','--all','-l','--episode','--index','--sort=fatd']+self.device.args
         proc=subproc(cmd)
         proglines=[]
         index=-1
@@ -329,21 +311,16 @@ class ThreadedConnector( Thread ):
         except:pass
 
 class ThreadedDeleter( Thread ):
-    def __init__( self, parent, evtStop, device, ip, port, programs,indices):
+    def __init__( self, parent, evtStop, device, programs,indices):
         Thread.__init__( self )
         self.parent=parent
         self.Stop=evtStop
         self.device=device
-        self.ip=ip
-        self.port=port
         self.programs=programs
         self.indices=indices
         self.start()
     def run(self):
-        if self.ip:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port,'--all','--BWName']
-        else:
-            cmd=[wizexe,'--device',self.device,'--all','--BWName']
+        cmd=[wizexe,'--all','--BWName']+self.device.args
 
         for idx,program in zip(self.indices,self.programs):
             cmddel=cmd+['--delete',program['index']]
@@ -374,13 +351,11 @@ class ThreadedDeleter( Thread ):
         except:pass #we're probably exiting
 
 class ThreadedDownloader( Thread ):
-    def __init__(self, parent, device, ip, port, programs, evtPlay, evtStop):
+    def __init__(self, parent, device, programs, evtPlay, evtStop):
         Thread.__init__( self )
 
         self.parent=parent
         self.device=device
-        self.ip=ip
-        self.port=port
         self.programs=programs
         self.Play=evtPlay
         self.Stop=evtStop
@@ -417,15 +392,14 @@ class ThreadedDownloader( Thread ):
 
     def _download(self,program):
         self._log('Downloading %s...'%program['title'])
+
         fd=program['filename'].encode(filesysenc)
         d=os.path.dirname(fd)
         f,e=os.path.splitext(os.path.basename(fd))
-        if self.ip:
-            cmd=[wizexe,'-H',self.ip,'-p',self.port]
-        else:
-            cmd=[wizexe,'--device',self.device]
-        if 'ts' in e.lower():cmd.extend(['--all','-q','-t','-R','--BWName','-O',d,'-T',f,program['index']])
-        else:cmd.extend(['--all','-q','-R','--BWName','-O',d,'-T',f,program['index']])
+
+        cmd=[wizexe,'--all','-q','-R','--BWName','-O',d,'-T',f,program['index']]+self.device.args
+        if 'ts' in e.lower():cmd+=['-t']
+
         try:
             self.proc=subproc(cmd)
         except Exception,err:
@@ -731,7 +705,7 @@ class ThreadedScheduler( Thread , wx.EvtHandler):
         while not self.Queue.empty():
             if self.evtStop.is_set():return
             program = self.Queue.get()
-            td= ThreadedDownloader( self, program['device'], program['ip'], program['port'], [program], self.evtPlay, self.evtStop)
+            td= ThreadedDownloader( self, program['device'], [program], self.evtPlay, self.evtStop)
             td.join()#Block until  download is complete
             self.Queue.task_done()
             evt = ScheduledDownloadComplete(wizEVT_SCHEDULEDDWONLOADCOMPLETE, -1,program)
@@ -812,6 +786,50 @@ class Stderr(object):
     def flush(self):
         pass
 
+
+class Device(object):
+    def __init__(self,device):
+
+        self.ip,self.port,self.name=('','','')
+
+        self.device=' '.join(device.split())
+        device=self._parse(device)
+        if device['ip']:self.ip=device['ip']
+        if device['port']:self.port,self._port=device['port'],device['port']
+        else:self.port,self._port='49152',''
+        if device['name']:self.name=device['name']
+        self.args=self._args()
+        self.display=self._display()
+
+    def __str__(self):
+        '''String representation that can be parsed as a new Device.'''
+        return self.device
+
+    def _args(self):
+        if self.ip:
+            cmd=['-H',self.ip,'-p',self.port]
+        else:
+            cmd=['--device',self.name]
+        return cmd
+
+    def _display(self):
+        '''String representation for display only.
+          Handles the case where a device is 'discovered'
+          and only the device name should be shown'''
+        if self.ip and not self.name:
+            s=self.ip
+            if self._port:s+=':'+self._port
+        else: s=self.name
+        return s
+
+    def _parse(self,device):
+        import re
+        try:
+            reg='((?P<ip>\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3})*(:(?P<port>\d{1,5}))*(\s*(?P<name>.*$)))'
+            pat=re.compile(reg)
+            mat=pat.search(device)
+            return mat.groupdict()
+        except: raise ValueError('Unable to parse device from"%s"'%device)
 
 #######################################################################
 #Utility helper functions

@@ -37,9 +37,6 @@ class GUI( gui.GUI ):
     idxInfo=1
     idxQueue=2
 
-    #Regular expressions for IP, IP:port, and hostname
-    _regexip=r'^\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}$' #May not be a valid IP, but it's the right form...
-    _regexipport=_regexip[:-1]+'(:(\d{1,5}))$'
 
     mincolwidth=60
 
@@ -75,7 +72,6 @@ class GUI( gui.GUI ):
         self._connecting=False
         self.player=None
         self.total=0
-        self.devices=odict()
         self.schedulelist=[]
         self.schedulequeue=Queue.Queue()
         self.scheduletime=None
@@ -230,21 +226,19 @@ class GUI( gui.GUI ):
             logger.debug('\n'.join(config))
 
         #write stuff to various controls, eg server & port
-        device=self.config.get('Settings','device')
+        self.devices=odict()
+        self.device=None
+        devices=self.config.get('Settings','device')
         self.cbxDevice.Clear()
-        if device:
-            devs=device.split(';')
-            for dev in devs:
-                dev=dev.split()
-                ipport=re.match(self._regexipport,dev[0])
-                if ipport:
-                    if len(dev)>1:
-                        device=' '.join(dev[1:])
-                        self.devices[device]=dev[0].split(':')
-                self.cbxDevice.Append(device)
+        devices=devices.split(';')
+        for device in devices:
+            device=Device(device)
+            self.devices[device.display]=device
+            self.cbxDevice.Append(device.display)
 
         if self.cbxDevice.GetCount()>0:
             self.cbxDevice.SetSelection(0)
+            self.device=self.devices.values()[0]
 
         #TS or TVWIZ
         self.tsformat=self.config.getboolean('Settings','tsformat')
@@ -369,7 +363,7 @@ class GUI( gui.GUI ):
         logger.debug('_CheckWiz')
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         self._Log('Checking recordings...')
-        checker=ThreadedChecker(self,self.Stop,self.device,self.ip,self.port)
+        checker=ThreadedChecker(self,self.Stop,self.device)
 
     def _CheckComplete(self,event):
         if event and event.message:self._Log(event.message)
@@ -431,13 +425,12 @@ class GUI( gui.GUI ):
         self.lstPrograms.SetSortEnabled(False)
         self.mitCheck.Enable( False )
         self.btnConnect.Enable( False )
+        self.cbxDevice.Enable( False )
         self.mitDelete.Enable( False )
         self.gaugeProgressBar.Show()
         self.gaugeProgressBar.Pulse()
         self.lblProgressText.Show()
         self.lblProgressText.SetLabelText('Connecting...')
-
-        self.ip,self.port,self.device=(None,None,None)
 
         device=str(self.cbxDevice.GetValue()).strip()
         if not device:
@@ -447,24 +440,18 @@ class GUI( gui.GUI ):
             return
 
         if device in self.devices:
-            self.device=device
-            self.ip,self.port=self.devices[device]
+            self.device=self.devices[device]
         else:
-            ipport=re.match(self._regexipport,device)
-            iponly=re.match(self._regexip,device)
-            if ipport:
-                self.ip,self.port=device.split(':')
-            elif iponly:
-                self.ip,self.port=device,'49152'
-            else:
-                self.device=device
+            self.device=Device(device)
+            self.devices[self.device.display]=self.device
+            self.cbxDevice.Append(self.device.display)
 
-        logger.debug('Connecting to %s:%s %s'%(self.ip,self.port,self.device))
-        self._Log('Connecting to %s...'%device)
+        logger.debug('Connecting to %s'%(str(self.device)))
+        self._Log('Connecting to %s...'%self.device.display)
 
         #Connect to the Wiz etc...
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,ip=self.ip,port=self.port, quick=self.quicklisting)
+        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,quick=self.quicklisting)
 
     def _Connected(self,event=None):
 
@@ -474,6 +461,7 @@ class GUI( gui.GUI ):
         self._connecting=False
         self.Stop.clear()
         self.btnConnect.Enable( True )
+        self.cbxDevice.Enable( True )
         self.mitDelete.Enable( True )
         self.lstPrograms.SetSortEnabled(True)
         if not self._downloading:
@@ -548,7 +536,7 @@ class GUI( gui.GUI ):
             logger.debug('_DeleteFromWiz, indices: %s'%str(indices))
             logger.debug('_DeleteFromWiz, programs: %s'%str(programs))
             self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-            deletions=ThreadedDeleter(self,self.Stop,self.device,self.ip,self.port,programs,indices)
+            deletions=ThreadedDeleter(self,self.Stop,self.device,programs,indices)
 
     def _DeleteProgram(self,event):
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
@@ -583,28 +571,28 @@ class GUI( gui.GUI ):
         logger.debug('_Discover, stdout: %s'%stdout)
         logger.debug('_Discover, stderr: %s'%stderr.strip())
         if stdout:
+            self.devices=odict()
             self.cbxDevice.Clear()
             self.cbxDevice.SetValue('')
-            wizzes=[]
-            for wiz in stdout.split('\n'):
-                wiz=wiz.strip()
-                if wiz:
-                    wizzes.append(wiz)
-                    wiz=wiz.split()
-                    wizname=str(' '.join(wiz[1:]))
-                    self.devices[wizname]=wiz[0].split(':')#IP:Port
-                    self._Log('Discovered %s (%s).'%(wizname,wiz[0]))
-                    self.cbxDevice.Append(wizname)
+            for device in stdout.split('\n'):
+                device=device.strip()
+                if device:
+                    device=Device(device)
+                    self.devices[device.display]=device
+                    self._Log('Discovered %s.'%(device.display))
+                    self.cbxDevice.Append(device.display)
 
             if self.cbxDevice.GetCount()>0:
                 self.cbxDevice.SetSelection(0)
-                self.config.set('Settings','device',';'.join(wizzes))
 
         else:
-            self.cbxDevice.Clear()
-            self.cbxDevice.SetValue('')
+            #self.cbxDevice.Clear()
+            #self.cbxDevice.SetValue('')
             self._Log('Unable to discover any Wizzes.')
             self._ShowTab(self.idxLog)
+
+        #Update config
+        self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
 
     def _DownloadQueue(self,*args):
         if self._downloading:return
@@ -650,7 +638,7 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( False )
         self.mitDownload.Enable( False )
         self._downloading=True
-        self.ThreadedDownloader=ThreadedDownloader(self,self.device,self.ip,self.port,programs,self.Play,self.Stop)
+        self.ThreadedDownloader=ThreadedDownloader(self,self.device,programs,self.Play,self.Stop)
 
     def _DownloadComplete(self,index,stopped):
         pidx=0
@@ -888,8 +876,6 @@ class GUI( gui.GUI ):
             for pidx in schedulelist:
                 if pidx not in self.schedulelist:
                     program=self.programs[pidx]
-                    program['ip']=self.ip #In case of multiple Wizzes
-                    program['port']=self.port
                     program['device']=self.device
                     self.schedulelist.append(pidx)
                     self.schedulequeue.put(program)
@@ -1107,18 +1093,24 @@ class GUI( gui.GUI ):
         self._Play()
         self.btnVLC.Disable()
 
+    def cbxDevice_OnCombobox( self, event ):
+        self._Connect()
+        
     def cbxDevice_OnKillFocus( self, event ):
         self.mitCheck.Enable( False )
         device=str(self.cbxDevice.GetValue())
-        if device in self.devices:
-            devices=[]
-            for device in self.devices:
-                ip,port=self.devices[device]
-                devices.append('%s:%s %s'%(ip,port,device))
-            self.config.set('Settings','device',';'.join(devices))
-        else:
-            self.config.set('Settings','device',device)
-        logger.debug(self.config.get('Settings','device'))
+        if device:
+            if device in self.devices:
+                self.device=self.devices[device]
+            else:
+                self.device=Device(device)
+                self.devices[device]=self.device
+                self.cbxDevice.Append(self.device.display)
+
+            #Update config
+            self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
+
+            logger.debug(self.config.get('Settings','device'))
 
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Jun  6 2011)
+## Python code generated with wxFormBuilder (version Mar 22 2011)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -256,6 +256,7 @@ class GUI ( wx.Frame ):
 		self.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
 		self.Bind( wx.EVT_SIZE, self.OnSize )
 		self.Bind( wx.EVT_UPDATE_UI, self.OnUpdateUI )
+		self.cbxDevice.Bind( wx.EVT_COMBOBOX, self.cbxDevice_OnCombobox )
 		self.cbxDevice.Bind( wx.EVT_KILL_FOCUS, self.cbxDevice_OnKillFocus )
 		self.cbxDevice.Bind( wx.EVT_TEXT_ENTER, self.cbxDevice_OnTextEnter )
 		self.btnConnect.Bind( wx.EVT_BUTTON, self.btnConnect_OnClick )
@@ -295,6 +296,7 @@ class GUI ( wx.Frame ):
 		self.Unbind( wx.EVT_KEY_DOWN )
 		self.Unbind( wx.EVT_SIZE )
 		self.Unbind( wx.EVT_UPDATE_UI )
+		self.cbxDevice.Unbind( wx.EVT_COMBOBOX, None )
 		self.cbxDevice.Unbind( wx.EVT_KILL_FOCUS, None )
 		self.cbxDevice.Unbind( wx.EVT_TEXT_ENTER, None )
 		self.btnConnect.Unbind( wx.EVT_BUTTON, None )
@@ -344,6 +346,9 @@ class GUI ( wx.Frame ):
 		event.Skip()
 	
 	def OnUpdateUI( self, event ):
+		event.Skip()
+	
+	def cbxDevice_OnCombobox( self, event ):
 		event.Skip()
 	
 	def cbxDevice_OnKillFocus( self, event ):
