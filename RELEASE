@@ -1,8 +1,12 @@
 #labels Featured
 =Release notes=
 
+==0.3.8==  
+===_Fixed in 0.3.8_===
+  * Major rewrite of Beyonwiz device handling, multiple Beyonwiz device names in any of the accepted formats now handled correctly.
+
 ==0.3.7==  
-===_Fixed in 0.3.6_===
+===_Fixed in 0.3.7_===
   * Fixed bug in downloads/deletions tracking.
   
 ==0.3.6==
