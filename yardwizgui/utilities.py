@@ -1063,8 +1063,14 @@ for f in getwizpnp:
 vlc=['vlc']
 vlcexe=''
 if iswin:
-    p=r'C:\Program Files\VideoLAN\VLC'
-    if not p in path.split(os.pathsep):path=p+os.pathsep+path
+    p=r'VideoLAN\VLC'
+    programfiles=[os.environ['ProgramFiles']]
+    pf86=os.environ.get('ProgramFiles(x86)')
+    if pf86:programfiles.append(pf86)
+    for pf in programfiles:
+        vlcpath=os.path.join(pf,p) 
+        if not vlcpath in path.split(os.pathsep):
+            path=vlcpath+os.pathsep+path
     os.environ['PATH']=path
     vlc.append('vlc.exe')
 
