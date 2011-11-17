@@ -54,7 +54,7 @@ def writelicenseversion(version,display_version):
 
 def createshortcut(filename,target, arguments=None, startin=None, icon=None, description=None):
     try:
-        import win32com.client #I'd really like to do this without pythonwin...
+        import win32com.client
         shell = win32com.client.Dispatch("WScript.Shell")
         shortcut = shell.CreateShortCut(filename)
         shortcut.TargetPath = target
@@ -64,7 +64,27 @@ def createshortcut(filename,target, arguments=None, startin=None, icon=None, des
         if description:shortcut.Description=description
         shortcut.save()
     except ImportError:
-        print 'Can\'t create shortcut without pythonwin installed'
+        import tempfile
+        fd,fn=tempfile.mkstemp(suffix='.vbs')
+        vbs='Set oWS = WScript.CreateObject("WScript.Shell")\n'
+        vbs+='sLinkFile = "%s"\n'%filename
+        vbs+='Set oLink = oWS.CreateShortcut(sLinkFile)\n'
+        vbs+='oLink.TargetPath = "%s"\n'%target
+        if arguments:vbs+='oLink.Arguments = "%s"\n'%arguments
+        if description:vbs+='oLink.Description = "%s"\n'%description
+        if icon:vbs+='oLink.IconLocation = "%s"\n'%icon
+        if startin:vbs+='oLink.WorkingDirectory = "%s"\n'%startin
+        vbs+='oLink.Save'
+        open(fn,'w').write(vbs)
+        cmd=['CSCRIPT.EXE',fn]
+        cmd=subprocess.list2cmdline(cmd)
+        os.close(fd)
+        proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout,stderr=proc.communicate()
+        exit_code=proc.wait()
+        os.unlink(fn)
+    if not os.path.exists(filename):raise RuntimeError('Unable to create shortcut.')
+    print 'Creating shortcut %s'%filename
 
 def getprogrammenu(allusers=True):
     import ctypes
@@ -204,6 +224,7 @@ elif 'uninstall' in sys.argv:
         print 'Removed '+f
     try:
         sm=getprogrammenu()
+        f='%s\\yardwiz.lnk'%sm
         if os.path.exists(f):
             os.unlink(f)
             print 'Removed '+f
@@ -212,7 +233,7 @@ elif 'uninstall' in sys.argv:
         if os.path.exists(f):
             os.unlink(f)
             print 'Removed '+f
-    except:pass
+    except:print 'Unable to remove %s'%f
     sys.exit(0)
 
 elif 'sdist' in sys.argv:
@@ -264,7 +285,7 @@ elif sys.platform[0:3]=='win' and 'install' in sys.argv:
     target='%s\\pythonw.exe'%prefix
     arguments='%s\\yardwiz'%scripts
     startin=prefix
-    icon='%s\\yardwizgui\\icons\\icon.ico'%lib
+    icon='%syardwizgui\\icons\\icon.ico'%lib
     description=setupargs['description']
     try:#Assume admin privileges
         createshortcut(os.path.join(getprogrammenu(),filename),target, arguments, startin, icon, description)
@@ -273,7 +294,7 @@ elif sys.platform[0:3]=='win' and 'install' in sys.argv:
 
 elif 'py2exe' in sys.argv:
     print 'Compiling installer.'
-    cmd=[r'C:\Program Files\NSIS\makensis','/V2','/DVERSION=',version,'/DDISPLAY_VERSION=',display_version,'build.nsi']
+    cmd=[r'C:\Program Files\NSIS\makensis','/V2','/DVERSION=',version,'/DDISPLAY_VERSION=', display_version,'build.nsi']
     cmd=subprocess.list2cmdline(cmd).replace('= ','=')
     proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout,stderr=proc.communicate()
