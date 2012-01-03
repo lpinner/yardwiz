@@ -25,7 +25,7 @@ import os,sys,threading,time,ConfigParser,logging,Queue
 import re,webbrowser,pickle
 import ordereddict
 import wx
-import wx.lib.agw.multidirdialog
+#import wx.lib.agw.multidirdialog as mdd
 import gui, configspec
 from ordereddict import OrderedDict as odict
 
@@ -486,12 +486,17 @@ class GUI( gui.GUI ):
     def _Convert(self):
         
         self.CancelConversion.clear()
-        dirdlg=wx.lib.agw.multidirdialog.MultiDirDialog(self, message='Select one or more tvwiz folders.')
-        dirdlg.ShowModal()
-        folders=dirdlg.GetPaths()
-        if not folders:return
+        #dirdlg=mdd.MultiDirDialog(self, message='Select one or more tvwiz folders.', 
+        #                          agwStyle=mdd.DD_MULTIPLE|mdd.DD_DIR_MUST_EXIST)
+        dirdlg=wx.DirDialog(self, message='Select a tvwiz folder.', 
+                                  style=wx.DD_DIR_MUST_EXIST)
 
-        self.ThreadedConverter=ThreadedConverter(self,self.CancelConversion,folders)
+        if dirdlg.ShowModal() == wx.ID_OK:
+            #folders=dirdlg.GetPaths()
+            folders=[dirdlg.GetPath()]
+            if not folders:return
+
+            self.ThreadedConverter=ThreadedConverter(self,self.CancelConversion,folders)
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):

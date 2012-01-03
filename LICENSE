@@ -31,6 +31,14 @@ http://www.opensource.org/licenses/mit-license.php
 The function yardwiz.which is from the MetaGETA utilities module which is copyright (c) 2011 Australian Government, Department of Sustainability, Environment, Water, Population and Communities (http://code.google.com/p/metageta) and is licensed under the MIT license.
 http://www.opensource.org/licenses/mit-license.php
 
+[Cameron Simpson's scripts]
+The classes utilities.Trunc and utilities.TVWiz were modified from Cameron Simpson's scripts.  Documentation and source available free from http://www.cskk.ezoshosting.com/cs/css/
+
+Cameron Simpson's scripts licence:
+  You're free to use, modify and redistribute these scripts provided that:
+    - you leave my code marked as mine and your modifications (if any) marked as yours
+    - you make recipients aware that the scripts can be obtained for free from my own web page
+
 [getwizpnp]
 The OS specific versions of YARDWiz include a compiled copy of GetWizPnP.pl which is copyright (c) 2011 prl (http://www.openwiz.org/wiki/GetWizPnP_Release)
 

@@ -322,20 +322,36 @@ class ThreadedConverter( Thread ):
     def run(self):
 
         for d in self.folders:
+            if wx.Platform == '__WXGTK__':
+                p=d.split(os.sep)
+                if p[0]=='Home directory':
+                    p[0] = wx.GetHomeDir()
+                    d=os.sep.join(p)
+                elif p[0] == 'Desktop':
+                    p.insert(0, wx.GetHomeDir())
+                    d=os.sep.join(p)
+
+            elif wx.Platform == '__WXMAC__':
+                p=d.split(os.sep)
+                if p[0] != os.sep:
+                    d=os.path.join(os.sep,'Volumes',d)
+
             ts=os.path.splitext(d)[0]+'.ts'
             try:
+                self._Log('Converting %s to TS format...'%d)
                 o=open(ts,'wb')
                 TVWiz(d).copyto(o)
             except Exception,err:
                 self._Log(str(err))
             else:
-                self._Log('Converted %s to TS format.'%d)
+                self._Log('Created %s.'%ts)
             finally:
-                o.close()
+                try:o.close()
+                except:pass
 
             if self.stop.isSet():
                 break
-                
+
         evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
         try:wx.PostEvent(self.parent, evt)
         except:pass
@@ -946,7 +962,7 @@ class TVWiz(object):
         else:
             for buf in self.data():
                 output.write(buf)
-        
+
 #######################################################################
 #Utility helper functions
 #######################################################################
