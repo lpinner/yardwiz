@@ -1,5 +1,5 @@
 import os,sys,time,signal,ctypes,copy,logging,logging.handlers
-import subprocess,re,ConfigParser,socket
+import subprocess,re,ConfigParser,socket,struct
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
@@ -309,6 +309,41 @@ class ThreadedConnector( Thread ):
             kill(self.proc)
             del self.proc
         except:pass
+
+class ThreadedConverter( Thread ):
+    def __init__( self, parent, evtStop, folders):
+        Thread.__init__( self )
+        self.folders=folders
+        self.parent=parent
+        self.stop = evtStop
+        self.stop.clear()
+        self.start()
+
+    def run(self):
+
+        for d in self.folders:
+            ts=os.path.splitext(d)[0]+'.ts'
+            try:
+                o=open(ts,'wb')
+                TVWiz(d).copyto(o)
+            except Exception,err:
+                self._Log(str(err))
+            else:
+                self._Log('Converted %s to TS format.'%d)
+            finally:
+                o.close()
+
+            if self.stop.isSet():
+                break
+                
+        evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass
+
+    def _Log(self,message):
+        evt = Log(wizEVT_LOG, -1,message)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass #we're probably exiting
 
 class ThreadedDeleter( Thread ):
     def __init__( self, parent, evtStop, device, programs,indices):
@@ -786,7 +821,6 @@ class Stderr(object):
     def flush(self):
         pass
 
-
 class Device(object):
     def __init__(self,device):
 
@@ -831,6 +865,88 @@ class Device(object):
             return mat.groupdict()
         except: raise ValueError('Unable to parse device from"%s"'%device)
 
+class Trunc(object):
+    ''' A parser for the "trunc" file in a TVWiz directory.
+        It is iterable, yielding tuples:
+        wizOffset, fileNum, flags, offset, size
+        as described at: http://openwiz.org/wiki/Recorded_Files#trunc_file
+    '''
+    #Modified from Cameron Simpson's scripts.
+    #Documentation and source available from http://www.cskk.ezoshosting.com/cs/css/
+    #
+    #Licence:
+    #  You're free to use, modify and redistribute these scripts provided that:
+    #    - you leave my code marked as mine and your modifications (if any) marked as yours
+    #    - you make recipients aware that the scripts can be obtained for free from my own web page
+
+    def __init__(self, path):
+        self.__path = path
+
+    def __iter__(self):
+        ''' The iterator to yield record tuples.
+        '''
+        fp = open(self.__path,'rb') #LP 03/01/2012 - open as rb so code works on windows
+        while True:
+            buf = fp.read(24)
+            if len(buf) == 0:
+                break
+            assert len(buf) == 24
+            yield struct.unpack("<QHHQL", buf)
+
+class TVWiz(object):
+    ''' Class to support access to Beyonwiz TVWiz data structures.
+    '''
+    #Modified from Cameron Simpson's scripts.
+    #Documentation and source available from http://www.cskk.ezoshosting.com/cs/css/
+    #
+    #Licence:
+    #  You're free to use, modify and redistribute these scripts provided that:
+    #    - you leave my code marked as mine and your modifications (if any) marked as yours
+    #    - you make recipients aware that the scripts can be obtained for free from my own web page
+
+    def __init__(self, wizdir):
+        self.__dir = wizdir
+
+    def trunc(self):
+        ''' Obtain a Trunc object for this TVWiz dir.
+        '''
+        return Trunc(os.path.join(self.__dir, "trunc"))
+
+    def data(self):
+        ''' A generator that yields MPEG2 data from the stream.
+        '''
+        T = self.trunc()
+        lastFileNum = None
+        for wizOffset, fileNum, flags, offset, size in T:
+            if lastFileNum is None or lastFileNum != fileNum:
+                if lastFileNum is not None:
+                    fp.close()
+                fp = open(os.path.join(self.__dir, "%04d"%fileNum),'rb') #LP 03/01/2012 - open as rb so code works on windows
+                filePos = 0
+                lastFileNum = fileNum
+            if filePos != offset:
+                fp.seek(offset)
+            while size > 0:
+                rsize = min(size, 8192)
+                buf = fp.read(rsize)
+                assert len(buf) <= rsize
+                if len(buf) == 0:
+                    raise IOError("%s: unexpected EOF", fp) #LP 03/01/2012 - remove dependency on custom CS error function
+                yield buf
+                size -= len(buf)
+        if lastFileNum is not None:
+            fp.close()
+
+    def copyto(self, output):
+        ''' Transcribe the uncropped content to a file named by output.
+        '''
+        if type(output) is str:
+            with open(output, "wb") as out: #LP 03/01/2012 - open as wb so code works on windows
+                self.copyto(out)
+        else:
+            for buf in self.data():
+                output.write(buf)
+        
 #######################################################################
 #Utility helper functions
 #######################################################################
@@ -922,7 +1038,7 @@ def subproc(cmd,stdin=False):
     logger.debug(subprocess.list2cmdline(cmd))
     logger.debug(str(cmd))
     if stdin:
-            proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
     else:
         if 'pythonw.exe' in sys.executable:
             proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
@@ -1097,4 +1213,3 @@ if 'linux' in sys.platform:
         import gtk
         gtk.gdk.set_program_class(APPNAME)
     except:pass
-

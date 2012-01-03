@@ -227,6 +227,9 @@ class GUI ( wx.Frame ):
 		self.mbrMenu.Append( self.mnuFile, u"File" ) 
 		
 		self.mnuTools = wx.Menu()
+		self.mitConvert = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Convert TVWIZ to TS format...", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuTools.AppendItem( self.mitConvert )
+		
 		self.mitScheduled = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Scheduled Downloads...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuTools.AppendItem( self.mitScheduled )
 		
@@ -283,6 +286,7 @@ class GUI ( wx.Frame ):
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
 		self.Bind( wx.EVT_MENU, self.mitCheck_OnSelect, id = self.mitCheck.GetId() )
 		self.Bind( wx.EVT_MENU, self.btnExit_onClick, id = self.mitExit.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitConvert_OnSelect, id = self.mitConvert.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitScheduled_OnSelect, id = self.mitScheduled.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitPreferences_OnSelect, id = self.mitPreferences.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitHelp_OnSelect, id = self.mitHelp.GetId() )
@@ -323,6 +327,7 @@ class GUI ( wx.Frame ):
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
 		self.Unbind( wx.EVT_MENU, id = self.mitCheck.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitExit.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitConvert.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitScheduled.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitPreferences.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitHelp.GetId() )
@@ -426,6 +431,9 @@ class GUI ( wx.Frame ):
 	def mitCheck_OnSelect( self, event ):
 		event.Skip()
 	
+	
+	def mitConvert_OnSelect( self, event ):
+		event.Skip()
 	
 	def mitScheduled_OnSelect( self, event ):
 		event.Skip()

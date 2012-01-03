@@ -25,6 +25,7 @@ import os,sys,threading,time,ConfigParser,logging,Queue
 import re,webbrowser,pickle
 import ordereddict
 import wx
+import wx.lib.agw.multidirdialog
 import gui, configspec
 from ordereddict import OrderedDict as odict
 
@@ -77,11 +78,13 @@ class GUI( gui.GUI ):
         self.scheduletime=None
 
         self.ThreadedConnector=None
+        self.ThreadedConverter=None
         self.ThreadedDownloader=None
         self.ThreadedScheduler=None
 
         self.Play=threading.Event()
         self.Stop=threading.Event()
+        self.CancelConversion=threading.Event()
 
         self.Bind(EVT_ADDPROGRAM, self._AddProgram)
         self.Bind(EVT_CHECKCOMPLETE, self._CheckComplete)
@@ -479,6 +482,16 @@ class GUI( gui.GUI ):
             self.mitCheck.Enable( True )
 
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+    def _Convert(self):
+        
+        self.CancelConversion.clear()
+        dirdlg=wx.lib.agw.multidirdialog.MultiDirDialog(self, message='Select one or more tvwiz folders.')
+        dirdlg.ShowModal()
+        folders=dirdlg.GetPaths()
+        if not folders:return
+
+        self.ThreadedConverter=ThreadedConverter(self,self.CancelConversion,folders)
 
     def _DeleteFromQueue(self):
         if self.lstQueue.GetSelectedItemCount()==len(self.queue):
@@ -1155,6 +1168,9 @@ class GUI( gui.GUI ):
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
+
+    def mitConvert_OnSelect( self, event ):
+        self._Convert()
 
     def mitDelete_OnSelect( self, event ):
         self._DeleteFromWiz()

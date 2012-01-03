@@ -15,7 +15,7 @@ class AddProgram(wx.PyCommandEvent):
 wizEVT_CHECKCOMPLETE = wx.NewEventType()
 EVT_CHECKCOMPLETE = wx.PyEventBinder(wizEVT_CHECKCOMPLETE, 1)
 class CheckComplete(wx.PyCommandEvent):
-    """Event to signal that we checking the recordings on the Wiz"""
+    """Event to signal that we have finished checking the recordings on the Wiz"""
     def __init__(self, etype, eid, checked, message):
         """Creates the event object"""
         wx.PyCommandEvent.__init__(self, etype, eid)
@@ -32,6 +32,14 @@ class Connected(wx.PyCommandEvent):
         self.connected = connected
         self.message = message
 
+wizEVT_CONVERTCOMPLETE = wx.NewEventType()
+EVT_CONVERTCOMPLETE = wx.PyEventBinder(wizEVT_CONVERTCOMPLETE, 1)
+class ConvertComplete(wx.PyCommandEvent):
+    """Event to signal that we have finished converting the TVWIZ files"""
+    def __init__(self, etype, eid):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+        
 wizEVT_DATETIMEUPDATED= wx.NewEventType()
 EVT_DATETIMEUPDATED = wx.PyEventBinder(wizEVT_DATETIMEUPDATED, 1)
 class DateTimeUpdated(wx.PyCommandEvent):
