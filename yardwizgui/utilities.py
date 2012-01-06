@@ -340,17 +340,19 @@ class ThreadedConverter( Thread ):
             try:
                 self._Log('Converting %s to TS format...'%d)
                 o=open(ts,'wb')
-                TVWiz(d).copyto(o)
+                TVWiz(d,self.stop).copyto(o)
             except Exception,err:
                 self._Log(str(err))
-            else:
-                self._Log('Created %s.'%ts)
             finally:
                 try:o.close()
                 except:pass
 
             if self.stop.isSet():
+                self._Log('Cancelled conversion of %s.'%d)
+                os.unlink(ts)
                 break
+            else:
+                self._Log('Created %s.'%ts)
 
         evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
         try:wx.PostEvent(self.parent, evt)
@@ -920,8 +922,10 @@ class TVWiz(object):
     #    - you leave my code marked as mine and your modifications (if any) marked as yours
     #    - you make recipients aware that the scripts can be obtained for free from my own web page
 
-    def __init__(self, wizdir):
+    def __init__(self, wizdir,evtstop): #LP 07/01/2012 - use threading event event to stop copy if required
         self.__dir = wizdir
+        self.__stop = evtstop
+        self.__stop.clear()
 
     def trunc(self):
         ''' Obtain a Trunc object for this TVWiz dir.
@@ -961,7 +965,10 @@ class TVWiz(object):
                 self.copyto(out)
         else:
             for buf in self.data():
-                output.write(buf)
+                if self.__stop.isSet():
+                    break
+                else:
+                    output.write(buf)
 
 #######################################################################
 #Utility helper functions

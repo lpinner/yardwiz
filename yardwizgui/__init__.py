@@ -489,7 +489,8 @@ class GUI( gui.GUI ):
         #dirdlg=mdd.MultiDirDialog(self, message='Select one or more tvwiz folders.', 
         #                          agwStyle=mdd.DD_MULTIPLE|mdd.DD_DIR_MUST_EXIST)
         dirdlg=wx.DirDialog(self, message='Select a tvwiz folder.', 
-                                  style=wx.DD_DIR_MUST_EXIST)
+                            defaultPath=self.config.get('Settings','lastdir'),
+                            style=wx.DD_DIR_MUST_EXIST)
 
         if dirdlg.ShowModal() == wx.ID_OK:
             #folders=dirdlg.GetPaths()
@@ -1225,6 +1226,8 @@ class GUI( gui.GUI ):
         try:self.Hide()
         except:pass
         try:self.Stop.set()
+        except:pass
+        try:self.CancelConversion.set()
         except:pass
         try:self._WriteConfig()
         except:pass
