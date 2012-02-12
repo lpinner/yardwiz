@@ -970,6 +970,28 @@ class GUI( gui.GUI ):
             self.txtInfo.ShowPosition(0)
             self._ShowTab(self.idxInfo)
 
+    def _ShowSelectedSize(self):
+        idx = self.lstPrograms.GetFirstSelected()
+        if idx == -1:
+            self.StatusBar.SetFieldsCount(1)
+            self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
+        else:
+            size=0
+            i=0
+            while idx != -1:
+                i+=1
+                lidx = self.lstPrograms.GetItem(idx).Data
+                pidx = self.programs.keys()[lidx]
+                program = self.programs[pidx]
+                size+=program['size']
+               
+                idx = self.lstPrograms.GetNextSelected(idx)
+            
+            self.StatusBar.SetFieldsCount(2)
+            if i==1:msg='Selected recording %sMB'%size
+            else:msg='Selected recordings %sMB'%size
+            self.StatusBar.SetFields(['Total recordings %sMB'%self.total,msg])
+        
     def _ShowTab(self,tabindex):
         self.nbTabArea.ChangeSelection(tabindex)
 
@@ -1144,6 +1166,9 @@ class GUI( gui.GUI ):
         self.lstPrograms.Select(item)
         self.lstPrograms.PopupMenu(self.mnuPrograms)
 
+    def lstPrograms_OnDeselect( self, event ):
+        self._ShowSelectedSize()
+
     def lstPrograms_OnDoubleClick( self, event ):
         self._Queue()
 
@@ -1153,6 +1178,7 @@ class GUI( gui.GUI ):
     def lstPrograms_OnSelect( self, event, showinfo=True ):
         if showinfo:self._ShowInfo()
         self.lstPrograms.SetFocus()
+        self._ShowSelectedSize()
 
     def lstQueueOnContextMenu( self, event ):
         self.mitRemove.Enable( False )
