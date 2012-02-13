@@ -210,11 +210,13 @@ class ThreadedConnector( Thread ):
 
     def _quickparseprogram(self,index):
         program=index.split()
-        datetime=program[-1]
+        datetime=program[-1].split('-')[0] #Handle multiple instant recording bug - http://www.beyonwiz.com.au/phpbb2/viewtopic.php?p=95311#95311
+                                           #Index can be recordings/<NAME>_<DATETIME>-<N> so strip off the "<-N>"
+                                           #E.g. recordings/_Sunrise _live_ Feb.14.2012_6.14-1
         title=' '.join(program[:-1]).replace('/_','/')
         title='/'.join(title.split('/')[1:])
         title=title.replace('_',':') #Strip off the root folder
-        return {'index':index.strip(),'date':datetime.strip(),'title':title.strip()}
+        return {'index':index.strip(),'date':datetime,'title':title.strip()}
 
     def _parseprogram(self,proglines):
         flaglist=['*LOCKED','*RECORDING NOW']
@@ -247,7 +249,9 @@ class ThreadedConnector( Thread ):
                 if len(dirs)>2:
                     program['title']='%s/%s'%('/'.join(dirs[1:-1]),program['title'])
                 datetime=program['index'].split()
-                program['date']=datetime[-1]
+                program['date']=datetime[-1].split('-')[0]#Handle multiple instant recording bug - http://www.beyonwiz.com.au/phpbb2/viewtopic.php?p=95311#95311
+                                                          #Index can be recordings/<NAME>_<DATETIME>-<N> so strip off the "<-N>"
+                                                          #E.g. recordings/_Sunrise _live_ Feb.14.2012_6.14-1
 
             elif 'playtime' in line:
                 playtime=line
