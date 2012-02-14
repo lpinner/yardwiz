@@ -99,19 +99,23 @@ class ThreadedConnector( Thread ):
 
         programs=[]
         import time
-
-        for index,line in enumerate(iter(self.proc.stdout.readline, "")):
+        index=-1
+        for line in iter(self.proc.stdout.readline, ""):
             if self._stop.isSet():
                 logger.debug('_stop.isSet')
                 try:kill(self.proc)
                 finally:return (0,'')
             line=line.strip()
-            logger.debug('%s,%s'%(index,line))
+            logger.debug('%s,%s'%(index+1,line))
             program=self._quickparseprogram(line)
-            programs.append(program['index'])
-            evt = AddProgram(wizEVT_ADDPROGRAM,-1,program,index)
-            try:wx.PostEvent(self.parent, evt)
-            except:pass #we're probably exiting
+            if not program['index'] in programs:
+                index+=1
+                programs.append(program['index'])
+                evt = AddProgram(wizEVT_ADDPROGRAM,-1,program,index)
+                try:wx.PostEvent(self.parent, evt)
+                except:pass #we're probably exiting
+            else:
+                self._log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
 
         exit_code=1
         try:
@@ -128,6 +132,7 @@ class ThreadedConnector( Thread ):
         self.proc=subproc(cmd)
         proglines=[]
         exists=[]
+        updated=[]
         for line in iter(self.proc.stdout.readline, ""):
             if self._stop.isSet():
                 try:kill(self.proc)
@@ -140,12 +145,14 @@ class ThreadedConnector( Thread ):
                         tmp=list(proglines)
                         proglines=[]
                         program=self._parseprogram(tmp)
-                        program['info']='\n'.join(tmp)
-                        idx=programs.index(program['index'])
-                        exists.append(program['index'])
-                        evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
-                        try:wx.PostEvent(self.parent, evt)
-                        except:pass #we're probably exiting
+                        if not program['index'] in updated:
+                            updated.append(program['index'])
+                            program['info']='\n'.join(tmp)                        
+                            idx=programs.index(program['index'])
+                            exists.append(program['index'])
+                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
+                            try:wx.PostEvent(self.parent, evt)
+                            except:pass #we're probably exiting
                 else:
                     proglines.append(line)
 
@@ -173,6 +180,7 @@ class ThreadedConnector( Thread ):
         self.proc=subproc(cmd)
         proglines=[]
         index=-1
+        programs=[]
         for line in iter(self.proc.stdout.readline, ""):
             if self._stop.isSet():
                 logger.debug('_stop.isSet')
@@ -189,10 +197,14 @@ class ThreadedConnector( Thread ):
                         tmp=list(proglines)
                         proglines=[]
                         program=self._parseprogram(tmp)
-                        index+=1
-                        evt = AddProgram(wizEVT_ADDPROGRAM, -1, program, index)
-                        try:wx.PostEvent(self.parent, evt)
-                        except:pass #we're probably exiting
+                        if not program['index'] in programs:
+                            index+=1
+                            programs.append(program['index'])
+                            evt = AddProgram(wizEVT_ADDPROGRAM, -1, program, index)
+                            try:wx.PostEvent(self.parent, evt)
+                            except:pass #we're probably exiting
+                        else:
+                            self._log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
                 else:
                     proglines.append(line)
         exit_code=1
@@ -308,6 +320,12 @@ class ThreadedConnector( Thread ):
             return exit_code,err
         except Exception,err:
             return 1,str(err)
+
+    def _log(self,msg):
+        evt = Log(wizEVT_LOG, -1, msg)
+        try:wx.PostEvent(self.parent, evt)
+        except:pass #we're probably exiting
+
     def __del__(self):
         try:
             kill(self.proc)
@@ -431,6 +449,7 @@ class ThreadedDownloader( Thread ):
             self._updateprogress({},'Downloading %s...'%program['title'])
             self.Play.set()
             self.Stop.clear()
+            #raise Exception('Debug!')
             self._download(program)
             self.total-=program['size']
             if self.Stop.isSet():break
