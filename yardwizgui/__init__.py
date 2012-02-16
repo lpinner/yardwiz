@@ -313,7 +313,6 @@ class GUI( gui.GUI ):
                     logger.debug('Exception,err: %s'%str(err))
                     self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
             else:
-
                 self.fade=self.config.getboolean('Window','fade')
         else:
             showfade=False

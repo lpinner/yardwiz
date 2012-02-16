@@ -1,4 +1,4 @@
-import os,sys,time,signal,ctypes,copy,logging,logging.handlers
+import os,sys,time,signal,ctypes,copy,logging,logging.handlers,traceback
 import subprocess,re,ConfigParser,socket,struct
 import wx
 from ordereddict import OrderedDict as odict
@@ -14,16 +14,53 @@ APPNAME='YARDWiz'
 #######################################################################
 #Helper classes
 #######################################################################
-class ThreadedChecker( Thread ):
-    def __init__( self, parent, evtStop, device):
+class ThreadedUtility( Thread ):
+    
+    def __init__( self, parent):
+
         Thread.__init__( self )
+        self.parent=parent
+
+        self.run_old = self.run
+        self.run = self.run_with_except_hook
+
+    def run_with_except_hook(self, *args, **kw):
+        #Global exception handler with workaround for Threads
+        #http://bugs.python.org/issue1230540#msg91244
+        try:
+            self.run_old(*args, **kw)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.excepthook(*sys.exc_info())
+            
+    def excepthook(self, type, value, tb):
+        msg=''.join(traceback.format_exception(type, value, tb))
+        if logger.getEffectiveLevel()==logging.DEBUG:
+            self.Log(msg)
+        else:
+            self.Log("Errors occurred, see the logfile '%s' for details" % logfile)
+        logger.error(msg)
+    
+    def Log(self,msg):
+        evt = Log(wizEVT_LOG, -1, msg)
+        self.PostEvent(evt)
+    
+    def PostEvent(self,evt):
+        try:wx.PostEvent(self.parent,evt)
+        except Exception as err:
+            print err
+            pass #We're probably exiting
+        
+class ThreadedChecker( ThreadedUtility ):
+    def __init__( self, parent, evtStop, device):
+        ThreadedUtility.__init__( self, parent )
         self.parent=parent
         self.Stop=evtStop
         self.device=device
         self.start()
     def run(self):
         cmd=[wizexe,'--all','--check']+self.device.args
-
         try:
             self.proc=subproc(cmd)
             while self.proc.poll() is None:
@@ -51,12 +88,11 @@ class ThreadedChecker( Thread ):
                 msg=msg+'\n'+stderr
 
         evt = CheckComplete(wizEVT_CHECKCOMPLETE, -1,checked,msg)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass
+        self.PostEvent(evt)
 
-class ThreadedConnector( Thread ):
+class ThreadedConnector( ThreadedUtility ):
     def __init__( self, parent, evtStop, device, quick=False):
-        Thread.__init__( self )
+        ThreadedUtility.__init__( self, parent )
         self.device=device
         self.parent=parent
         self.quick=quick
@@ -65,20 +101,17 @@ class ThreadedConnector( Thread ):
         self._stop.clear()
         self.start()
     def run(self):
+        raise Exception('Testing 123')
         if self.device.ip:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 s.settimeout(10.0)
                 s.connect((self.device.ip, int(self.device.port)))
                 s.shutdown(2)
-                evt = Log(wizEVT_LOG, -1,'The WizPnP server is online.')
-                try:wx.PostEvent(self.parent, evt)
-                except:pass #we're probably exiting
+                self.Log('The WizPnP server is online.')
             except Exception as err:
                 evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.\n'+str(err))
-                try:wx.PostEvent(self.parent, evt)
-                except:pass #we're probably exiting
-                return
+                self.PostEvent(evt)
 
         if self.quick:
             exit_code,err=self._quicklistprograms()
@@ -86,12 +119,10 @@ class ThreadedConnector( Thread ):
             exit_code,err=self._listprograms()
         if exit_code > 0:
             evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to list programs on the WizPnP server:\n%s'%err)
-            try:wx.PostEvent(self.parent, evt)
-            except:pass #we're probably exiting
+            self.PostEvent(evt)
         else:
             evt = Connected(wizEVT_CONNECTED, -1,True,'Finished listing programs on the WizPnP server')
-            try:wx.PostEvent(self.parent, evt)
-            except:pass
+            self.PostEvent(evt)
 
     def _quicklistprograms(self):
         cmd=[wizexe,'--all','--sort=fatd']+self.device.args
@@ -112,10 +143,9 @@ class ThreadedConnector( Thread ):
                 index+=1
                 programs.append(program['index'])
                 evt = AddProgram(wizEVT_ADDPROGRAM,-1,program,index)
-                try:wx.PostEvent(self.parent, evt)
-                except:pass #we're probably exiting
+                self.PostEvent(evt)
             else:
-                self._log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
+                self.Log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
 
         exit_code=1
         try:
@@ -151,8 +181,7 @@ class ThreadedConnector( Thread ):
                             idx=programs.index(program['index'])
                             exists.append(program['index'])
                             evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
-                            try:wx.PostEvent(self.parent, evt)
-                            except:pass #we're probably exiting
+                            self.PostEvent(evt)
                 else:
                     proglines.append(line)
 
@@ -169,8 +198,7 @@ class ThreadedConnector( Thread ):
         for idx,pidx in enumerate(programs):
             if pidx not in exists: #It's been deleted from the wiz which hasn't been reindexed
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1, programs,idx)
-                try:wx.PostEvent(self.parent, evt)
-                except:pass #we're probably exiting
+                self.PostEvent(evt)
 
         return exit_code,''
 
@@ -201,10 +229,9 @@ class ThreadedConnector( Thread ):
                             index+=1
                             programs.append(program['index'])
                             evt = AddProgram(wizEVT_ADDPROGRAM, -1, program, index)
-                            try:wx.PostEvent(self.parent, evt)
-                            except:pass #we're probably exiting
+                            self.PostEvent(evt)
                         else:
-                            self._log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
+                            self.Log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
                 else:
                     proglines.append(line)
         exit_code=1
@@ -308,8 +335,7 @@ class ThreadedConnector( Thread ):
                         program['info']=unicode('\n'.join(tmp),'UTF-8',errors='ignore')
                         index+=1
                         evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
-                        try:wx.PostEvent(self.parent, evt)
-                        except:pass #we're probably exiting
+                        self.PostEvent(evt)
                 else:
                     proglines.append(line)
 
@@ -321,20 +347,15 @@ class ThreadedConnector( Thread ):
         except Exception,err:
             return 1,str(err)
 
-    def _log(self,msg):
-        evt = Log(wizEVT_LOG, -1, msg)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
-
     def __del__(self):
         try:
             kill(self.proc)
             del self.proc
         except:pass
 
-class ThreadedConverter( Thread ):
+class ThreadedConverter( ThreadedUtility ):
     def __init__( self, parent, evtStop, folders):
-        Thread.__init__( self )
+        ThreadedUtility.__init__( self, parent )
         self.folders=folders
         self.parent=parent
         self.stop = evtStop
@@ -360,40 +381,35 @@ class ThreadedConverter( Thread ):
 
             ts=os.path.splitext(d)[0]+'.ts'
             try:
-                self._Log('Converting %s to TS format...'%d)
+                self.Log('Converting %s to TS format...'%d)
                 o=open(ts,'wb')
                 TVWiz(d,self.stop).copyto(o)
             except Exception,err:
-                self._Log(str(err))
+                self.Log(str(err))
             finally:
                 try:o.close()
                 except:pass
 
             if self.stop.isSet():
-                self._Log('Cancelled conversion of %s.'%d)
+                self.Log('Cancelled conversion of %s.'%d)
                 os.unlink(ts)
                 break
             else:
-                self._Log('Created %s.'%ts)
+                self.Log('Created %s.'%ts)
 
         evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass
+        self.PostEvent(evt)
 
-    def _Log(self,message):
-        evt = Log(wizEVT_LOG, -1,message)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
-
-class ThreadedDeleter( Thread ):
+class ThreadedDeleter( ThreadedUtility ):
     def __init__( self, parent, evtStop, device, programs,indices):
-        Thread.__init__( self )
+        ThreadedUtility.__init__( self, parent )
         self.parent=parent
         self.Stop=evtStop
         self.device=device
         self.programs=programs
         self.indices=indices
         self.start()
+        
     def run(self):
         cmd=[wizexe,'--all','--BWName']+self.device.args
 
@@ -413,21 +429,15 @@ class ThreadedDeleter( Thread ):
                 stdout,stderr=self.proc.communicate()
                 if stdout.strip():raise Exception,'Unable to delete %s'%(program['title'])
             except Exception,err:
-                self._Log(str(err))
+                self.Log(str(err))
             else:
-                self._Log('Deleted %s.'%program['title'])
+                self.Log('Deleted %s.'%program['title'])
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
-                try:wx.PostEvent(self.parent, evt)
-                except:pass
+                self.PostEvent(evt)
 
-    def _Log(self,message):
-        evt = Log(wizEVT_LOG, -1,message)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
-
-class ThreadedDownloader( Thread ):
+class ThreadedDownloader( ThreadedUtility ):
     def __init__(self, parent, device, programs, evtPlay, evtStop):
-        Thread.__init__( self )
+        ThreadedUtility.__init__( self, parent )
 
         self.parent=parent
         self.device=device
@@ -467,7 +477,7 @@ class ThreadedDownloader( Thread ):
         else:return
 
     def _download(self,program):
-        self._log('Downloading %s...'%program['title'])
+        self.Log('Downloading %s...'%program['title'])
 
         fd=program['filename'].encode(filesysenc)
         d=os.path.dirname(fd)
@@ -479,8 +489,8 @@ class ThreadedDownloader( Thread ):
         try:
             self.proc=subproc(cmd)
         except Exception,err:
-            self._log('Error, unable to download %s.'%program['filename'])
-            self._log(str(err))
+            self.Log('Error, unable to download %s.'%program['filename'])
+            self.Log(str(err))
 
         f=program['filename']
         MB=1024.0**2
@@ -507,19 +517,19 @@ class ThreadedDownloader( Thread ):
                         else:break
 
                 except Exception,err:
-                    self._log('Unable to stop download or delete %s.'%program['filename'])
-                    self._log(str(err))
+                    self.Log('Unable to stop download or delete %s.'%program['filename'])
+                    self.Log(str(err))
                 else:
-                    self._log('Download cancelled.')
+                    self.Log('Download cancelled.')
                 return
 
             elif not self.Play.isSet():#We're paused
                 try:
                     self._stopdownload()
                 except:
-                    self._log('Unable to pause download.')
+                    self.Log('Unable to pause download.')
                     raise
-                self._log('Download paused.')
+                self.Log('Download paused.')
                 while True:
                     self.Play.wait(0.5) #block until Play is set
                     if self.Stop.isSet():
@@ -527,10 +537,10 @@ class ThreadedDownloader( Thread ):
                         try:
                             self._delete(program['filename'])
                         except Exception,err:
-                            self._log('Unable to delete %s.'%program['filename'])
-                            self._log(str(err))
+                            self.Log('Unable to delete %s.'%program['filename'])
+                            self.Log(str(err))
                         else:
-                            self._log('Download cancelled.')
+                            self.Log('Download cancelled.')
                         return
                     elif self.Play.isSet():
                         break
@@ -578,9 +588,9 @@ class ThreadedDownloader( Thread ):
         except:return#We're probably exiting
         stdout,stderr=self.proc.communicate()
         if exit_code or not os.path.exists(f):
-            self._log('Error, unable to download %s.'%program['filename'])
-            self._log(stdout)
-            self._log(stderr)
+            self.Log('Error, unable to download %s.'%program['filename'])
+            self.Log(stdout)
+            self.Log(stderr)
             self._delete(program['filename'])
             self._downloadcomplete(index=program['index'],stopped=True)
         else:
@@ -594,37 +604,30 @@ class ThreadedDownloader( Thread ):
                       'totaltime':'',
                       'speed':speed}
             self._updateprogress(progress)
-            self._log('Download of %s complete.'%program['filename'])
+            self.Log('Download of %s complete.'%program['filename'])
             self._downloadcomplete(index=program['index'])
-
-    def _log(self,msg):
-        evt = Log(wizEVT_LOG, -1, msg)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
 
     def _updateprogress(self,progress=[], message=''):
         evt = UpdateProgress(wizEVT_UPDATEPROGRESS, -1, progress,message)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
+        self.PostEvent(evt)
 
     def _downloadcomplete(self,index=-1,stopped=False):
         evt = DownloadComplete(wizEVT_DOWNLOADCOMPLETE, -1,index, stopped)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
+        self.PostEvent(evt)
 
     def _stopdownload(self):
         try:
             kill(self.proc)
-        except Exception,err:self._log(str(err))
+        except Exception,err:self.Log(str(err))
     def __del__(self):
         try:
             kill(self.proc)
             del self.proc
         except:pass
 
-class ThreadedPlayer( Thread ):
+class ThreadedPlayer( ThreadedUtility ):
     def __init__( self, parent, evtStop, evtPlay,filename,args=None):
-        Thread.__init__( self )
+        ThreadedUtility.__init__( self, parent )
         self.parent=parent
         self.Stop=evtStop
         self.Play=evtPlay
@@ -679,9 +682,8 @@ class ThreadedPlayer( Thread ):
             if stderr:
                 msg=msg+'\n'+stderr
 
-        evt = Log(wizEVT_LOG, -1,msg)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
+        evt = self.Log(msg)
+        self.PostEvent(evt)
         self.quit()
 
     def getfreeport(self):
@@ -713,8 +715,7 @@ class ThreadedPlayer( Thread ):
         try:kill(self.proc)
         except:pass
         evt = PlayComplete(wizEVT_PLAYCOMPLETE, -1)
-        try:wx.PostEvent(self.parent, evt)
-        except:pass #we're probably exiting
+        self.PostEvent(evt)
 
     def getdata(self):
         data=''
@@ -734,9 +735,9 @@ class ThreadedPlayer( Thread ):
         data=self.getdata()
         return data.strip('>').strip()=='1'
 
-class ThreadedScheduler( Thread , wx.EvtHandler):
+class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
     def __init__( self, parent, startDateTime, prgQueue):
-        Thread.__init__( self )
+        ThreadedUtility.__init__( self, parent )
         wx.EvtHandler.__init__( self )
 
         self.parent=parent
@@ -755,7 +756,7 @@ class ThreadedScheduler( Thread , wx.EvtHandler):
 
     def reset(self,startDateTime):
         if self.downloading:
-            self._log('Can\'t reschedule once downloading')
+            self.Log('Can\'t reschedule once downloading')
         else:
             self.timer.cancel()
             self.startDateTime=wxdatetime_to_datetime(startDateTime)
@@ -785,10 +786,10 @@ class ThreadedScheduler( Thread , wx.EvtHandler):
             td.join()#Block until  download is complete
             self.Queue.task_done()
             evt = ScheduledDownloadComplete(wizEVT_SCHEDULEDDWONLOADCOMPLETE, -1,program)
-            wx.PostEvent(self.parent, evt)
+            self.PostEvent(evt)
 
         evt = SchedulerComplete(wizEVT_SCHEDULERCOMPLETE, -1)
-        wx.PostEvent(self.parent, evt)
+        self.PostEvent(evt)
 
     def _ondownloadcomplete(self,event):
         self.timeremaining=None
@@ -803,14 +804,10 @@ class ThreadedScheduler( Thread , wx.EvtHandler):
             f=os.path.basename(progress['filename'])
             msg='Downloaded %s%% (%s MB) of %s, %s remaining.'
             msg=msg%(progress['percent'],progress['downloaded'],f,progress['time'])
-            self._log(msg)
+            self.Log(msg)
 
     def _onlog(self,event):
-        wx.PostEvent(self.parent,event)
-
-    def _log(self,message):
-        evt = Log(wizEVT_LOG, -1,message)
-        wx.PostEvent(self.parent, evt)
+        self.PostEvent(event)
 
     def __del__( self):
         try:self.stop()
@@ -852,13 +849,9 @@ class Stderr(object):
     def write(self, text,*args,**kwargs):
         if self._first:
             self._first=0
-            #import atexit
-            #atexit.register(self.errordialog,
-            #                "See the logfile '%s' for details" % logfile,
-            #                "Errors occurred")
             self.errordialog("Errors occurred, see the logfile '%s' for details" % logfile, "Errors occurred")
-
         logger.error(text.strip())
+
     def flush(self):
         pass
 
