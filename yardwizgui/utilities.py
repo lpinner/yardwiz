@@ -681,8 +681,7 @@ class ThreadedPlayer( ThreadedUtility ):
             if stderr:
                 msg=msg+'\n'+stderr
 
-        evt = self.Log(msg)
-        self.PostEvent(evt)
+        self.Log(msg)
         self.quit()
 
     def getfreeport(self):
