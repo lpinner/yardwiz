@@ -101,7 +101,6 @@ class ThreadedConnector( ThreadedUtility ):
         self._stop.clear()
         self.start()
     def run(self):
-        raise Exception('Testing 123')
         if self.device.ip:
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
