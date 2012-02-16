@@ -739,25 +739,69 @@ class GUI( gui.GUI ):
                 filename=self._sanitize('%s %s'%(filename,filename_date)).strip('_')
             else:
                 filename=os.path.splitext(os.path.basename(filename))[0]
-            tsspec='TS Files (*.ts)|*.ts'
-            twspec='TVWIZ format (*.tvwiz)|*.tvwiz'
-            if self.tsformat:
-                filespec='|'.join([tsspec,twspec])
-                ext=['.ts','.tvwiz']
-            else:
-                filespec='|'.join([twspec,tsspec])
-                ext=['.tvwiz','.ts']
-            dlg = wx.FileDialog(self, "Open", self.config.get('Settings','lastdir'), filename,filespec, wx.FD_SAVE)
-            if (dlg.ShowModal() == wx.ID_OK):
-                f=dlg.Filename#.encode(filesysenc)
-                d=dlg.Directory#.encode(filesysenc)
-                if d[-1]==':':d+=os.path.sep
-                ext=ext[dlg.GetFilterIndex()]
-                if not os.path.splitext(f)[1].lower()==ext:f+=ext
-                self.config.set('Settings','lastdir',d)
-                filename=os.path.join(d,f)
-                return filename
-            else:return #Stop showing file dialogs if queue download is cancelled
+
+            try: #Kludge to work around segfault on Ubuntu 11.10 (Issue 30)
+                import pygtk,gtk,warnings
+                pygtk.require('2.0')
+                assert gtk.pygtk_version >= (2,3,90)
+                warnings.filterwarnings('ignore','',gtk.Warning)
+                dialog = gtk.FileChooserDialog("Save as..",
+                                               None,gtk.FILE_CHOOSER_ACTION_SAVE,
+                                               (gtk.STOCK_CANCEL, gtk.RESPONSE_CANCEL,
+                                                gtk.STOCK_SAVE_AS, gtk.RESPONSE_OK))
+                dialog.set_default_response(gtk.RESPONSE_OK)
+                dialog.set_current_folder(self.config.get('Settings','lastdir'))
+                dialog.set_current_name(os.path.basename(filename))
+
+                tsfilter = gtk.FileFilter()
+                tsfilter.set_name("TS Files (*.ts)")
+                tsfilter.add_pattern("*.ts")
+
+                twfilter = gtk.FileFilter()
+                twfilter.set_name("TVWIZ format (*.tvwiz)")
+                twfilter.add_pattern("*.tvwiz")
+
+                if self.tsformat:
+                    dialog.add_filter(tsfilter)
+                    dialog.add_filter(twfilter)
+                else:
+                    dialog.add_filter(twfilter)
+                    dialog.add_filter(tsfilter)
+
+                response = dialog.run()
+                
+                if response == gtk.RESPONSE_OK:
+                    filename=dialog.get_filename()
+                    filter=dialog.get_filter().get_name()
+                    if filter=='TS Files (*.ts)':ext='.ts'
+                    else:ext='.tvwiz'
+                    if not os.path.splitext(filename)[1].lower()==ext:filename+=ext
+                    self.config.set('Settings','lastdir',os.path.dirname(filename))
+                else:filename=None
+                dialog.destroy()
+
+            except:
+                tsspec='TS Files (*.ts)|*.ts'
+                twspec='TVWIZ format (*.tvwiz)|*.tvwiz'
+                if self.tsformat:
+                    filespec='|'.join([tsspec,twspec])
+                    ext=['.ts','.tvwiz']
+                else:
+                    filespec='|'.join([twspec,tsspec])
+                    ext=['.tvwiz','.ts']
+                dlg = wx.FileDialog(self, "Save As...", self.config.get('Settings','lastdir'), filename,filespec, wx.FD_SAVE)
+                if (dlg.ShowModal() == wx.ID_OK):
+                    f=dlg.Filename#.encode(filesysenc)
+                    d=dlg.Directory#.encode(filesysenc)
+                    if d[-1]==':':d+=os.path.sep
+                    ext=ext[dlg.GetFilterIndex()]
+                    if not os.path.splitext(f)[1].lower()==ext:f+=ext
+                    self.config.set('Settings','lastdir',d)
+                    filename=os.path.join(d,f)
+
+                else:filename=None
+
+            return filename
 
     def _Hide(self,*args,**kwargs):
         self.progress_timer.Stop()
