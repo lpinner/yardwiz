@@ -299,12 +299,12 @@ class GUI( gui.GUI ):
                     logger.debug('exit_code: %s'%exit_code)
                     logger.debug('stdout: %s'%stdout)
                     logger.debug('stderr: %s'%stderr)
-                    if exit_code > 0:
+                    if exit_code != 0:
                         self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
                     else:
-                        comver=stdout.split()[-1].split('.')
-                        logger.debug('comver: %s'%str(comver))
-                        if int(comver[1])==9 and int(comver[2])<=4:
+                        comver=[int(v) for v in stdout.split()[-1].split('.')]
+                        logger.debug('compiz version: %s'%str(comver))
+                        if comver>=[0,8,6]:
                             showfade=False
                             self.fade=False
                         else:
