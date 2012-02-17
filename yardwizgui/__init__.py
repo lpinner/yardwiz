@@ -231,17 +231,24 @@ class GUI( gui.GUI ):
         #write stuff to various controls, eg server & port
         self.devices=odict()
         self.device=None
-        devices=self.config.get('Settings','device')
+        devices=self.config.get('Settings','device').strip()
+        logger.debug('Devices="%s"'%devices)
         self.cbxDevice.Clear()
-        devices=devices.split(';')
-        for device in devices:
-            device=Device(device)
-            self.devices[device.display]=device
-            self.cbxDevice.Append(device.display)
+        if devices:
+            devices=devices.split(';')
+            logger.debug('Devices="%s"'%devices)
+            for device in devices:
+                device=Device(device)
+                self.devices[device.display]=device
+                self.cbxDevice.Append(device.display)
 
         if self.cbxDevice.GetCount()>0:
             self.cbxDevice.SetSelection(0)
             self.device=self.devices.values()[0]
+
+        logger.debug(self.config.get('Settings','device'))
+        logger.debug(str(self.devices))
+        logger.debug(self.devices.values())
 
         #TS or TVWIZ
         self.tsformat=self.config.getboolean('Settings','tsformat')
@@ -1124,9 +1131,11 @@ class GUI( gui.GUI ):
         self._UpdateSize()
         sections = self.config.sections()
         for section in sections:
+            logger.debug(repr(section))
             options = self.config.options(section)
             for option in options:
                 val=self.config.get(section,option)
+                logger.debug('    %s=%s'%(repr(option),repr(val)))
                 if isinstance(val, unicode):
                     self.config.set(section,option,val.encode(filesysenc))
 
@@ -1193,8 +1202,9 @@ class GUI( gui.GUI ):
 
             #Update config
             self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
-
             logger.debug(self.config.get('Settings','device'))
+            logger.debug(str(self.devices))
+            logger.debug(self.devices.values())
 
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()

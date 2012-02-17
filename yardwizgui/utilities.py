@@ -866,7 +866,12 @@ class Device(object):
         if device['name']:self.name=device['name']
         self.args=self._args()
         self.display=self._display()
-
+        logger.debug('Adding new Device')
+        logger.debug('Device IP,Port,Name="%s,%s,%s"'%(self.ip,self.port,self.name))
+        logger.debug('Device display="%s"'%self.display)
+        logger.debug('Device args="%s"'%self.args)
+        logger.debug('Device str="%s"'%self.device)
+        
     def __str__(self):
         '''String representation that can be parsed as a new Device.'''
         return self.device
