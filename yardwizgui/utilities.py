@@ -316,6 +316,7 @@ class ThreadedConnector( ThreadedUtility ):
         proc=subproc(cmd)
         proglines=[]
         index=-1
+        programs=[]
         for line in iter(proc.stdout.readline, ""):
             if self._stop.isSet():
                 logger.debug('_stop.isSet')
@@ -331,10 +332,13 @@ class ThreadedConnector( ThreadedUtility ):
                         tmp=list(proglines)
                         proglines=[]
                         program=self._parseprogram(tmp)
-                        program['info']=unicode('\n'.join(tmp),'UTF-8',errors='ignore')
-                        index+=1
-                        evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
-                        self.PostEvent(evt)
+                        program=self._parseprogram(tmp)
+                        if not program['index'] in programs:
+                            programs.append(program['index'])
+                            program['info']=unicode('\n'.join(tmp),'UTF-8',errors='ignore')
+                            index+=1
+                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
+                            self.PostEvent(evt)
                 else:
                     proglines.append(line)
 
