@@ -758,7 +758,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         else:
             self.timer.cancel()
             self.startDateTime=wxdatetime_to_datetime(startDateTime)
-            self.start()
+            self.run()
 
     def stop(self):
         if self.downloading:
