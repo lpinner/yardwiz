@@ -1,5 +1,5 @@
 import os,sys,time,signal,ctypes,copy,logging,logging.handlers,traceback
-import subprocess,re,ConfigParser,socket,struct,tempfile,glob
+import subprocess,re,ConfigParser,socket,struct,glob
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
