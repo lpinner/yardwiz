@@ -6,7 +6,6 @@ soundstooltip='Sound files must be 8 bit mono WAV format with no metadata tags.'
 deletetooltip='Confirm that you really wish to delete a recording from your Beyonwiz.'
 quicklistingtooltip='Note: enabling quick listing will show any files that have been deleted from your Wiz and will allow you to attempt to delete recordings that are locked, which will fail.'
 fadetooltip='Use fade in/out effects.'
-logfiletooltip='The path of the current log file. Changing this has no effect.'
 vlctooltip='For more, see: http://wiki.videolan.org/VLC_command-line_help'
 configspec={
     'Settings':{
@@ -33,7 +32,6 @@ configspec={
         'ymin':['Top', 'str']
      },
     'Debug':{
-        'debug':['Enable debug messages',  'bool'],
-        'logfile':['Log file path',  'str', logfiletooltip]
+        'debug':['Enable debug messages',  'bool']
      }
 }

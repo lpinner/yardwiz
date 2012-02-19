@@ -1,5 +1,5 @@
 import os,sys,time,signal,ctypes,copy,logging,logging.handlers,traceback
-import subprocess,re,ConfigParser,socket,struct,glob
+import subprocess,re,ConfigParser,socket,struct
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
@@ -316,7 +316,6 @@ class ThreadedConnector( ThreadedUtility ):
         proc=subproc(cmd)
         proglines=[]
         index=-1
-        programs=[]
         for line in iter(proc.stdout.readline, ""):
             if self._stop.isSet():
                 logger.debug('_stop.isSet')
@@ -332,13 +331,10 @@ class ThreadedConnector( ThreadedUtility ):
                         tmp=list(proglines)
                         proglines=[]
                         program=self._parseprogram(tmp)
-                        program=self._parseprogram(tmp)
-                        if not program['index'] in programs:
-                            programs.append(program['index'])
-                            program['info']=unicode('\n'.join(tmp),'UTF-8',errors='ignore')
-                            index+=1
-                            evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
-                            self.PostEvent(evt)
+                        program['info']=unicode('\n'.join(tmp),'UTF-8',errors='ignore')
+                        index+=1
+                        evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
+                        self.PostEvent(evt)
                 else:
                     proglines.append(line)
 
@@ -762,7 +758,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         else:
             self.timer.cancel()
             self.startDateTime=wxdatetime_to_datetime(startDateTime)
-            self.run()
+            self.start()
 
     def stop(self):
         if self.downloading:
@@ -870,12 +866,7 @@ class Device(object):
         if device['name']:self.name=device['name']
         self.args=self._args()
         self.display=self._display()
-        logger.debug('Adding new Device')
-        logger.debug('Device IP,Port,Name="%s,%s,%s"'%(self.ip,self.port,self.name))
-        logger.debug('Device display="%s"'%self.display)
-        logger.debug('Device args="%s"'%self.args)
-        logger.debug('Device str="%s"'%self.device)
-        
+
     def __str__(self):
         '''String representation that can be parsed as a new Device.'''
         return self.device
@@ -1191,23 +1182,14 @@ if frozen() or 'pythonw.exe' in sys.executable:
 #Setup logging
 #######################################################################
 tmp=os.environ.get('TEMP',os.environ.get('TMP','/tmp'))
-now=time.time()
-logtime=time.strftime('%Y%m%d.%H%M%S',time.localtime(now))+'.%s'%int(now%1*10000)
-logfile=os.path.join(tmp, '%s.%s.log'%(APPNAME,logtime))
-#Clean up old log files
-for f in glob.glob(os.path.join(tmp,'%s.*.log'%APPNAME)):
-    if now-os.stat(f).st_mtime>(86400*5): #> 5 days
-        os.unlink(f)
-f=os.path.join(tmp,'%s.log'%APPNAME)
-if os.path.exists(f):
-    os.unlink(f)
+logfile=os.path.join(tmp, '%s.log'%APPNAME)
 formatter = logging.Formatter('%(levelname)s %(module)s.%(funcName)s: %(message)s')
-handler=logging.FileHandler(logfile,mode='wb')
+handler=logging.FileHandler(logfile,mode='w')
 handler.setFormatter(formatter)
 logger = logging.getLogger(APPNAME)
 logger.addHandler(handler)
 logger.setLevel(logging.ERROR)
-del f,logtime,tmp,now,formatter,handler
+del tmp,formatter,handler
 
 #######################################################################
 #Workarounds for crossplatform issues

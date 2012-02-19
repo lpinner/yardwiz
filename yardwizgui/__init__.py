@@ -38,6 +38,7 @@ class GUI( gui.GUI ):
     idxInfo=1
     idxQueue=2
 
+
     mincolwidth=60
 
     def __init__( self):
@@ -230,24 +231,17 @@ class GUI( gui.GUI ):
         #write stuff to various controls, eg server & port
         self.devices=odict()
         self.device=None
-        devices=self.config.get('Settings','device').strip()
-        logger.debug('Devices="%s"'%devices)
+        devices=self.config.get('Settings','device')
         self.cbxDevice.Clear()
-        if devices:
-            devices=devices.split(';')
-            logger.debug('Devices="%s"'%devices)
-            for device in devices:
-                device=Device(device)
-                self.devices[device.display]=device
-                self.cbxDevice.Append(device.display)
+        devices=devices.split(';')
+        for device in devices:
+            device=Device(device)
+            self.devices[device.display]=device
+            self.cbxDevice.Append(device.display)
 
         if self.cbxDevice.GetCount()>0:
             self.cbxDevice.SetSelection(0)
             self.device=self.devices.values()[0]
-
-        logger.debug(self.config.get('Settings','device'))
-        logger.debug(str(self.devices))
-        logger.debug(self.devices.values())
 
         #TS or TVWIZ
         self.tsformat=self.config.getboolean('Settings','tsformat')
@@ -899,9 +893,6 @@ class GUI( gui.GUI ):
         self.configspec=configspec.configspec
         self._CleanupConfig()
 
-        #Add logfile to config so it shows in "Tools->Options..." dialog
-        self.config.set('Debug','logfile',logfile)
-
         #Already downloaded recordings
         self.downloadedcache=os.path.join(configdir,'downloaded.cache')
         try:self.downloaded=pickle.load( open(self.downloadedcache))
@@ -1131,26 +1122,17 @@ class GUI( gui.GUI ):
     def _WriteConfig(self):
         #Write self.config back
         self._UpdateSize()
-
-        #Remove logfile so it doesn't get written out
-        self.config.remove_option('Debug', 'logfile')
-
         sections = self.config.sections()
         for section in sections:
-            logger.debug(repr(section))
             options = self.config.options(section)
             for option in options:
                 val=self.config.get(section,option)
-                logger.debug('    %s=%s'%(repr(option),repr(val)))
                 if isinstance(val, unicode):
                     self.config.set(section,option,val.encode(filesysenc))
 
         if not os.path.exists(os.path.dirname(self.userconfig)):
             os.mkdir(os.path.dirname(self.userconfig))
         self.config.write(open(self.userconfig,'w'))
-
-        #Add logfile back in so it shows in "Tools->Options..." dialog
-        self.config.set('Debug', 'logfile', logfile)
 
         pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
         pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
@@ -1211,9 +1193,8 @@ class GUI( gui.GUI ):
 
             #Update config
             self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
+
             logger.debug(self.config.get('Settings','device'))
-            logger.debug(str(self.devices))
-            logger.debug(self.devices.values())
 
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()
@@ -1281,9 +1262,8 @@ class GUI( gui.GUI ):
 
     def mitPreferences_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)
-        self.cbxDevice_OnKillFocus(None) #Clicking a menu item doesn't move focus off a control,
-                                         #so make sure the device name get's updated.
-        settings=SettingsDialog(self,self.config,self.configspec) 
+        self.cbxDevice_OnKillFocus(None)          #Clicking a menu item doesn't move focus off a control,
+        settings=SettingsDialog(self,self.config,self.configspec) #so make sure the device name get's updated.
         if settings.saved:
             self.config=settings.config
             self._ApplyConfig()
