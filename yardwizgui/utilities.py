@@ -1,5 +1,5 @@
 import os,sys,time,signal,ctypes,copy,logging,logging.handlers,traceback
-import subprocess,re,ConfigParser,socket,struct
+import subprocess,re,ConfigParser,socket,struct,tempfile,glob
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
@@ -1191,14 +1191,23 @@ if frozen() or 'pythonw.exe' in sys.executable:
 #Setup logging
 #######################################################################
 tmp=os.environ.get('TEMP',os.environ.get('TMP','/tmp'))
-logfile=os.path.join(tmp, '%s.log'%APPNAME)
+now=time.time()
+logtime=time.strftime('%Y%m%d.%H%M%S',time.localtime(now))+'.%s'%int(now%1*10000)
+logfile=os.path.join(tmp, '%s.%s.log'%(APPNAME,logtime))
+#Clean up old log files
+for f in glob.glob(os.path.join(tmp,'%s.*.log'%APPNAME)):
+    if now-os.stat(f).st_mtime>(86400*5): #> 5 days
+        os.unlink(f)
+f=os.path.join(tmp,'%s.log'%APPNAME)
+if os.path.exists(f):
+    os.unlink(f)
 formatter = logging.Formatter('%(levelname)s %(module)s.%(funcName)s: %(message)s')
-handler=logging.FileHandler(logfile,mode='w')
+handler=logging.FileHandler(logfile,mode='wb')
 handler.setFormatter(formatter)
 logger = logging.getLogger(APPNAME)
 logger.addHandler(handler)
 logger.setLevel(logging.ERROR)
-del tmp,formatter,handler
+del f,logtime,tmp,now,formatter,handler
 
 #######################################################################
 #Workarounds for crossplatform issues
