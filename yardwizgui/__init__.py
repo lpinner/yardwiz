@@ -244,6 +244,7 @@ class GUI( gui.GUI ):
         if self.cbxDevice.GetCount()>0:
             self.cbxDevice.SetSelection(0)
             self.device=self.devices.values()[0]
+            self._Enable()
 
         logger.debug(self.config.get('Settings','device'))
         logger.debug(str(self.devices))
@@ -467,24 +468,13 @@ class GUI( gui.GUI ):
             self._Log(event.message)
 
         self._connecting=False
-        self.Stop.clear()
-        self.btnConnect.Enable( True )
-        self.cbxDevice.Enable( True )
-        self.mitDelete.Enable( True )
-        self.lstPrograms.SetSortEnabled(True)
-        if not self._downloading:
-            self.lblProgressText.SetLabelText('')
-            self.lblProgressText.Hide()
-            self.gaugeProgressBar.Hide()
-
+        self._Enable()
+        
         downloaded,deleted=self.downloaded,self.deleted
         for pidx in downloaded:
             if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
         for pidx in self.deleted:
             if pidx not in self.programs:del self.deleted[self.deleted.index(pidx)]
-
-        if event and event.connected:
-            self.mitCheck.Enable( True )
 
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
@@ -716,6 +706,18 @@ class GUI( gui.GUI ):
                 self.btnClearQueue.Enable( True )
                 self.btnDownload.Enable( True )
                 self.lstQueue.Enable( True )
+        
+    def _Enable(self):
+        self.Stop.clear()
+        self.btnConnect.Enable( True )
+        self.cbxDevice.Enable( True )
+        self.mitDelete.Enable( True )
+        self.lstPrograms.SetSortEnabled(True)
+        self.mitCheck.Enable( True )
+        if not self._downloading:
+            self.lblProgressText.SetLabelText('')
+            self.lblProgressText.Hide()
+            self.gaugeProgressBar.Hide()
 
     def _Fade(self,start,stop,delta,callback):
         if self.fade:
@@ -1199,7 +1201,6 @@ class GUI( gui.GUI ):
         self._Connect()
         
     def cbxDevice_OnKillFocus( self, event ):
-        self.mitCheck.Enable( False )
         device=str(self.cbxDevice.GetValue())
         if device:
             if device in self.devices:
@@ -1208,6 +1209,7 @@ class GUI( gui.GUI ):
                 self.device=Device(device)
                 self.devices[device]=self.device
                 self.cbxDevice.Append(self.device.display)
+            self._Enable()
 
             #Update config
             self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))

@@ -51,6 +51,21 @@ class ThreadedUtility( Thread ):
         except Exception as err:
             print err
             pass #We're probably exiting
+
+    def isonline(self, device):
+        if device.ip:
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            try:
+                s.settimeout(10.0)
+                s.connect((self.device.ip, int(self.device.port)))
+                s.shutdown(2)
+                self.Log('The WizPnP server is online.')
+                return True
+            except Exception as err:
+                evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.\n'+str(err))
+                self.PostEvent(evt)    
+                return False
+        else: return True
         
 class ThreadedChecker( ThreadedUtility ):
     def __init__( self, parent, evtStop, device):
@@ -61,6 +76,7 @@ class ThreadedChecker( ThreadedUtility ):
         self.start()
     def run(self):
         cmd=[wizexe,'--all','--check']+self.device.args
+        if not self.isonline(self.device):return
         try:
             self.proc=subproc(cmd)
             while self.proc.poll() is None:
@@ -101,16 +117,8 @@ class ThreadedConnector( ThreadedUtility ):
         self._stop.clear()
         self.start()
     def run(self):
-        if self.device.ip:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            try:
-                s.settimeout(10.0)
-                s.connect((self.device.ip, int(self.device.port)))
-                s.shutdown(2)
-                self.Log('The WizPnP server is online.')
-            except Exception as err:
-                evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.\n'+str(err))
-                self.PostEvent(evt)
+
+        if not self.isonline(self.device):return
 
         if self.quick:
             exit_code,err=self._quicklistprograms()
@@ -414,6 +422,8 @@ class ThreadedDeleter( ThreadedUtility ):
         self.start()
         
     def run(self):
+        if not self.isonline(self.device):return
+
         cmd=[wizexe,'--all','--BWName']+self.device.args
 
         for idx,program in zip(self.indices,self.programs):
@@ -458,6 +468,9 @@ class ThreadedDownloader( ThreadedUtility ):
         self.start()
 
     def run(self):
+
+        if not self.isonline(self.device):return
+
         for program in self.programs:
             self._updateprogress({},'Downloading %s...'%program['title'])
             self.Play.set()
