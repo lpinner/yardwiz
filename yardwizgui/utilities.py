@@ -517,6 +517,7 @@ class ThreadedDownloader( ThreadedUtility ):
         if os.path.exists(f):prevsize=filesize(f)
         else:prevsize=0.0
         speeds=deque([],maxlen=120)
+        percent=0
         while self.proc.poll() is None:
             if self.Stop.isSet(): #Stop button pressed
                 self.Play.clear()
@@ -566,7 +567,7 @@ class ThreadedDownloader( ThreadedUtility ):
                 time.sleep(1)
                 if os.path.exists(f):#getwizpnp might not be going yet...
                     size=filesize(f)
-                    try:percent=int(size/s*100)
+                    try:percent=int(size/s*100+0.5)
                     except ZeroDivisionError:percent=0
 
                     now=time.time()
@@ -603,7 +604,7 @@ class ThreadedDownloader( ThreadedUtility ):
         try:exit_code=self.proc.poll()
         except:return#We're probably exiting
         stdout,stderr=self.proc.communicate()
-        if exit_code or not os.path.exists(f):
+        if exit_code or not os.path.exists(f) or percent < 100:
             self.Log('Error, unable to download %s.'%program['filename'])
             self.Log(stdout)
             self.Log(stderr)
