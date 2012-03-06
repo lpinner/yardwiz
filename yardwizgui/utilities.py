@@ -403,8 +403,9 @@ class ThreadedConverter( ThreadedUtility ):
             finally:
                 try:o.close()
                 except:pass
-                evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
-                self.PostEvent(evt)
+
+        evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
+        self.PostEvent(evt)
 
 
 class ThreadedDeleter( ThreadedUtility ):
