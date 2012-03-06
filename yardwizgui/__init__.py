@@ -152,6 +152,7 @@ class GUI( gui.GUI ):
         self.lblProgressText.Hide()
         self.gaugeProgressBar.Hide()
 
+        self._Enable()
         self._FadeIn()
         self.Show()
 
@@ -233,6 +234,10 @@ class GUI( gui.GUI ):
         self.device=None
         devices=self.config.get('Settings','device').strip()
         logger.debug('Devices="%s"'%devices)
+        if self.cbxDevice.GetCount()>0:
+            d=self.cbxDevice.Value
+        else:
+            d=''
         self.cbxDevice.Clear()
         if devices:
             devices=devices.split(';')
@@ -243,9 +248,12 @@ class GUI( gui.GUI ):
                 self.cbxDevice.Append(device.display)
 
         if self.cbxDevice.GetCount()>0:
-            self.cbxDevice.SetSelection(0)
-            self.device=self.devices.values()[0]
-            self._Enable()
+            try:
+                self.cbxDevice.SetSelection(self.cbxDevice.Items.index(d))
+                self.device=d
+            except:
+                self.cbxDevice.SetSelection(0)
+                self.device=self.devices.values()[0]
 
         logger.debug(self.config.get('Settings','device'))
         logger.debug(str(self.devices))
@@ -1216,21 +1224,22 @@ class GUI( gui.GUI ):
         self._Connect()
         
     def cbxDevice_OnKillFocus( self, event ):
-        device=str(self.cbxDevice.GetValue())
-        if device:
-            if device in self.devices:
-                self.device=self.devices[device]
-            else:
-                self.device=Device(device)
-                self.devices[device]=self.device
-                self.cbxDevice.Append(self.device.display)
-            self._Enable()
-
-            #Update config
-            self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
-            logger.debug(self.config.get('Settings','device'))
-            logger.debug(str(self.devices))
-            logger.debug(self.devices.values())
+        if self.cbxDevice.IsEnabled():
+            device=str(self.cbxDevice.GetValue())
+            if device:
+                if device in self.devices:
+                    self.device=self.devices[device]
+                else:
+                    self.device=Device(device)
+                    self.devices[device]=self.device
+                    self.cbxDevice.Append(self.device.display)
+                self._Enable()
+    
+                #Update config
+                self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
+                logger.debug(self.config.get('Settings','device'))
+                logger.debug(str(self.devices))
+                logger.debug(self.devices.values())
 
     def cbxDevice_OnTextEnter( self, event ):
         self._Connect()
@@ -1299,7 +1308,7 @@ class GUI( gui.GUI ):
     def mitPreferences_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)
         self.cbxDevice_OnKillFocus(None) #Clicking a menu item doesn't move focus off a control,
-                                         #so make sure the device name get's updated.
+                                         #so make sure the device name gets updated.
         settings=SettingsDialog(self,self.config,self.configspec) 
         if settings.saved:
             self.config=settings.config

@@ -904,6 +904,8 @@ class Device(object):
         if self.ip and not self.name:
             s=self.ip
             if self._port:s+=':'+self._port
+        elif self.ip and self._port and self.name: 
+            s='%s (%s:%s)'%(self.name,self.ip,self.port)
         else: s=self.name
         return s
 
