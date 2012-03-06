@@ -392,21 +392,20 @@ class ThreadedConverter( ThreadedUtility ):
                 self.Log('Converting %s to TS format...'%d)
                 o=open(ts,'wb')
                 TVWiz(d,self.stop).copyto(o)
+                if self.stop.isSet():
+                    self.Log('Cancelled conversion of %s.'%d)
+                    os.unlink(ts)
+                    break
+                else:
+                    self.Log('Created %s.'%ts)
             except Exception,err:
                 self.Log(str(err))
             finally:
                 try:o.close()
                 except:pass
+                evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
+                self.PostEvent(evt)
 
-            if self.stop.isSet():
-                self.Log('Cancelled conversion of %s.'%d)
-                os.unlink(ts)
-                break
-            else:
-                self.Log('Created %s.'%ts)
-
-        evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
-        self.PostEvent(evt)
 
 class ThreadedDeleter( ThreadedUtility ):
     def __init__( self, parent, evtStop, device, programs,indices):
@@ -936,7 +935,11 @@ class Trunc(object):
     def __iter__(self):
         ''' The iterator to yield record tuples.
         '''
-        fp = open(self.__path,'rb') #LP 03/01/2012 - open as rb so code works on windows
+        try:fp = open(self.__path,'rb') #LP 03/01/2012 - open as rb so code works on windows
+        except:
+            if not os.path.exists(path): #LP 06/03/2012 - Raise a more understandable error
+                raise TypeError('%s is not a TVWiz directory'%os.path.dirname(self.__path))
+            else:raise
         while True:
             buf = fp.read(24)
             if len(buf) == 0:
