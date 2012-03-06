@@ -1216,7 +1216,7 @@ f=os.path.join(tmp,'%s.log'%APPNAME)
 if os.path.exists(f):
     os.unlink(f)
 formatter = logging.Formatter('%(levelname)s %(module)s.%(funcName)s: %(message)s')
-handler=logging.FileHandler(logfile,mode='wb')
+handler=logging.FileHandler(logfile,mode='w')
 handler.setFormatter(formatter)
 logger = logging.getLogger(APPNAME)
 logger.addHandler(handler)
