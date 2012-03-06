@@ -1,0 +1,18 @@
+#!wing
+#!version=4.0
+##################################################################
+# Wing IDE project file                                          #
+##################################################################
+[project attributes]
+proj.directory-list = [{'dirloc': loc('yardwizgui'),
+                        'excludes': (),
+                        'filter': '*',
+                        'include_hidden': False,
+                        'recursive': True,
+                        'watch_for_changes': True}]
+proj.file-list = [loc('build-yardwiz-linux.py'),
+                  loc('googlecode_upload.py'),
+                  loc('setup.py'),
+                  loc('upload_release.py'),
+                  loc('yardwiz')]
+proj.file-type = 'shared'
