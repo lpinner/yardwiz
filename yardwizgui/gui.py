@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Mar 22 2011)
+## Python code generated with wxFormBuilder (version Jun 30 2011)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -11,6 +11,7 @@ from widgets import SortableListCtrl
 from widgets import PropertyScrolledPanel
 from widgets import AutoWidthListCtrl
 import wx
+import wx.xrc
 import wx.combo
 from widgets import DateTimeCtrl
 
@@ -217,16 +218,16 @@ class GUI ( wx.Frame ):
 		
 		self.mbrMenu = wx.MenuBar( 0 )
 		self.mnuFile = wx.Menu()
-		self.mitCheck = wx.MenuItem( self.mnuFile, wx.ID_ANY, u"Check recordings", wx.EmptyString, wx.ITEM_NORMAL )
-		self.mnuFile.AppendItem( self.mitCheck )
-		self.mitCheck.Enable( False )
-		
 		self.mitExit = wx.MenuItem( self.mnuFile, wx.ID_ANY, u"Exit", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuFile.AppendItem( self.mitExit )
 		
 		self.mbrMenu.Append( self.mnuFile, u"File" ) 
 		
 		self.mnuTools = wx.Menu()
+		self.mitCheck = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Check recordings", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuTools.AppendItem( self.mitCheck )
+		self.mitCheck.Enable( False )
+		
 		self.mitConvert = wx.MenuItem( self.mnuTools, wx.ID_ANY, u"Convert TVWIZ to TS format...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuTools.AppendItem( self.mitConvert )
 		
@@ -284,8 +285,8 @@ class GUI ( wx.Frame ):
 		self.btnStop.Bind( wx.EVT_BUTTON, self.btnStop_OnClick )
 		self.btnVLC.Bind( wx.EVT_BUTTON, self.btnVLC_OnClick )
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
-		self.Bind( wx.EVT_MENU, self.mitCheck_OnSelect, id = self.mitCheck.GetId() )
 		self.Bind( wx.EVT_MENU, self.btnExit_onClick, id = self.mitExit.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitCheck_OnSelect, id = self.mitCheck.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitConvert_OnSelect, id = self.mitConvert.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitScheduled_OnSelect, id = self.mitScheduled.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitPreferences_OnSelect, id = self.mitPreferences.GetId() )
@@ -325,8 +326,8 @@ class GUI ( wx.Frame ):
 		self.btnStop.Unbind( wx.EVT_BUTTON, None )
 		self.btnVLC.Unbind( wx.EVT_BUTTON, None )
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
-		self.Unbind( wx.EVT_MENU, id = self.mitCheck.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitExit.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitCheck.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitConvert.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitScheduled.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitPreferences.GetId() )
@@ -428,9 +429,9 @@ class GUI ( wx.Frame ):
 	def btnExit_onClick( self, event ):
 		event.Skip()
 	
+	
 	def mitCheck_OnSelect( self, event ):
 		event.Skip()
-	
 	
 	def mitConvert_OnSelect( self, event ):
 		event.Skip()

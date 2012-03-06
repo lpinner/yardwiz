@@ -70,6 +70,7 @@ class GUI( gui.GUI ):
 
         self._downloading=False
         self._connecting=False
+        self._checking=False
         self.player=None
         self.total=0
         self.schedulelist=[]
@@ -367,16 +368,30 @@ class GUI( gui.GUI ):
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
 
     def _CheckWiz(self):
+        if self._connecting or self._checking or self._downloading:return
+        self._checking=True
+        self.Stop.clear()
+        self.lstPrograms.SetSortEnabled(False)
+        self.mitCheck.Enable( False )
+        self.btnConnect.Enable( False )
+        self.cbxDevice.Enable( False )
+        self.mitDelete.Enable( False )
+        self.gaugeProgressBar.Show()
+        self.gaugeProgressBar.Pulse()
+        self.lblProgressText.Show()
+        self.lblProgressText.SetLabelText('Checking recordings...')
+
         self._ShowTab(self.idxLog)
         self.mitCheck.Enable( False )
-        logger.debug('_CheckWiz')
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         self._Log('Checking recordings...')
         checker=ThreadedChecker(self,self.Stop,self.device)
 
     def _CheckComplete(self,event):
         if event and event.message:self._Log(event.message)
-        self.mitCheck.Enable( True )
+        self._checking=False
+        self._Enable()
+        
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _CleanupConfig(self):
@@ -427,7 +442,7 @@ class GUI( gui.GUI ):
         self.btnDownload.Enable( False )
 
     def _Connect(self):
-        if self._connecting or self._downloading:return
+        if self._connecting or self._checking or self._downloading:return
         self._connecting=True
         self._Reset()
         self.Stop.clear()

@@ -97,12 +97,9 @@ class ThreadedChecker( ThreadedUtility ):
             msg=str(err)
         else:
             checked=True
-            msg='Finished checking recordings'
-            if stdout:
-                msg=msg+'\n'+stdout
-            if stderr:
-                msg=msg+'\n'+stderr
-
+            msg='Finished checking recordings. '
+            if stderr:msg+='\n'.join(['The following errors were found:',stderr])
+            else:msg+='No errors found.'
         evt = CheckComplete(wizEVT_CHECKCOMPLETE, -1,checked,msg)
         self.PostEvent(evt)
 
@@ -611,7 +608,6 @@ class ThreadedDownloader( ThreadedUtility ):
             self._delete(program['filename'])
             self._downloadcomplete(index=program['index'],stopped=True)
         else:
-            #Should check filesize v. getwizpnp reported size...
             progress={'filename':'',
                       'percent':100,
                       'downloaded':round(program['size']/MB*MiB, 1),
