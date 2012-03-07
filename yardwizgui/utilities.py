@@ -75,7 +75,7 @@ class ThreadedChecker( ThreadedUtility ):
         self.device=device
         self.start()
     def run(self):
-        cmd=[wizexe,'--all','--check']+self.device.args
+        cmd=[wizexe,'--all','--check','--verbose']+self.device.args
         if not self.isonline(self.device):return
         try:
             self.proc=subproc(cmd)
@@ -86,8 +86,10 @@ class ThreadedChecker( ThreadedUtility ):
                     return
             exit_code=self.proc.poll()
             stdout,stderr=self.proc.communicate()
-            stderr=stderr.strip()
-            stdout=stdout.strip()
+            stderr=stderr.replace('\r','').strip()
+
+            #for line in stderr:
+            #    logger.info('stderr:'+stderr)
             if exit_code:
                 msg='Unable to check recordings'
                 if stderr:msg=msg+': '+stderr
@@ -98,11 +100,31 @@ class ThreadedChecker( ThreadedUtility ):
         else:
             checked=True
             msg='Finished checking recordings. '
-            if stderr:msg+='\n'.join(['The following errors were found:',stderr])
+            errors=self._parseerrors(stderr)
+            if errors:msg+='\n'.join(['The following errors were found:',errors])
             else:msg+='No errors found.'
         evt = CheckComplete(wizEVT_CHECKCOMPLETE, -1,checked,msg)
         self.PostEvent(evt)
-
+        
+    def _parseerrors(self,stderr):
+        lines=stderr.split('\n')
+        errors=[]
+        while True:
+            try:line=lines.pop(0)
+            except:break
+            if line.strip()[-1]==':':
+                program=line[:-1]
+                while True:
+                    try:line=lines.pop(0)
+                    except:break
+                    error=[]
+                    if line.strip()[-1]==':':
+                        lines.insert(0,line)
+                        break
+                    else:
+                        error.append(line)
+            if error:errors.extend([program]+error)
+        return '\n'.join(errors)
 class ThreadedConnector( ThreadedUtility ):
     def __init__( self, parent, evtStop, device, quick=False):
         ThreadedUtility.__init__( self, parent )
