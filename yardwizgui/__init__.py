@@ -156,6 +156,10 @@ class GUI( gui.GUI ):
         self._FadeIn()
         self.Show()
 
+        if self.device and self.config.getboolean('Settings','autoconnect'):
+            self._Connect()
+
+        
     #######################################################################
     #Methods
     #######################################################################
@@ -1221,7 +1225,8 @@ class GUI( gui.GUI ):
         self.btnVLC.Disable()
 
     def cbxDevice_OnCombobox( self, event ):
-        self._Connect()
+        if self.config.getboolean('Settings','onselect'):
+            self._Connect()
         
     def cbxDevice_OnKillFocus( self, event ):
         if self.cbxDevice.IsEnabled():
