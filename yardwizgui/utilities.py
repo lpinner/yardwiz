@@ -171,7 +171,7 @@ class ThreadedConnector( ThreadedUtility ):
                 evt = AddProgram(wizEVT_ADDPROGRAM,-1,program,index)
                 self.PostEvent(evt)
             else:
-                self.Log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
+                self.Log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed. Rename one on the PVR to allow YARDWiz to show them both.'%program['index'])
 
         exit_code=1
         try:
@@ -257,7 +257,7 @@ class ThreadedConnector( ThreadedUtility ):
                             evt = AddProgram(wizEVT_ADDPROGRAM, -1, program, index)
                             self.PostEvent(evt)
                         else:
-                            self.Log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed'%program['index'])
+                            self.Log('There are multiple recordings with the index "%s" on the Beyonwiz. Only the first one can be displayed. Rename one on the PVR to allow YARDWiz to show them both.'%program['index'])
                 else:
                     proglines.append(line)
         exit_code=1
@@ -462,6 +462,8 @@ class ThreadedDeleter( ThreadedUtility ):
                 if stdout.strip():raise Exception,'Unable to delete %s'%(program['title'])
             except Exception,err:
                 self.Log(str(err))
+                evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1)
+                self.PostEvent(evt)
             else:
                 self.Log('Deleted %s.'%program['title'])
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
@@ -501,7 +503,7 @@ class ThreadedDownloader( ThreadedUtility ):
 
     def _delete(self, f,n=5):
         if os.path.exists(f):
-            for i in range(n):#Try to delete the file 3 times
+            for i in range(n):#Try to delete the file n times
                 try:
                     time.sleep(1)
                     os.unlink(f)
@@ -625,9 +627,11 @@ class ThreadedDownloader( ThreadedUtility ):
         stdout,stderr=self.proc.communicate()
         if exit_code or not os.path.exists(f) or percent < 100:
             self.Log('Error, unable to download %s.'%program['filename'])
-            self.Log(stdout)
-            self.Log(stderr)
-            self._delete(program['filename'])
+            self.Log('getWizPnP STDOUT:'+stdout)
+            self.Log('getWizPnP STDERR:'+stderr)
+            if not 'Copy failed: Forbidden' in stderr:
+                try:self._delete(program['filename'])
+                except:self.Log('Error: Unable to delete %s'%program['filename'])
             self._downloadcomplete(index=program['index'],stopped=True)
         else:
             progress={'filename':'',
@@ -889,6 +893,14 @@ class Stderr(object):
     def flush(self):
         pass
 
+class Callback:
+    def __init__(self, callback, *args, **kwargs):
+        self.callback = callback
+        self.args = args
+        self.kwargs = kwargs
+    def __call__(self):
+        return self.callback(*self.args,**self.kwargs)
+        
 class Device(object):
     def __init__(self,device):
 

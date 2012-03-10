@@ -581,19 +581,20 @@ class GUI( gui.GUI ):
 
     def _DeleteProgram(self,event):
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        idx=self.lstPrograms.FindItemData(-1,event.index)
-        if idx>-1:
-            pidx=self.programs.keys()[event.index]
-            if pidx not in self.deleted:self.deleted.append(pidx)
-            self.lstPrograms.DeleteItem(idx)
-            self.total-=self.programs[pidx]['size']
-            if not self._downloading:
-                self.StatusBar.SetFieldsCount(1)
-                self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
-        idx=self.lstQueue.FindItemData(-1,event.index)
-        if idx>-1:
-            del self.queue[self.queue.index(pidx)]
-            self.lstQueue.DeleteItem(idx)
+        if event.index>-1:
+            idx=self.lstPrograms.FindItemData(-1,event.index)
+            if idx>-1:
+                pidx=self.programs.keys()[event.index]
+                if pidx not in self.deleted:self.deleted.append(pidx)
+                self.lstPrograms.DeleteItem(idx)
+                self.total-=self.programs[pidx]['size']
+                if not self._downloading:
+                    self.StatusBar.SetFieldsCount(1)
+                    self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
+            idx=self.lstQueue.FindItemData(-1,event.index)
+            if idx>-1:
+                del self.queue[self.queue.index(pidx)]
+                self.lstQueue.DeleteItem(idx)
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _Discover(self):
@@ -635,15 +636,15 @@ class GUI( gui.GUI ):
         #Update config
         self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
 
-    def _DownloadQueue(self,*args):
+    def _DownloadQueue(self,getfilenames=True):
         if self._downloading:return
 
         programs=[]
         size=0
         for pidx in self.queue:
             program = self.programs[pidx]
-            filename = self._GetFileName(program)
-
+            if getfilenames:filename = self._GetFileName(program)
+            else: filename=program.get('filename',None)
             if not filename:return #Stop showing file dialogs if queue download is cancelled
 
             program['filename']=filename
@@ -658,7 +659,7 @@ class GUI( gui.GUI ):
             #Wait for the program info to update
             self.btnClearQueue.Enable( False )
             self.btnDownload.Enable( False )
-            self.connecttimer = wx.PyTimer(self._DownloadQueue)
+            self.connecttimer = wx.PyTimer(Callback(self._DownloadQueue,False))
             self.connecttimer.Start(250,wx.TIMER_ONE_SHOT)
             return
 
