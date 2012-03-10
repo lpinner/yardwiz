@@ -698,7 +698,7 @@ class GUI( gui.GUI ):
                 if self.playsounds:
                     try:
                         if not os.path.exists(self.downloadcompletesound):
-                            raise IOError, '[Errno 2] No such file or directory: %f'%self.downloadcompletesound
+                            raise IOError, 'No such file or directory: %f'%self.downloadcompletesound
                         sound = wx.Sound(self.downloadcompletesound)
                         sound.Play(wx.SOUND_ASYNC)
                     except Exception, err:

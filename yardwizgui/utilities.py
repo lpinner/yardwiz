@@ -11,6 +11,9 @@ from events import *
 
 APPNAME='YARDWiz'
 
+MB=1024.0**2
+MiB=1000.0**2
+
 #######################################################################
 #Helper classes
 #######################################################################
@@ -125,6 +128,7 @@ class ThreadedChecker( ThreadedUtility ):
                         error.append(line)
             if error:errors.extend([program]+error)
         return '\n'.join(errors)
+    
 class ThreadedConnector( ThreadedUtility ):
     def __init__( self, parent, evtStop, device, quick=False):
         ThreadedUtility.__init__( self, parent )
@@ -322,7 +326,7 @@ class ThreadedConnector( ThreadedUtility ):
                 playtime=line
                 line=line.split()
                 program['length']=line[1]
-                program['size']=float(line[4])
+                program['size']=(float(line[4])*MiB)/MB #Convert megabytes to mebibytes
             elif 'autoDelete' in line:
                 pass
             else:
@@ -530,8 +534,6 @@ class ThreadedDownloader( ThreadedUtility ):
             self.Log(str(err))
 
         f=program['filename']
-        MB=1024.0**2
-        MiB=1000.0**2
         s=program['size']*MB
         total=self.total*MB
         start=time.time()
@@ -636,8 +638,8 @@ class ThreadedDownloader( ThreadedUtility ):
         else:
             progress={'filename':'',
                       'percent':100,
-                      'downloaded':round(program['size']/MB*MiB, 1),
-                      'size':round(program['size']/MB*MiB, 1),
+                      'downloaded':(program['size'], 1),
+                      'size':round(program['size'], 1),
                       'total':self.total,
                       'time':'0',
                       'totaltime':'',
