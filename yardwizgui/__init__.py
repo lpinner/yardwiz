@@ -203,7 +203,7 @@ class GUI( gui.GUI ):
 
         if self.total>0 and not self._downloading:
             self.StatusBar.SetFieldsCount(1)
-            self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
+            self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1)])
 
         self.lstPrograms.resizeLastColumn(self.mincolwidth)
 
@@ -590,7 +590,7 @@ class GUI( gui.GUI ):
                 self.total-=self.programs[pidx]['size']
                 if not self._downloading:
                     self.StatusBar.SetFieldsCount(1)
-                    self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
+                    self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1)])
             idx=self.lstQueue.FindItemData(-1,event.index)
             if idx>-1:
                 del self.queue[self.queue.index(pidx)]
@@ -836,6 +836,9 @@ class GUI( gui.GUI ):
 
                 else:filename=None
 
+            d,f=os.path.split(filename)
+            if d.lower().endswith('.tvwiz'):
+                filename=os.path.join(os.path.dirname(d),f)
             return filename
 
     def _Hide(self,*args,**kwargs):
@@ -1056,7 +1059,7 @@ class GUI( gui.GUI ):
         idx = self.lstPrograms.GetFirstSelected()
         if idx == -1:
             self.StatusBar.SetFieldsCount(1)
-            self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
+            self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1)])
         else:
             size=0
             i=0
@@ -1070,9 +1073,9 @@ class GUI( gui.GUI ):
                 idx = self.lstPrograms.GetNextSelected(idx)
             
             self.StatusBar.SetFieldsCount(2)
-            if i==1:msg='Selected recording %sMB'%size
-            else:msg='Selected recordings %sMB'%size
-            self.StatusBar.SetFields(['Total recordings %sMB'%self.total,msg])
+            if i==1:msg='Selected recording %sMB'%round(size,1)
+            else:msg='Selected recordings %sMB'%round(size,1)
+            self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1),msg])
         
     def _ShowTab(self,tabindex):
         self.nbTabArea.ChangeSelection(tabindex)
@@ -1090,7 +1093,7 @@ class GUI( gui.GUI ):
             self.total+=program['size']
         if self.total>0 and not self._downloading:
             self.StatusBar.SetFieldsCount(1)
-            self.StatusBar.SetFields(['Total recordings %sMB'%self.total])
+            self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1)])
         try:
             self.lstPrograms.SetStringItem(idx,0,program['title'])
             self.lstPrograms.SetStringItem(idx,1,program['channel'])
