@@ -306,9 +306,8 @@ class PropertyScrolledPanel(ScrolledPanel):
                         ctlOption=wx.FilePickerCtrl(pane, wx.ID_ANY, val, title, ext, wx.DefaultPosition, wx.DefaultSize, wx.FLP_DEFAULT_STYLE|wx.FLP_USE_TEXTCTRL )
                     else:continue
                     if tooltip:
-                        tooltip=wx.ToolTip(tooltip)
-                        txtOption.SetToolTip(tooltip)
-                        ctlOption.SetToolTip(tooltip)
+                        txtOption.SetToolTip(wx.ToolTip(tooltip))
+                        ctlOption.SetToolTip(wx.ToolTip(tooltip))
                     opts[option]=ctlOption
                     addrSizer.Add(txtOption, 0,wx.LEFT|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 25)
                     addrSizer.Add(ctlOption, 0, wx.EXPAND)
@@ -321,8 +320,10 @@ class PropertyScrolledPanel(ScrolledPanel):
 
             self._config[section]=opts
 
-        self.panes[0].Expand()
         self.SetupScrolling()
+        self.panes[0].Expand()
+        self.panes[0].SetFocus()
+        self.ScrollChildIntoView=lambda args:None#Stop auto scrolling when selecting new control
 
     def GetConfig(self, saved):
         if saved:
