@@ -68,9 +68,10 @@ class GUI( gui.GUI ):
         self.SetTitle('%s (%s)'%(self.GetTitle(),self.display_version))
         self.StatusBar.SetFieldsCount(1)
 
-        self._downloading=False
-        self._connecting=False
         self._checking=False
+        self._connecting=False
+        self._deleting=False
+        self._downloading=False
         self.player=None
         self.total=0
         self.schedulelist=[]
@@ -100,6 +101,7 @@ class GUI( gui.GUI ):
         self.lstPrograms.SetSortEnabled(True)
 
         #Bind F5 to connect
+        self.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
         for cw in self.GetChildren():
             cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
             for cw in cw.GetChildren():
@@ -380,7 +382,7 @@ class GUI( gui.GUI ):
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
 
     def _CheckWiz(self):
-        if self._connecting or self._checking or self._downloading:return
+        if self._connecting or self._deleting or self._downloading:return
         self._checking=True
         self.Stop.clear()
         self.lstPrograms.SetSortEnabled(False)
@@ -454,7 +456,7 @@ class GUI( gui.GUI ):
         self.btnDownload.Enable( False )
 
     def _Connect(self):
-        if self._connecting or self._checking or self._downloading:return
+        if self._connecting or self._checking or self._deleting or self._downloading:return
         self._connecting=True
         self._Reset()
         self.Stop.clear()
@@ -537,6 +539,7 @@ class GUI( gui.GUI ):
             self.lstQueue.DeleteItem(idx)
 
     def _DeleteFromWiz(self):
+        if self._connecting or self._checking:return
         idx = self.lstPrograms.GetFirstSelected()
         programs=[]
         indices=[]
@@ -571,6 +574,19 @@ class GUI( gui.GUI ):
         else:
             delete=True
         if delete:
+            self._deleting=True
+            if not self._downloading:
+                self.lstPrograms.SetSortEnabled(False)
+                self.mitCheck.Enable( False )
+                self.btnConnect.Enable( False )
+                self.cbxDevice.Enable( False )
+                self.mitDelete.Enable( False )
+                self.mitCheck.Enable( False )
+                self.gaugeProgressBar.Show()
+                self.gaugeProgressBar.Pulse()
+                self.lblProgressText.Show()
+                self.lblProgressText.SetLabelText('Deleting recordings...')
+    
             self._ShowTab(self.idxLog)
             indices.reverse()
             programs.reverse()
@@ -596,6 +612,9 @@ class GUI( gui.GUI ):
                 del self.queue[self.queue.index(pidx)]
                 self.lstQueue.DeleteItem(idx)
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+        self._deleting=False
+        if not self._downloading:
+            self._Enable()
 
     def _Discover(self):
         self._Log('Searching for Wizzes.')

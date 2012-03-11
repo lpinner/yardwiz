@@ -60,13 +60,12 @@ class ThreadedUtility( Thread ):
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             try:
                 s.settimeout(10.0)
-                s.connect((self.device.ip, int(self.device.port)))
+                s.connect((device.ip, int(device.port)))
                 s.shutdown(2)
                 self.Log('The WizPnP server is online.')
                 return True
             except Exception as err:
-                evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to contact the WizPnP server.\n'+str(err))
-                self.PostEvent(evt)    
+                self.Log('Unable to contact the WizPnP server.\n'+str(err))
                 return False
         else: return True
         
@@ -79,7 +78,10 @@ class ThreadedChecker( ThreadedUtility ):
         self.start()
     def run(self):
         cmd=[wizexe,'--all','--check','--verbose']+self.device.args
-        if not self.isonline(self.device):return
+        if not self.isonline(self.device):
+            evt = CheckComplete(wizEVT_CHECKCOMPLETE, -1,False,None)
+            self.PostEvent(evt)
+            return
         try:
             self.proc=subproc(cmd)
             while self.proc.poll() is None:
@@ -141,7 +143,10 @@ class ThreadedConnector( ThreadedUtility ):
         self.start()
     def run(self):
 
-        if not self.isonline(self.device):return
+        if not self.isonline(self.device):
+            evt = Connected(wizEVT_CONNECTED, -1,False,None)
+            self.PostEvent(evt)    
+            return
 
         if self.quick:
             exit_code,err=self._quicklistprograms()
@@ -445,7 +450,10 @@ class ThreadedDeleter( ThreadedUtility ):
         self.start()
         
     def run(self):
-        if not self.isonline(self.device):return
+        if not self.isonline(self.device):
+            evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1)
+            self.PostEvent(evt)
+            return
 
         cmd=[wizexe,'--all','--BWName']+self.device.args
 
@@ -494,7 +502,9 @@ class ThreadedDownloader( ThreadedUtility ):
 
     def run(self):
 
-        if not self.isonline(self.device):return
+        if not self.isonline(self.device):
+            self._downloadcomplete(stopped=True)
+            return
 
         for program in self.programs:
             self._updateprogress({},'Downloading %s...'%program['title'])
