@@ -249,21 +249,32 @@ class PropertyScrolledPanel(ScrolledPanel):
         ScrolledPanel.__init__(self, *args, **kwargs)
         sizer = wx.BoxSizer(wx.VERTICAL)
         self.SetSizer(sizer)
-        self.SetupScrolling()
         self.expanded=0
         self.panes=[]
 
+        self._ScrollChildIntoView=ScrolledPanel.ScrollChildIntoView
+        ScrolledPanel.ScrollChildIntoView=self.ScrollChildIntoView#Stop auto scrolling when selecting new control
+        ScrolledPanel.OnChildFocus=self.OnChildFocus#Stop auto scrolling when selecting new control
+
+    def OnChildFocus(self, evt=None):
+        #if evt:evt.Skip()
+        return None
+
+    def ScrollChildIntoView(self,*args,**kwargs):
+        return None
+    
     def OnPaneChanged(self, evt=None):
-        self.Freeze()
+        #self.Freeze()
         expanded=-1
         for i,pane in enumerate(self.panes):
             if pane.Expanded:
                 if i==self.expanded:pane.Collapse()
                 else:expanded=i
         self.expanded=expanded
+        #self.Thaw()
         self.Layout()
-        self.SetupScrolling()
-        self.Thaw()
+        self._ScrollChildIntoView(self,self.panes[self.expanded])
+        #self.SetupScrolling()
 
     def SetConfig(self, config, specs={}):
         #specs format is {section:{option:[optionvalue, optiontype, tooltip, [optionargs]]}
@@ -320,10 +331,10 @@ class PropertyScrolledPanel(ScrolledPanel):
 
             self._config[section]=opts
 
-        self.SetupScrolling()
         self.panes[0].Expand()
-        self.panes[0].SetFocus()
-        self.ScrollChildIntoView=lambda args:None#Stop auto scrolling when selecting new control
+        self.panes[0].GetPane().SetFocus()
+        self.Layout()
+        self.SetupScrolling()
 
     def GetConfig(self, saved):
         if saved:
