@@ -256,25 +256,23 @@ class PropertyScrolledPanel(ScrolledPanel):
         ScrolledPanel.ScrollChildIntoView=self.ScrollChildIntoView#Stop auto scrolling when selecting new control
         ScrolledPanel.OnChildFocus=self.OnChildFocus#Stop auto scrolling when selecting new control
 
-    def OnChildFocus(self, evt=None):
-        #if evt:evt.Skip()
+    def OnChildFocus(self,*args,**kwargs):
         return None
 
     def ScrollChildIntoView(self,*args,**kwargs):
         return None
     
     def OnPaneChanged(self, evt=None):
-        #self.Freeze()
+        self.Freeze()
         expanded=-1
         for i,pane in enumerate(self.panes):
             if pane.Expanded:
                 if i==self.expanded:pane.Collapse()
                 else:expanded=i
         self.expanded=expanded
-        #self.Thaw()
+        self.Thaw()
         self.Layout()
         self._ScrollChildIntoView(self,self.panes[self.expanded])
-        #self.SetupScrolling()
 
     def SetConfig(self, config, specs={}):
         #specs format is {section:{option:[optionvalue, optiontype, tooltip, [optionargs]]}
