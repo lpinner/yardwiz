@@ -101,13 +101,7 @@ class GUI( gui.GUI ):
         self.lstPrograms.SetSortEnabled(True)
 
         #Bind F5 to connect
-        self.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
-        for cw in self.GetChildren():
-            cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
-            for cw in cw.GetChildren():
-                cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
-                for cw in cw.GetChildren():
-                    cw.Bind( wx.EVT_KEY_DOWN, self.OnKeyDown )
+        self._BindEvent( wx.EVT_KEY_DOWN, self.OnKeyDown,self )
 
         self.tooltips={}
         for cw in self.GetChildren():
@@ -401,6 +395,15 @@ class GUI( gui.GUI ):
         self._Log('Checking recordings...')
         checker=ThreadedChecker(self,self.Stop,self.device)
 
+    def _BindEvent(self,event,handler,window):
+        try:window.Bind(event,handler)
+        except:pass
+        try:
+            for cw in window.GetChildren():
+                try:self._BindEvent(event,handler,cw)
+                except:pass
+        except:pass
+        
     def _CheckComplete(self,event):
         if event and event.message:self._Log(event.message)
         self._checking=False
@@ -1042,16 +1045,15 @@ class GUI( gui.GUI ):
 
         self.mitScheduled.Enable(len(self.schedulelist)>0)
 
-    def _SetCursor(self,cursor):
-        self.SetCursor(cursor)
-        for cw in self.GetChildren():
-            cw.SetCursor(cursor)
-            for cw in cw.GetChildren():
-                cw.SetCursor(cursor)
-                for cw in cw.GetChildren():
-                    cw.SetCursor(cursor)
-
-        self.SetCursor(cursor)
+    def _SetCursor(self,cursor,window=None):
+        if not window:window=self
+        try:window.SetCursor(cursor)
+        except:pass
+        try:
+            for cw in window.GetChildren():
+                try:self._SetCursor(cursor,cw)
+                except:pass
+        except:pass
 
     def _SetTransparent(self):
         self.amount += self.delta

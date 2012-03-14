@@ -274,6 +274,17 @@ class PropertyScrolledPanel(ScrolledPanel):
         self.Layout()
         self._ScrollChildIntoView(self,self.panes[self.expanded])
 
+    def SetFGBGColour(self,fg,bg,ctrl):
+        try:
+            ctrl.ForegroundColour=fg
+            ctrl.BackgroundColour=bg
+        except:pass
+        try:
+            for cw in ctrl.GetChildren():
+                try:self.SetFGBGColour(fg,bg,cw)
+                except:pass
+        except:pass
+
     def SetConfig(self, config, specs={}):
         #specs format is {section:{option:[optionvalue, optiontype, tooltip, [optionargs]]}
         self._config={}
@@ -286,6 +297,8 @@ class PropertyScrolledPanel(ScrolledPanel):
                                     style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE)
             self.panes.append(cp)
             pane=cp.GetPane()
+            self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,cp)
+            self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,pane)
             self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.OnPaneChanged, cp)
             addrSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=1)
             addrSizer.AddGrowableCol(1)
@@ -308,18 +321,21 @@ class PropertyScrolledPanel(ScrolledPanel):
                         if config.getboolean(section, option):
                             ctlOption.SetValue(True)
                     elif ctrl=='dir':
-                        ctlOption=wx.DirPickerCtrl( pane, wx.ID_ANY, val, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE|wx.DIRP_USE_TEXTCTRL )
+                        ctlOption=wx.DirPickerCtrl( pane, wx.ID_ANY, val, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.DIRP_DEFAULT_STYLE|wx.DIRP_USE_TEXTCTRL)
                     elif ctrl=='file':
                         if args:ext=args[0]
                         else:ext='*.*'
-                        ctlOption=wx.FilePickerCtrl(pane, wx.ID_ANY, val, title, ext, wx.DefaultPosition, wx.DefaultSize, wx.FLP_DEFAULT_STYLE|wx.FLP_USE_TEXTCTRL )
+                        ctlOption=wx.FilePickerCtrl(pane, wx.ID_ANY, val, title, ext, wx.DefaultPosition, wx.DefaultSize, wx.FLP_DEFAULT_STYLE|wx.FLP_USE_TEXTCTRL)
                     else:continue
                     if tooltip:
                         txtOption.SetToolTip(wx.ToolTip(tooltip))
                         ctlOption.SetToolTip(wx.ToolTip(tooltip))
+
                     opts[option]=ctlOption
                     addrSizer.Add(txtOption, 0,wx.LEFT|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 25)
                     addrSizer.Add(ctlOption, 0, wx.EXPAND)
+                    self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,txtOption)
+                    self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,ctlOption)
 
             border = wx.BoxSizer()
             border.Add(addrSizer, 1, wx.EXPAND|wx.ALL, 5)

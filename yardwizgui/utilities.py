@@ -690,10 +690,9 @@ class ThreadedPlayer( ThreadedUtility ):
 
         self.port=self.getfreeport()
         cmd=[vlcexe,'--extraintf=rc','--rc-host=localhost:%s'%self.port,'--quiet','--verbose=0']
-        if not iswin:cmd.append('--rc-fake-tty')
-        if self.args:
-            cmd=cmd+self.args
-        cmd=cmd+[self.filename.encode(filesysenc)]
+        if not iswin:cmd+=['--rc-fake-tty']
+        if self.args:cmd+=self.args
+        cmd+=[self.filename.encode(filesysenc)]
 
         try:
             self.proc=subproc(cmd)
