@@ -245,17 +245,20 @@ class GUI( gui.GUI ):
             devices=devices.split(';')
             logger.debug('Devices="%s"'%devices)
             for device in devices:
-                device=Device(device)
-                self.devices[device.display]=device
-                self.cbxDevice.Append(device.display)
+                if device!='':
+                    device=Device(device)
+                    self.devices[device.display]=device
+                    self.cbxDevice.Append(device.display)
 
         if self.cbxDevice.GetCount()>0:
             try:
                 self.cbxDevice.SetSelection(self.cbxDevice.Items.index(d))
-                self.device=d
+                self.device=self.devices[d]
             except:
                 self.cbxDevice.SetSelection(0)
                 self.device=self.devices.values()[0]
+
+        self.config.set('Settings','device',';'.join(map(str,self.devices.values())))
 
         logger.debug(self.config.get('Settings','device'))
         logger.debug(str(self.devices))
@@ -1214,6 +1217,9 @@ class GUI( gui.GUI ):
         #Remove logfile so it doesn't get written out
         self.config.remove_option('Debug', 'logfile')
 
+        #Remove logfile so it doesn't get written out
+        self.config.remove_option('Debug', 'logfile')
+
         sections = self.config.sections()
         for section in sections:
             logger.debug(repr(section))
@@ -1291,7 +1297,7 @@ class GUI( gui.GUI ):
                 self._Enable()
     
                 #Update config
-                self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
+                self.config.set('Settings','device',';'.join(map(str,self.devices.values())))
                 logger.debug(self.config.get('Settings','device'))
                 logger.debug(str(self.devices))
                 logger.debug(self.devices.values())
