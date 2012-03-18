@@ -85,6 +85,7 @@ class GUI( gui.GUI ):
 
         self.Play=threading.Event()
         self.Stop=threading.Event()
+        self.StopStreaming=threading.Event()
         self.CancelConversion=threading.Event()
 
         self.Bind(EVT_ADDPROGRAM, self._AddProgram)
@@ -97,6 +98,7 @@ class GUI( gui.GUI ):
         self.Bind(EVT_SCHEDULEDDWONLOADCOMPLETE, self.onScheduledDownloadComplete)
         self.Bind(EVT_SCHEDULERCOMPLETE, self.onSchedulerComplete)
         self.Bind(EVT_PLAYCOMPLETE, self.onPlayComplete)
+        self.Bind(EVT_STREAMCOMPLETE, self.onStreamComplete)
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
         self.lstPrograms.SetSortEnabled(True)
 
@@ -344,10 +346,17 @@ class GUI( gui.GUI ):
         if vlcexe:
             self.vlcargs=self.config.get('Settings','vlcargs').split()
             self.btnVLC.Disable()
+            self.mitStream.Enable()
+            pos=-1
+            for pos,mit in enumerate(self.mnuPrograms.GetMenuItems()):
+                if mit.Label == self.mitStream.Label:break                
+            if pos>-1:self.mnuPrograms.InsertSeparator(pos)
+            
         else:
             if 'vlcargs' in self.configspec['Settings']:
                 del self.configspec['Settings']['vlcargs']
             self.btnVLC.Hide()
+            self.mnuPrograms.DeleteItem(self.mitStream)
 
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
@@ -878,8 +887,10 @@ class GUI( gui.GUI ):
             self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
             logger.debug(msg)
 
-    def _Play(self,*args,**kwargs):
-        self.player=ThreadedPlayer(self, self.Stop, self.Play,self.filename,self.vlcargs)
+    def _Play(self,filename=None):
+        if filename is None:filename=self.filename
+        if filename:
+            self.player=ThreadedPlayer(self, self.Stop, self.Play,self.filename,self.vlcargs)
 
     def _PostDownloadCommand(self,program):
         cmd=self.postcmd.split('#')[0].strip()
@@ -1101,6 +1112,19 @@ class GUI( gui.GUI ):
     def _ShowTab(self,tabindex):
         self.nbTabArea.ChangeSelection(tabindex)
 
+    def _Stream(self):
+        idx = self.lstPrograms.GetFirstSelected()
+        if idx == -1:return
+        qidx = self.lstPrograms.GetItem(idx).Data
+        pidx=self.programs.keys()[qidx]
+        program = self.programs[pidx]
+        if '*RECORDING' in program['title']:
+            self._Log('Unable to play %s as it is currently recording.'%program['title'])
+            self._ShowTab(self.idxLog)
+            return
+        self.mitStream.Enable(False)
+        tp=ThreadedStreamPlayer(self, self.device, program, self.StopStreaming, self.vlcargs)
+        
     def _UpdateProgram(self,event):
         idx=self.lstPrograms.FindItemData(-1,event.index)
         program=event.program
@@ -1335,6 +1359,9 @@ class GUI( gui.GUI ):
     def mitHelp_OnSelect( self, event ):
         webbrowser.open_new_tab('http://code.google.com/p/yardwiz/wiki/Help')
 
+    def mitStream_OnSelect( self, event ):
+        self._Stream()
+    
     def mitPreferences_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)
         self.cbxDevice_OnKillFocus(None) #Clicking a menu item doesn't move focus off a control,
@@ -1372,6 +1399,8 @@ class GUI( gui.GUI ):
         except:pass
         try:self.Stop.set()
         except:pass
+        try:self.StopStreaming.set()
+        except:pass
         try:self.CancelConversion.set()
         except:pass
         try:self._WriteConfig()
@@ -1402,6 +1431,9 @@ class GUI( gui.GUI ):
         self.btnVLC.Disable()
         del self.player
         self.player=None
+
+    def onStreamComplete( self, event ):
+        self.mitStream.Enable()
 
     def onUpdateProgress( self, event ):
         self._UpdateProgress(event.progress,event.message)

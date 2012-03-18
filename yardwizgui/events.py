@@ -1,4 +1,4 @@
-import wx
+import wx,logging
 #######################################################################
 #Custom WX Events
 #######################################################################
@@ -73,10 +73,11 @@ wizEVT_LOG = wx.NewEventType()
 EVT_LOG = wx.PyEventBinder(wizEVT_LOG, 1)
 class Log(wx.PyCommandEvent):
     """Event to signal that there is a message to log"""
-    def __init__(self, etype, eid, message=None):
+    def __init__(self, etype, eid, message=None, severity=logging.INFO):
         """Creates the event object"""
         wx.PyCommandEvent.__init__(self, etype, eid)
         self.message = message
+        self.severity = severity
 
 wizEVT_PLAYCOMPLETE = wx.NewEventType()
 EVT_PLAYCOMPLETE = wx.PyEventBinder(wizEVT_PLAYCOMPLETE, 1)
@@ -105,6 +106,14 @@ class ScheduledDownloadComplete(wx.PyCommandEvent):
 
 wizEVT_UPDATEPROGRAM = wx.NewEventType()
 EVT_UPDATEPROGRAM = wx.PyEventBinder(wizEVT_UPDATEPROGRAM, 1)
+wizEVT_STREAMCOMPLETE = wx.NewEventType()
+EVT_STREAMCOMPLETE = wx.PyEventBinder(wizEVT_STREAMCOMPLETE, 1)
+class StreamComplete(wx.PyCommandEvent):
+    """Event to signal that VLC has finished playing"""
+    def __init__(self, etype, eid):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+
 class UpdateProgram(wx.PyCommandEvent):
     """Event to signal that program info has been updated"""
     def __init__(self, etype, eid, program=None,index=-1):

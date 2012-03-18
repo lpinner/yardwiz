@@ -67,6 +67,10 @@ class GUI ( wx.Frame ):
 		self.mitScheduler = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Schedule for dowload...", wx.EmptyString, wx.ITEM_NORMAL )
 		self.mnuPrograms.AppendItem( self.mitScheduler )
 		
+		self.mitStream = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Play in VLC", wx.EmptyString, wx.ITEM_NORMAL )
+		self.mnuPrograms.AppendItem( self.mitStream )
+		self.mitStream.Enable( False )
+		
 		self.mnuPrograms.AppendSeparator()
 		
 		self.mitDelete = wx.MenuItem( self.mnuPrograms, wx.ID_ANY, u"Delete...", wx.EmptyString, wx.ITEM_NORMAL )
@@ -272,6 +276,7 @@ class GUI ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.mitDownload_onSelect, id = self.mitDownload.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitQueue_onSelect, id = self.mitQueue.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitScheduler_OnSelect, id = self.mitScheduler.GetId() )
+		self.Bind( wx.EVT_MENU, self.mitStream_OnSelect, id = self.mitStream.GetId() )
 		self.Bind( wx.EVT_MENU, self.mitDelete_OnSelect, id = self.mitDelete.GetId() )
 		self.lstQueue.Bind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, self.lstQueue_OnMiddleClick )
 		self.lstQueue.Bind( wx.EVT_LIST_ITEM_RIGHT_CLICK, self.lstQueue_OnRightClick )
@@ -313,6 +318,7 @@ class GUI ( wx.Frame ):
 		self.Unbind( wx.EVT_MENU, id = self.mitDownload.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitQueue.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitScheduler.GetId() )
+		self.Unbind( wx.EVT_MENU, id = self.mitStream.GetId() )
 		self.Unbind( wx.EVT_MENU, id = self.mitDelete.GetId() )
 		self.lstQueue.Unbind( wx.EVT_LIST_ITEM_MIDDLE_CLICK, None )
 		self.lstQueue.Unbind( wx.EVT_LIST_ITEM_RIGHT_CLICK, None )
@@ -388,6 +394,9 @@ class GUI ( wx.Frame ):
 		event.Skip()
 	
 	def mitScheduler_OnSelect( self, event ):
+		event.Skip()
+	
+	def mitStream_OnSelect( self, event ):
 		event.Skip()
 	
 	def mitDelete_OnSelect( self, event ):

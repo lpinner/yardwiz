@@ -1,5 +1,5 @@
 import os,sys,time,signal,ctypes,copy,logging,logging.handlers,traceback
-import subprocess,re,ConfigParser,socket,struct,glob
+import subprocess,re,ConfigParser,socket,struct,glob,tempfile
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
@@ -40,19 +40,19 @@ class ThreadedUtility( Thread ):
     def excepthook(self, type, value, tb):
         msg=''.join(traceback.format_exception(type, value, tb))
         if logger.getEffectiveLevel()==logging.DEBUG:
-            self.Log(msg)
+            self.Log(msg, logging.ERROR)
         else:
-            self.Log("Errors occurred, see the logfile '%s' for details" % logfile)
+            self.Log("Errors occurred, see the logfile '%s' for details" % logfile, logging.ERROR)
         logger.error(msg)
     
-    def Log(self,msg):
-        evt = Log(wizEVT_LOG, -1, msg)
+    def Log(self,msg,*args,**kwargs):
+        evt = Log(wizEVT_LOG, -1, msg,*args,**kwargs)
         self.PostEvent(evt)
     
     def PostEvent(self,evt):
         try:wx.PostEvent(self.parent,evt)
         except Exception as err:
-            print err
+            logger.error(str(err)) 
             pass #We're probably exiting
 
     def isonline(self, device):
@@ -65,7 +65,7 @@ class ThreadedUtility( Thread ):
                 self.Log('The WizPnP server is online.')
                 return True
             except Exception as err:
-                self.Log('Unable to contact the WizPnP server.\n'+str(err))
+                self.Log('Unable to contact the WizPnP server.\n'+str(err),logging.ERROR)
                 return False
         else: return True
         
@@ -430,7 +430,7 @@ class ThreadedConverter( ThreadedUtility ):
                 else:
                     self.Log('Created %s.'%ts)
             except Exception,err:
-                self.Log(str(err))
+                self.Log(str(err),logging.ERROR)
             finally:
                 try:o.close()
                 except:pass
@@ -473,7 +473,7 @@ class ThreadedDeleter( ThreadedUtility ):
                 stdout,stderr=self.proc.communicate()
                 if stdout.strip():raise Exception,'Unable to delete %s'%(program['title'])
             except Exception,err:
-                self.Log(str(err))
+                self.Log(str(err),logging.ERROR)
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1)
                 self.PostEvent(evt)
             else:
@@ -540,9 +540,9 @@ class ThreadedDownloader( ThreadedUtility ):
         try:
             self.proc=subproc(cmd)
         except Exception,err:
-            self.Log('Error, unable to download %s.'%program['filename'])
-            self.Log(str(err))
-
+            self.Log('Error, unable to download %s.'%program['filename'],logging.ERROR)
+            self.Log(str(err),logging.ERROR)
+            
         f=program['filename']
         s=program['size']*MB
         total=self.total*MB
@@ -560,15 +560,15 @@ class ThreadedDownloader( ThreadedUtility ):
                     for i in range(3):#Try to delete the file 3 times
                         try:
                             time.sleep(1)
-                            self._delete(program['filename'])
+                            delete(program['filename'])
                         except:
                             if i==2:raise
                             else:continue
                         else:break
 
                 except Exception,err:
-                    self.Log('Unable to stop download or delete %s.'%program['filename'])
-                    self.Log(str(err))
+                    self.Log('Unable to stop download or delete %s.'%program['filename'],logging.ERROR)
+                    self.Log(str(err),logging.ERROR)
                 else:
                     self.Log('Download cancelled.')
                 return
@@ -577,7 +577,7 @@ class ThreadedDownloader( ThreadedUtility ):
                 try:
                     self._stopdownload()
                 except:
-                    self.Log('Unable to pause download.')
+                    self.Log('Unable to pause download.',logging.ERROR)
                     raise
                 self.Log('Download paused.')
                 while True:
@@ -585,10 +585,10 @@ class ThreadedDownloader( ThreadedUtility ):
                     if self.Stop.isSet():
                         self._downloadcomplete(index=program['index'],stopped=True)
                         try:
-                            self._delete(program['filename'])
+                            delete(program['filename'])
                         except Exception,err:
-                            self.Log('Unable to delete %s.'%program['filename'])
-                            self.Log(str(err))
+                            self.Log('Unable to delete %s.'%program['filename'],logging.ERROR)
+                            self.Log(str(err),logging.ERROR)
                         else:
                             self.Log('Download cancelled.')
                         return
@@ -638,12 +638,12 @@ class ThreadedDownloader( ThreadedUtility ):
         except:return#We're probably exiting
         stdout,stderr=self.proc.communicate()
         if exit_code or not os.path.exists(f) or percent < 100:
-            self.Log('Error, unable to download %s.'%program['filename'])
-            self.Log('getWizPnP STDOUT:'+stdout)
-            self.Log('getWizPnP STDERR:'+stderr)
+            self.Log('Error, unable to download %s.'%program['filename'],logging.ERROR)
+            self.Log('getWizPnP STDOUT:'+stdout,logging.ERROR)
+            self.Log('getWizPnP STDERR:'+stderr,logging.ERROR)
             if not 'Copy failed: Forbidden' in stderr:
-                try:self._delete(program['filename'])
-                except:self.Log('Error: Unable to delete %s'%program['filename'])
+                try:delete(program['filename'])
+                except:self.Log('Error: Unable to delete %s'%program['filename'],logging.ERROR)
             self._downloadcomplete(index=program['index'],stopped=True)
         else:
             progress={'filename':'',
@@ -669,7 +669,7 @@ class ThreadedDownloader( ThreadedUtility ):
     def _stopdownload(self):
         try:
             kill(self.proc)
-        except Exception,err:self.Log(str(err))
+        except Exception,err:self.Log(str(err),logging.ERROR)
     def __del__(self):
         try:
             kill(self.proc)
@@ -724,15 +724,15 @@ class ThreadedPlayer( ThreadedUtility ):
                 raise Exception,msg
         except Exception,err:
             self.quit()
-            msg=str(err)
+            self.Log(str(err),logging.ERROR)
         else:
             msg='Finished playing recording'
             if stdout:
                 msg=msg+'\n'+stdout
             if stderr:
                 msg=msg+'\n'+stderr
+            self.Log(msg)
 
-        self.Log(msg)
         self.quit()
 
     def getfreeport(self):
@@ -805,7 +805,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
 
     def reset(self,startDateTime):
         if self.downloading:
-            self.Log('Can\'t reschedule once downloading')
+            self.Log('Can\'t reschedule once downloading',logging.ERROR)
         else:
             self.timer.cancel()
             self.startDateTime=wxdatetime_to_datetime(startDateTime)
@@ -857,6 +857,67 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
 
     def _onlog(self,event):
         self.PostEvent(event)
+
+    def __del__( self):
+        try:self.stop()
+        except:pass
+
+class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
+    def __init__( self, parent, device, program, Stop, args):
+        ThreadedUtility.__init__( self, parent )
+        wx.EvtHandler.__init__( self )
+
+        self.parent=parent
+        self.device=device
+        self.program=copy.copy(program)
+        self.args=args
+        self.Play=Event()
+        self.Play.set()
+        self.Stop=Stop
+        self.Stop.clear()
+        self.td=None
+        self.tp=None
+        
+        #self.tmpfile=tempfile.NamedTemporaryFile(delete=False )
+        #self.program['filename']=self.tmpfile.name
+        self.program['filename']=tempfile.mktemp(suffix='.ts')
+        logger.debug(self.program['filename'])
+        
+        self.Bind(EVT_DOWNLOADCOMPLETE, self._ondownloadcomplete)
+        self.Bind(EVT_LOG, self._onlog)
+        self.Bind(EVT_UPDATEPROGRESS, self._onupdateprogress)
+        self.Bind(EVT_PLAYCOMPLETE, self._onplaycomplete)
+
+        self.start()
+
+    def stop(self):
+        self.Stop.set()
+        try:self.td.join()
+        except:pass
+        try:self.tp.join()
+        except:pass
+        try:delete(self.program['filename'])
+        except:self.Log('Error: Unable to delete %s'%self.program['filename'],logging.ERROR)
+        evt = StreamComplete(wizEVT_STREAMCOMPLETE, -1)
+        self.PostEvent(evt)
+
+    def run(self):
+        self.td= ThreadedDownloader( self, self.device, [self.program], self.Play, self.Stop)
+
+    def _ondownloadcomplete(self,event):
+        pass
+
+    def _onplaycomplete(self,event):
+        self.stop()
+
+    def _onupdateprogress(self,event):
+        if not self.tp and event.progress.get('downloaded',0)>5:
+            self.tp=ThreadedPlayer( self, self.Stop, self.Play,self.program['filename'],self.args)        
+        #pass
+
+    def _onlog(self,event):
+        if event.severity!=logging.INFO:
+            self.PostEvent(event)
 
     def __del__( self):
         try:self.stop()
@@ -1061,6 +1122,18 @@ def data_path():
     if frozen() and sys.frozen!='macosx_app':
         return os.path.dirname(sys.executable)
     return os.path.dirname(__file__)
+
+def delete(f,n=5):
+    if os.path.exists(f):
+        for i in range(n):#Try to delete the file n times
+            try:
+                time.sleep(1)
+                os.unlink(f)
+            except:
+                if i==n-1:raise
+                else:continue
+            else:return
+    else:return
 
 def errordialog(message, caption):
     dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
@@ -1310,6 +1383,7 @@ for f in vlc:
     if which(f):
         vlcexe=f
         break
+#vlcexe=''
 
 if iswin:
     CTRL_C_EVENT = 0
