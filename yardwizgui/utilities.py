@@ -696,8 +696,12 @@ class ThreadedPlayer( ThreadedUtility ):
 
         try:
             self.proc=subproc(cmd)
-            self.socket=self.getsocket(self.port)
-            data=self.getdata()
+            try:
+                self.socket=self.getsocket(self.port)
+                data=self.getdata()
+            except Exception as err:
+                self.proc.kill()
+                #self.Log(str(err),logging.ERROR)
             while self.proc.poll() is None:
                 time.sleep(0.1)
                 if self.Stop.isSet():

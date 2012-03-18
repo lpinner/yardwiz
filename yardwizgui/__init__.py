@@ -350,7 +350,8 @@ class GUI( gui.GUI ):
             pos=-1
             for pos,mit in enumerate(self.mnuPrograms.GetMenuItems()):
                 if mit.Label == self.mitStream.Label:break                
-            if pos>-1:self.mnuPrograms.InsertSeparator(pos)
+            if pos>-1 and not self.mnuPrograms.FindItemByPosition(pos-1).IsSeparator():
+                self.mnuPrograms.InsertSeparator(pos)
             
         else:
             if 'vlcargs' in self.configspec['Settings']:
