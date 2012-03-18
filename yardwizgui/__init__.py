@@ -871,9 +871,11 @@ class GUI( gui.GUI ):
 
                 else:filename=None
 
-            d,f=os.path.split(filename)
-            if d.lower().endswith('.tvwiz'):
-                filename=os.path.join(os.path.dirname(d),f)
+            try:
+                d,f=os.path.split(filename)
+                if d.lower().endswith('.tvwiz'):
+                    filename=os.path.join(os.path.dirname(d),f)
+            except:filename=None
             return filename
 
     def _Hide(self,*args,**kwargs):
