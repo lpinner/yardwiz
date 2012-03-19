@@ -837,6 +837,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
             program = self.Queue.get()
             td= ThreadedDownloader( self, program['device'], [program], self.evtPlay, self.evtStop)
             td.join()#Block until  download is complete
+            if self.evtStop.is_set():return
             self.Queue.task_done()
             evt = ScheduledDownloadComplete(wizEVT_SCHEDULEDDWONLOADCOMPLETE, -1,program)
             self.PostEvent(evt)
