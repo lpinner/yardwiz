@@ -312,27 +312,47 @@ class GUI( gui.GUI ):
             showfade=True
             if 'linux' in sys.platform: #Workaround for http://trac.wxwidgets.org/ticket/13240
                 try:
-                    logger.debug('Checking compiz')
-                    proc=subproc(['compiz', '--version'])
-                    stdout,stderr=proc.communicate()
-                    exit_code=proc.wait()
-                    stdout,stderr=stdout.strip(),stderr.strip()
-                    logger.debug('exit_code: %s'%exit_code)
-                    logger.debug('stdout: %s'%stdout)
-                    logger.debug('stderr: %s'%stderr)
-                    if exit_code != 0:
-                        self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
-                    else:
-                        comver=[int(v) for v in stdout.split()[-1].split('.')]
-                        logger.debug('compiz version: %s'%str(comver))
-                        if comver>=[0,8,6]:
-                            showfade=False
-                            self.fade=False
-                        else:
-                            self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
+                    logger.debug('Checking for gnome shell')
+                    proc=subproc(['gnome-shell','--version'])
+                    gstdout,gstderr=proc.communicate()
+                    gexit_code=proc.wait()
+                    gstdout,gstderr=gstdout.strip(),gstderr.strip()
+                    logger.debug('exit_code: %s'%gexit_code)
+                    logger.debug('stdout: %s'%gstdout)
+                    logger.debug('stderr: %s'%gstderr)
                 except Exception,err:
                     logger.debug('Exception,err: %s'%str(err))
-                    self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
+                    gexit_code=1
+                    
+                try:
+                    logger.debug('Checking compiz')
+                    proc=subproc(['compiz', '--version'])
+                    cstdout,cstderr=proc.communicate()
+                    cexit_code=proc.wait()
+                    cstdout,cstderr=cstdout.strip(),cstderr.strip()
+                    logger.debug('exit_code: %s'%cexit_code)
+                    logger.debug('stdout: %s'%cstdout)
+                    logger.debug('stderr: %s'%cstderr)
+                except Exception,err:
+                    logger.debug('Exception,err: %s'%str(err))
+                    cexit_code=1
+
+                if cexit_code != 0 and gexit_code!=0:
+                    self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz/gnome3, so use the preference
+                elif cexit_code==0:
+                    comver=[int(v) for v in cstdout.split()[-1].split('.')]
+                    logger.debug('compiz version: %s'%str(comver))
+                    if comver>=[0,8,6]:
+                        showfade=False
+                        self.fade=False
+                    else:
+                        self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
+                elif gexit_code==0:
+                    if os.environ.get('DESKTOP_SESSION',False)=='gnome':
+                        showfade=False
+                        self.fade=False
+                    else:
+                        self.fade=self.config.getboolean('Window','fade') #Assume we're not running compiz, so use the preference
             else:
                 self.fade=self.config.getboolean('Window','fade')
         else:
