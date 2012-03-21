@@ -269,21 +269,13 @@ class PropertyScrolledPanel(ScrolledPanel):
             if pane.Expanded:
                 if i==self.expanded:pane.Collapse()
                 else:expanded=i
+            
         self.expanded=expanded
+
         self.Thaw()
         self.Layout()
-        self._ScrollChildIntoView(self,self.panes[self.expanded])
-
-    def SetFGBGColour(self,fg,bg,ctrl):
-        try:
-            ctrl.ForegroundColour=fg
-            ctrl.BackgroundColour=bg
-        except:pass
-        try:
-            for cw in ctrl.GetChildren():
-                try:self.SetFGBGColour(fg,bg,cw)
-                except:pass
-        except:pass
+        if not 'linux' in sys.platform:
+            self._ScrollChildIntoView(self,self.panes[self.expanded])
 
     def SetConfig(self, config, specs={}):
         #specs format is {section:{option:[optionvalue, optiontype, tooltip, [optionargs]]}
@@ -297,8 +289,6 @@ class PropertyScrolledPanel(ScrolledPanel):
                                     style=wx.CP_DEFAULT_STYLE|wx.CP_NO_TLW_RESIZE)
             self.panes.append(cp)
             pane=cp.GetPane()
-            self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,cp)
-            self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,pane)
             self.Bind(wx.EVT_COLLAPSIBLEPANE_CHANGED, self.OnPaneChanged, cp)
             addrSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=1)
             addrSizer.AddGrowableCol(1)
@@ -334,15 +324,13 @@ class PropertyScrolledPanel(ScrolledPanel):
                     opts[option]=ctlOption
                     addrSizer.Add(txtOption, 0,wx.LEFT|wx.ALIGN_LEFT|wx.ALIGN_CENTER_VERTICAL, 25)
                     addrSizer.Add(ctlOption, 0, wx.EXPAND)
-                    self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,txtOption)
-                    self.SetFGBGColour(self.ForegroundColour,self.BackgroundColour,ctlOption)
 
             border = wx.BoxSizer()
             border.Add(addrSizer, 1, wx.EXPAND|wx.ALL, 5)
             pane.SetSizer(border)
 
             self.Sizer.Add(cp, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
-
+            
             self._config[section]=opts
 
         self.panes[0].Expand()

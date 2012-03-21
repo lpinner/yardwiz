@@ -519,6 +519,7 @@ class GUI( gui.GUI ):
             self.device=Device(device)
             self.devices[self.device.display]=self.device
             self.cbxDevice.Append(self.device.display)
+            self.config.set('Settings','device',';'.join([str(dev) for dev in self.devices.values()]))
 
         logger.debug('Connecting to %s'%(str(self.device)))
         self._Log('Connecting to %s...'%self.device.display)
@@ -1547,9 +1548,11 @@ class SettingsDialog( gui.SettingsDialog ):
     def __init__( self, parent, config,  specs ):
         self.saved=False
         gui.SettingsDialog.__init__(self, parent)
-        self.PropertyScrolledPanel.SetConfig(config, specs)
-        self.Layout()
         self.Sizer.Fit( self )
+        self.PropertyScrolledPanel.SetAutoLayout(1)
+        self.PropertyScrolledPanel.SetConfig(config, specs)
+        self.PropertyScrolledPanel.SetupScrolling()
+        self.Layout()
         self.ShowModal()
 
     def OnCancel( self, event ):
