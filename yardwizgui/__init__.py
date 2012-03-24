@@ -92,6 +92,7 @@ class GUI( gui.GUI ):
         self.Bind(EVT_ADDPROGRAM, self._AddProgram)
         self.Bind(EVT_CHECKCOMPLETE, self._CheckComplete)
         self.Bind(EVT_CONNECTED, self._Connected)
+        self.Bind(EVT_DELETECOMPLETE, self._DeleteComplete)
         self.Bind(EVT_DELETEPROGRAM, self._DeleteProgram)
         self.Bind(EVT_UPDATEPROGRAM, self._UpdateProgram)
         self.Bind(EVT_DOWNLOADCOMPLETE, self.onDownloadComplete)
@@ -180,11 +181,13 @@ class GUI( gui.GUI ):
         else:
             self.programs[program['index']]=program
 
-        if  program['index'] in self.deleted:
-            return
-
         iidx=event.index
         lidx=self.lstPrograms.FindItemData(-1,iidx)
+
+        if  program['index'] in self.deleted:
+            if lidx>-1:self.lstPrograms.DeleteItem(lidx)
+            return
+        
         if lidx>-1:
             self.lstPrograms.SetStringItem(lidx,0,program['title'])
             self.lstPrograms.SetStringItem(lidx,1,program['channel'])
@@ -539,7 +542,7 @@ class GUI( gui.GUI ):
         self._connecting=False
         self._Enable()
         
-        downloaded,deleted=self.downloaded,self.deleted
+        downloaded,deleted=self.downloaded[:],self.deleted[:]
         for pidx in downloaded:
             if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
         for pidx in self.deleted:
@@ -635,8 +638,13 @@ class GUI( gui.GUI ):
             self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
             deletions=ThreadedDeleter(self,self.Stop,self.device,programs,indices)
 
+    def _DeleteComplete(self,event):
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+        self._deleting=False
+        if not self._downloading:
+            self._Enable()
+
     def _DeleteProgram(self,event):
-        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         if event.index>-1:
             idx=self.lstPrograms.FindItemData(-1,event.index)
             if idx>-1:
@@ -651,10 +659,6 @@ class GUI( gui.GUI ):
             if idx>-1:
                 del self.queue[self.queue.index(pidx)]
                 self.lstQueue.DeleteItem(idx)
-        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-        self._deleting=False
-        if not self._downloading:
-            self._Enable()
 
     def _Discover(self):
         self._Log('Searching for Wizzes.')

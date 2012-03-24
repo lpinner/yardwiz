@@ -49,6 +49,14 @@ class DateTimeUpdated(wx.PyCommandEvent):
         wx.PyCommandEvent.__init__(self, etype, eid)
         self.DateTime = DateTime
 
+wizEVT_DELETECOMPLETE = wx.NewEventType()
+EVT_DELETECOMPLETE = wx.PyEventBinder(wizEVT_DELETECOMPLETE, 1)
+class DeleteComplete(wx.PyCommandEvent):
+    """Event to signal that deletions are complete"""
+    def __init__(self, etype, eid):
+        """Creates the event object"""
+        wx.PyCommandEvent.__init__(self, etype, eid)
+
 wizEVT_DELETEPROGRAM = wx.NewEventType()
 EVT_DELETEPROGRAM = wx.PyEventBinder(wizEVT_DELETEPROGRAM, 1)
 class DeleteProgram(wx.PyCommandEvent):
@@ -59,6 +67,26 @@ class DeleteProgram(wx.PyCommandEvent):
         self.program = program
         self.index = index
 
+        wizEVT_DELETEPROGRAM = wx.NewEventType()
+        EVT_DELETEPROGRAM = wx.PyEventBinder(wizEVT_DELETEPROGRAM, 1)
+        class DeleteProgram(wx.PyCommandEvent):
+            """Event to signal that a program should be deleted"""
+            def __init__(self, etype, eid, program=None, index=-1):
+                """Creates the event object"""
+                wx.PyCommandEvent.__init__(self, etype, eid)
+                self.program = program
+                self.index = index
+        
+                wizEVT_DELETEPROGRAM = wx.NewEventType()
+                EVT_DELETEPROGRAM = wx.PyEventBinder(wizEVT_DELETEPROGRAM, 1)
+                class DeleteProgram(wx.PyCommandEvent):
+                    """Event to signal that a program should be deleted"""
+                    def __init__(self, etype, eid, program=None, index=-1):
+                        """Creates the event object"""
+                        wx.PyCommandEvent.__init__(self, etype, eid)
+                        self.program = program
+                        self.index = index
+                
 wizEVT_DOWNLOADCOMPLETE = wx.NewEventType()
 EVT_DOWNLOADCOMPLETE = wx.PyEventBinder(wizEVT_DOWNLOADCOMPLETE, 1)
 class DownloadComplete(wx.PyCommandEvent):

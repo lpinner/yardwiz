@@ -138,6 +138,10 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             twidth = self.GetTextExtent(values[j])[0]+10
 
             self.SetColumnWidth(j,max([cwidth,hwidth,twidth]))
+        
+    def DeleteItem(self,item):
+        wx.ListCtrl.DeleteItem(self,item)
+        del self.itemDataMap[self.itemDataMap.keys()[item]]
 
     def SetStringItem(self,item,col,value):
         self.itemDataMap[self.itemDataMap.keys()[item]][col]=value

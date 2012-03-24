@@ -481,6 +481,9 @@ class ThreadedDeleter( ThreadedUtility ):
                 evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1,program,idx)
                 self.PostEvent(evt)
 
+        evt = DeleteComplete(wizEVT_DELETECOMPLETE, -1)
+        self.PostEvent(evt)
+
 class ThreadedDownloader( ThreadedUtility ):
     def __init__(self, parent, device, programs, evtPlay, evtStop):
         ThreadedUtility.__init__( self, parent )
