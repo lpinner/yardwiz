@@ -10,6 +10,8 @@ quicklistingtooltip='Note: enabling quick listing will show any files that have 
 fadetooltip='Use fade in/out effects.'
 logfiletooltip='The path of the current log file. Changing this has no effect.'
 vlctooltip='For more, see: http://wiki.videolan.org/VLC_command-line_help'
+streamtooltip='Using a temporary file when playing in VLC allows you to pause and rewind.'
+
 configspec={
     'Settings':{
         'device':['Device', 'str', devicetooltip],
@@ -19,6 +21,7 @@ configspec={
         'tsformat':['Default to TS format for downloads', 'bool',tstooltip],
         'postdownloadcommand':['Post download command', 'str', postdownloadtooltip],
         'vlcargs':['VLC commandline arguments', 'str',vlctooltip],
+        'tempfile':['Use temp file when playing', 'bool',streamtooltip],
         'display_dateformat':['Date format for display','str', dateformattooltip],
         'filename_dateformat':['Date format for filenames', 'str', dateformattooltip],
         'confirmdelete':['Confirm delete', 'bool'],

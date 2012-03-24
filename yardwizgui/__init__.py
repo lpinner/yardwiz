@@ -74,6 +74,7 @@ class GUI( gui.GUI ):
         self._downloading=False
         self.player=None
         self.total=0
+        self.tempfile=False
         self.schedulelist=[]
         self.schedulequeue=Queue.Queue()
         self.scheduletime=None
@@ -368,6 +369,7 @@ class GUI( gui.GUI ):
         logger.debug('VLC path: %s'%vlcexe)
         if vlcexe:
             self.vlcargs=self.config.get('Settings','vlcargs').split()
+            self.tempfile=self.config.getboolean('Settings','tempfile')
             self.btnVLC.Disable()
             self.mitStream.Enable()
             pos=-1
@@ -379,6 +381,7 @@ class GUI( gui.GUI ):
         else:
             if 'vlcargs' in self.configspec['Settings']:
                 del self.configspec['Settings']['vlcargs']
+                del self.configspec['Settings']['tempfile']
             self.btnVLC.Hide()
             self.mnuPrograms.DeleteItem(self.mitStream)
 
@@ -1150,7 +1153,7 @@ class GUI( gui.GUI ):
             self._ShowTab(self.idxLog)
             return
         self.mitStream.Enable(False)
-        tp=ThreadedStreamPlayer(self, self.device, program, self.StopStreaming, self.vlcargs)
+        tp=ThreadedStreamPlayer(self, self.device, program, self.StopStreaming, self.vlcargs, self.tempfile)
         
     def _UpdateProgram(self,event):
         idx=self.lstPrograms.FindItemData(-1,event.index)

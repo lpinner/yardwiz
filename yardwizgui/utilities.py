@@ -868,7 +868,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         except:pass
 
 class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
-    def __init__( self, parent, device, program, Stop, args):
+    def __init__( self, parent, device, program, Stop, args, usetempfile=False):
         ThreadedUtility.__init__( self, parent )
         wx.EvtHandler.__init__( self )
 
@@ -876,6 +876,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         self.device=device
         self.program=copy.copy(program)
         self.args=args
+        self.stream=not usetempfile
         self.Play=Event()
         self.Play.set()
         self.Stop=Stop
@@ -883,10 +884,9 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         self.td=None
         self.tp=None
         
-        #self.tmpfile=tempfile.NamedTemporaryFile(delete=False )
-        #self.program['filename']=self.tmpfile.name
-        self.program['filename']=tempfile.mktemp(suffix='.ts')
-        logger.debug(self.program['filename'])
+        if not self.stream:
+            self.program['filename']=tempfile.mktemp(suffix='.ts')
+            logger.debug(self.program['filename'])
         
         self.Bind(EVT_DOWNLOADCOMPLETE, self._ondownloadcomplete)
         self.Bind(EVT_LOG, self._onlog)
@@ -897,17 +897,67 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
 
     def stop(self):
         self.Stop.set()
-        try:self.td.join()
-        except:pass
-        try:self.tp.join()
-        except:pass
-        try:delete(self.program['filename'])
-        except:self.Log('Error: Unable to delete %s'%self.program['filename'],logging.ERROR)
-        evt = StreamComplete(wizEVT_STREAMCOMPLETE, -1)
-        self.PostEvent(evt)
+        if not self.stream:
+            try:self.td.join()
+            except:pass
+            try:self.tp.join()
+            except:pass
+            try:delete(self.program['filename'])
+            except:self.Log('Error: Unable to delete %s'%self.program['filename'],logging.ERROR)
+            evt = StreamComplete(wizEVT_STREAMCOMPLETE, -1)
+            self.PostEvent(evt)
+        else:
+            trc=[]
+            msg=[]
+            try:
+                exit_code=self.wizproc.poll()
+                if exit_code is None:
+                    try:kill(self.wizproc)
+                    except:pass
+                    exit_code=self.wizproc.poll()
+                if exit_code:
+                    msg+=[self.wizproc.stderr.read()]
+            except Exception as err:
+                trc+=[str(err)]
+            try:
+                exit_code=self.vlcproc.poll()
+                if exit_code is None:
+                    try:kill(self.vlcproc)
+                    except:pass
+                    exit_code=self.vlcproc.poll()
+                if exit_code:
+                    msg+=[self.vlcproc.stderr.read()]
+            except Exception as err:
+                trc+=[str(err)]
+                    
+            evt = StreamComplete(wizEVT_STREAMCOMPLETE, -1)
+            self.PostEvent(evt)
+            return [msg,trc]
+                    
 
     def run(self):
-        self.td= ThreadedDownloader( self, self.device, [self.program], self.Play, self.Stop)
+        if not self.stream:
+            self.td= ThreadedDownloader( self, self.device, [self.program], self.Play, self.Stop)
+        else:
+            cmd=[wizexe,'--stdout','--all','-R','--BWName',self.program['index']]+self.device.args
+            try:
+                self.wizproc=subproc(cmd)
+                cmd=[vlcexe,'--no-video-title','-']
+                self.vlcproc = subproc(cmd,stdin=self.wizproc.stdout)
+                while self.vlcproc.poll() is None:
+                    if self.wizproc.poll():raise Exception('getWizPnP is no longer running!')
+                    if self.Stop.isSet():
+                        self.stop()
+                        return
+                    else:time.sleep(1)
+                self.stop()
+            except Exception as err:
+                msg,trc=self.stop()
+                trc=[str(err)]+trc
+                self.Log('Error, unable to stream %s.'%self.program['title'],logging.ERROR)
+                if msg:self.Log('\n'.join(msg),logging.ERROR)
+                if trc:logger.debug('\n'.join(trc))
+            
 
     def _ondownloadcomplete(self,event):
         pass
@@ -1223,7 +1273,8 @@ def subproc(cmd,stdin=False):
     logger.debug(subprocess.list2cmdline(cmd))
     logger.debug(str(cmd))
     if stdin:
-        proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        if type(stdin) is not file:stdin=subprocess.PIPE
+        proc=subprocess.Popen(cmd, stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
     else:
         if 'pythonw.exe' in sys.executable:
             proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
