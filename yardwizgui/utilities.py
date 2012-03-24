@@ -883,7 +883,12 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         self.Stop.clear()
         self.td=None
         self.tp=None
-        
+
+        v=getwizpnpversion()
+        if self.stream and v<[0,5,3]:
+            self.stream=False
+            self.Log('Unable to play recordings without a tempfile with getWizPnP<0.5.3')
+            
         if not self.stream:
             self.program['filename']=tempfile.mktemp(suffix='.ts')
             logger.debug(self.program['filename'])
@@ -1223,6 +1228,18 @@ def filesize(path):
 def frozen():
     return hasattr(sys, "frozen")
 
+def getwizpnpversion():
+    version=[0,0,0]
+    cmd = [wizexe,'--version']
+    try:
+        proc=subproc(cmd)
+        exit_code=proc.wait()
+        stdout,stderr=proc.communicate()
+        #version=[int(x) for x in stdout.strip()[0:5].split('.')]
+        version=[int(x) for x in stderr.strip()[0:5].split('.')]
+    except Exception as err:
+        print str(err)
+    return version
 def kill(proc):
     if iswin:
         #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
