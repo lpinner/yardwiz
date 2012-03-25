@@ -372,16 +372,22 @@ class GUI( gui.GUI ):
         logger.debug('VLC path: %s'%vlcexe)
         if vlcexe:
             self.vlcargs=self.config.get('Settings','vlcargs').split()
-            self.tempfile=self.config.getboolean('Settings','tempfile')
             self.btnVLC.Disable()
-            self.mitStream.Enable()
-            pos=-1
-            for pos,mit in enumerate(self.mnuPrograms.GetMenuItems()):
-                if mit.Label == self.mitStream.Label:break                
-            if pos>-1 and not self.mnuPrograms.FindItemByPosition(pos-1).IsSeparator():
-                self.mnuPrograms.InsertSeparator(pos)
+            v=getwizpnpversion()
+            if v<[0,5,3]:
+                del self.configspec['Settings']['tempfile']
+                self.tempfile=False
+            else:
+                self.tempfile=self.config.getboolean('Settings','tempfile')
+                self.mitStream.Enable()
+                pos=-1
+                for pos,mit in enumerate(self.mnuPrograms.GetMenuItems()):
+                    if mit.Label == self.mitStream.Label:break                
+                if pos>-1 and not self.mnuPrograms.FindItemByPosition(pos-1).IsSeparator():
+                    self.mnuPrograms.InsertSeparator(pos)
             
         else:
+            self.tempfile=False
             if 'vlcargs' in self.configspec['Settings']:
                 del self.configspec['Settings']['vlcargs']
                 del self.configspec['Settings']['tempfile']
