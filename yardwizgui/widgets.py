@@ -128,20 +128,22 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
         wx.ListCtrl.InsertColumn(self,*args,**kwargs)
         self.SetColumnCount(self.GetColumnCount())
 
-    def Append(self,values):
-        self.itemDataMap[self.GetItemCount()]=values
-        wx.ListCtrl.Append(self,values)
+    def Append(self,items):
+        for itemdata in items:
+            values=items[itemdata]
+            self.itemDataMap[itemdata]=values
+            wx.ListCtrl.Append(self,values)
 
-        for j in range(self.GetColumnCount()):
-            cwidth=self.GetColumnWidth(j)
-            hwidth=self.HeaderWidths[j]
-            twidth = self.GetTextExtent(values[j])[0]+10
-
-            self.SetColumnWidth(j,max([cwidth,hwidth,twidth]))
+            for j in range(self.GetColumnCount()):
+                cwidth=self.GetColumnWidth(j)
+                hwidth=self.HeaderWidths[j]
+                twidth = self.GetTextExtent(str(values[j]))[0]+10
+    
+                self.SetColumnWidth(j,max([cwidth,hwidth,twidth]))
         
     def DeleteItem(self,item):
+        del self.itemDataMap[self.GetItemData(item)]
         wx.ListCtrl.DeleteItem(self,item)
-        del self.itemDataMap[self.itemDataMap.keys()[item]]
 
     def SetStringItem(self,item,col,value):
         self.itemDataMap[self.itemDataMap.keys()[item]][col]=value
@@ -235,7 +237,9 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
         for sorter in CustomSorters:  #Assume it's a float or date and fall back to the default sorter if this fails
             try:return sorter(key1, key2)
             except: pass
-        return self.DefaultSorter(key1, key2)
+        try:return self.DefaultSorter(key1, key2)
+        except:
+            raise
 
     def SetSortEnabled(self, enabled=True):
         if enabled:

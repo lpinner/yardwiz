@@ -196,7 +196,7 @@ class GUI( gui.GUI ):
             self.lstPrograms.SetStringItem(lidx,4,program['length'])
         else:
             lidx=self.lstPrograms.GetItemCount()
-            self.lstPrograms.Append([program['title'],program['channel'],display_date,program['size'],program['length']])
+            self.lstPrograms.Append({iidx:[program['title'],program['channel'],display_date,program['size'],program['length']]})
             self.lstPrograms.SetItemData(lidx,iidx)
             self.total+=program['size']
 
@@ -589,7 +589,7 @@ class GUI( gui.GUI ):
         prognames=[]
 
         while idx != -1:
-            lidx = self.lstPrograms.GetItem(idx).Data
+            lidx = self.lstPrograms.GetItemData(idx)
             pidx = self.programs.keys()[lidx]
             program = self.programs[pidx]
 
@@ -646,19 +646,19 @@ class GUI( gui.GUI ):
 
     def _DeleteProgram(self,event):
         if event.index>-1:
-            idx=self.lstPrograms.FindItemData(-1,event.index)
-            if idx>-1:
+            lidx=self.lstPrograms.FindItemData(-1,event.index)
+            if lidx>-1:
                 pidx=self.programs.keys()[event.index]
                 if pidx not in self.deleted:self.deleted.append(pidx)
-                self.lstPrograms.DeleteItem(idx)
+                self.lstPrograms.DeleteItem(lidx)
                 self.total-=self.programs[pidx]['size']
                 if not self._downloading:
                     self.StatusBar.SetFieldsCount(1)
                     self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1)])
-            idx=self.lstQueue.FindItemData(-1,event.index)
-            if idx>-1:
+            qidx=self.lstQueue.FindItemData(-1,event.index)
+            if qidx>-1:
                 del self.queue[self.queue.index(pidx)]
-                self.lstQueue.DeleteItem(idx)
+                self.lstQueue.DeleteItem(qidx)
 
     def _Discover(self):
         self._Log('Searching for Wizzes.')
