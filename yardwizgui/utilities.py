@@ -968,7 +968,8 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
             
 
     def _ondownloadcomplete(self,event):
-        pass
+        if event.stopped:self.stop()
+        #pass
 
     def _onplaycomplete(self,event):
         self.stop()
