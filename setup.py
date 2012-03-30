@@ -253,7 +253,8 @@ elif 'py2exe' in sys.argv:
                             }]
     setupargs['options']={"py2exe":
                             {'excludes':['xml','ssl','httplib','urllib','xml','_ssl','email','doctest','pdb','unittest','inspect','pyreadline'],
-                            'compressed':True
+                             'includes':['psutil'],
+                             'compressed':True
                             }
                         }
     setupargs['data_files']=[('',['getwizpnp.exe']),

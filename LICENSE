@@ -23,6 +23,10 @@ http://creativecommons.org/licenses/sampling+/1.0
 The python module "ordereddict" is copyright (c) 2009 Raymond Hettinger (http://pypi.python.org/pypi/ordereddict) and is licensed under the MIT license.
 http://www.opensource.org/licenses/mit-license.php
 
+[psutil]
+The compiled version of YARDWiz (Windows) includes the psutil python package which is copyright (c) 2009, Jay Loden, Dave Daeschler, Giampaolo Rodola (http://code.google.com/p/psutil) and is licensed under the BSD license.
+http://code.google.com/p/psutil/source/browse/trunk/LICENSE http://www.opensource.org/licenses/bsd-license.php
+
 [py2exe]
 The class yardwiz.Stderr is modified from py2exe's boot_common.Stderr which is copyright (c) 2000-2008 Thomas Heller, Mark Hammond, Jimmy Retzlaff (http://www.py2exe.org) and is licensed under the MIT license.
 http://www.opensource.org/licenses/mit-license.php
