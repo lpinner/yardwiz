@@ -129,10 +129,10 @@ if 'linux' in sys.platform and 'install' in sys.argv:
         import wx
         v=wx.VERSION
         if not v[0]>=2 and v[1]>=8:
-            print 'wxPython v2.8+ is required, YARDWiz setup can not continue. Install wxPython 2.8 or later and then try again.'
+            print 'wxPython v2.8+ is required, YARDWiz setup can not continue. Install wxPython 2.8 (python-wxgtk2.8) or later and then try again.'
             sys.exit(1)
     except:
-        print 'wxPython is not installed or is not configured correctly, YARDWiz setup can not continue. Install wxPython and then try again.'
+        print 'wxPython is not installed or is not configured correctly, YARDWiz setup can not continue. Install wxPython 2.8 (python-wxgtk2.8)and then try again.'
         sys.exit(1)
 
     setupargs['data_files']=[('share/pixmaps',['yardwizgui/icons/yardwiz.png']),('share/applications',['yardwiz.desktop'])]
@@ -276,6 +276,8 @@ if 'linux' in sys.platform and 'install' in sys.argv:
     print 'Changing mode of %s/share/applications/yardwiz.desktop to 755'%data
     os.chmod(os.path.join(data,'share/applications/yardwiz.desktop'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
     print 'Changing mode of %s/share/pixmaps/yardwiz.png to 744'%data
+    if prefix!=data:
+        os.symlink(os.path.join(data,'share/applications/yardwiz.desktop'),os.path.join(prefix,'share/applications/yardwiz.desktop'))
     os.chmod(os.path.join(data,'share/pixmaps/yardwiz.png'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH)
     if os.path.exists('%s/bin/getWizPnP'%data):
         print 'Changing mode of %s/bin/getWizPnP to 755'%data
