@@ -807,12 +807,12 @@ class GUI( gui.GUI ):
         
     def _Enable(self):
         self.Stop.clear()
-        self.btnConnect.Enable( True )
-        self.cbxDevice.Enable( True )
         self.mitDelete.Enable( True )
         self.lstPrograms.SetSortEnabled(True)
         self.mitCheck.Enable( True )
         if not self._downloading:
+            self.btnConnect.Enable( True )
+            self.cbxDevice.Enable( True )
             self.lblProgressText.SetLabelText('')
             self.lblProgressText.Hide()
             self.gaugeProgressBar.Hide()

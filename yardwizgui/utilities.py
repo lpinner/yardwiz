@@ -1246,6 +1246,7 @@ def getwizpnpversion():
         print str(err)
     return version
 def kill(proc):
+    
     if iswin:
         #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
         CTRL_C_EVENT = 0
@@ -1259,30 +1260,36 @@ def kill(proc):
             #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
             #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
             try:
-                cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
-                killproc=subproc(cmd)
-                exit_code=killproc.wait()
-            except WindowsError,err:
+                parent = psutil.Process(proc.pid)
+                for child in parent.get_children():
+                    child.kill()
+                parent.kill()
+            except ImportError:
                 try:
-                    cmd = ['taskkill','/F','/t','/PID',str(proc.pid)]
+                    cmd = ['pskill','/accepteula', '-t',str(proc.pid)]
                     killproc=subproc(cmd)
                     exit_code=killproc.wait()
                 except WindowsError,err:
-                    if err.winerror==2:
-                        msg= '%s\nYour version of Windows does not include the "taskkill" command, '
-                        msg+='you will need to end all GetWizPnP.exe processess manually using '
-                        msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
-                        msg+='If you wish to make use of the stop and pause functionality, download '
-                        msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
-                        msg+='and copy PsKill.exe to the %s directory\n%s'
-                        raise WindowsError,msg%('#'*10,APPNAME,'#'*10)
-                    else:
-                        raise
+                    try:
+                        cmd = ['taskkill','/F','/t','/PID',str(proc.pid)]
+                        killproc=subproc(cmd)
+                        exit_code=killproc.wait()
+                    except WindowsError,err:
+                        if err.winerror==2:
+                            msg= '%s\nYour version of Windows does not include the "taskkill" command, '
+                            msg+='you will need to end all GetWizPnP.exe processess manually using '
+                            msg+='the Windows Task Manager (Ctrl-Alt-Delete).\n\n'
+                            msg+='If you wish to make use of the stop and pause functionality, download '
+                            msg+='PsTools.zip from http://technet.microsoft.com/en-us/sysinternals/bb896683 '
+                            msg+='and copy PsKill.exe to the %s directory\n%s'
+                            raise WindowsError,msg%('#'*10,APPNAME,'#'*10)
+                        else:
+                            raise
     else:
         proc.send_signal(signal.SIGINT)
     time.sleep(0.5)
     logger.debug('Killed process %s, %s'%(proc.pid,proc.poll()))
-
+    
 def license():
     try:
         import __license__
