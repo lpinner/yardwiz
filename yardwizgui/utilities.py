@@ -1260,7 +1260,11 @@ def kill(proc):
             #NOTE: taskkill.exe is NOT available in WinNT, Win2K or WinXP Home Edition.
             #      It is available on WinXP Pro, Win 7 Pro , no idea about Vista or Win 7 starter/basic/home
             try:
-                parent = psutil.Process(proc.pid)
+                import psutil
+                try:parent = psutil.Process(proc.pid)
+                except: 
+                    logger.debug('No such process %s'%(proc.pid))
+                    return
                 for child in parent.get_children():
                     child.kill()
                 parent.kill()
