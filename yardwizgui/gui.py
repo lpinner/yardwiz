@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Jun 30 2011)
+## Python code generated with wxFormBuilder (version Mar 17 2012)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -50,6 +50,7 @@ class GUI ( wx.Frame ):
 		
 		bSizer81.Add( self.btnConnect, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_LEFT|wx.ALL, 5 )
 		
+		
 		bSizer4.Add( bSizer81, 0, wx.EXPAND, 0 )
 		
 		self.lstPrograms = SortableListCtrl( self, wx.ID_ANY, wx.DefaultPosition, wx.DefaultSize, wx.LC_REPORT )
@@ -92,6 +93,7 @@ class GUI ( wx.Frame ):
 		
 		bSizer7.Add( self.txtLog, 1, wx.EXPAND, 0 )
 		
+		
 		self.nbtabLog.SetSizer( bSizer7 )
 		self.nbtabLog.Layout()
 		bSizer7.Fit( self.nbtabLog )
@@ -103,6 +105,7 @@ class GUI ( wx.Frame ):
 		self.txtInfo.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer8.Add( self.txtInfo, 1, wx.EXPAND, 0 )
+		
 		
 		self.nbtabInfo.SetSizer( bSizer8 )
 		self.nbtabInfo.Layout()
@@ -131,6 +134,7 @@ class GUI ( wx.Frame ):
 		
 		
 		bSizer5.Add( self.lstQueue, 1, wx.EXPAND, 5 )
+		
 		
 		self.nbtabQueue.SetSizer( bSizer5 )
 		self.nbtabQueue.Layout()
@@ -180,6 +184,7 @@ class GUI ( wx.Frame ):
 		
 		bSizer12.Add( self.btnVLC, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.LEFT|wx.RIGHT|wx.TOP, 5 )
 		
+		
 		self.m_panel4.SetSizer( bSizer12 )
 		self.m_panel4.Layout()
 		bSizer12.Fit( self.m_panel4 )
@@ -207,12 +212,15 @@ class GUI ( wx.Frame ):
 		self.btnExit = wx.Button( self.m_panel5, wx.ID_ANY, u"Exit", wx.DefaultPosition, wx.DefaultSize, wx.BU_EXACTFIT )
 		self.bProgressSizer.Add( self.btnExit, 0, wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT|wx.ALL|wx.RIGHT, 5 )
 		
+		
 		self.m_panel5.SetSizer( self.bProgressSizer )
 		self.m_panel5.Layout()
 		self.bProgressSizer.Fit( self.m_panel5 )
 		self.bSizer.Add( self.m_panel5, 1, wx.EXPAND, 5 )
 		
+		
 		bSizer4.Add( self.bSizer, 0, wx.EXPAND, 5 )
+		
 		
 		self.SetSizer( bSizer4 )
 		self.Layout()
@@ -484,6 +492,7 @@ class ConfirmDelete ( wx.Dialog ):
 		self.lblQuestion.Wrap( -1 )
 		fgSizer2.Add( self.lblQuestion, 0, wx.ALIGN_CENTER_VERTICAL|wx.EXPAND|wx.ALL, 5 )
 		
+		
 		fgSizer4.Add( fgSizer2, 1, wx.EXPAND, 5 )
 		
 		self.chkShowAgain = wx.CheckBox( self, wx.ID_ANY, u"Do not ask next time", wx.DefaultPosition, wx.DefaultSize, 0 )
@@ -499,7 +508,9 @@ class ConfirmDelete ( wx.Dialog ):
 		self.DialogButtonsNo = wx.Button( self, wx.ID_NO )
 		DialogButtons.AddButton( self.DialogButtonsNo )
 		DialogButtons.Realize();
+		
 		fgSizer4.Add( DialogButtons, 1, wx.ALIGN_RIGHT|wx.EXPAND|wx.ALL, 5 )
+		
 		
 		self.SetSizer( fgSizer4 )
 		self.Layout()
@@ -550,27 +561,32 @@ class AboutDialog ( wx.Dialog ):
 		self.lblTitle.Wrap( 250 )
 		self.lblTitle.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 90, 92, False, wx.EmptyString ) )
 		
-		bSizer5.Add( self.lblTitle, 0, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, 5 )
+		bSizer5.Add( self.lblTitle, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.LEFT|wx.RIGHT, 5 )
 		
 		self.lblVersion = wx.StaticText( self, wx.ID_ANY, u"Version", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.lblVersion.Wrap( -1 )
 		bSizer5.Add( self.lblVersion, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
+		self.lblGetWizPnPversion = wx.StaticText( self, wx.ID_ANY, u"GetwizPnP version", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
+		self.lblGetWizPnPversion.Wrap( -1 )
+		bSizer5.Add( self.lblGetWizPnPversion, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
+		
 		self.lblCopyright = wx.StaticText( self, wx.ID_ANY, u"Copyright", wx.DefaultPosition, wx.DefaultSize, wx.ALIGN_CENTRE )
 		self.lblCopyright.Wrap( -1 )
 		self.lblCopyright.SetFont( wx.Font( wx.NORMAL_FONT.GetPointSize(), 70, 93, 91, False, wx.EmptyString ) )
 		
-		bSizer5.Add( self.lblCopyright, 0, wx.ALIGN_CENTER|wx.LEFT|wx.RIGHT, 5 )
+		bSizer5.Add( self.lblCopyright, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.lblDescription = wx.StaticText( self, wx.ID_ANY, u"YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP program. ", wx.DefaultPosition, wx.Size( 250,-1 ), wx.ALIGN_CENTRE )
 		self.lblDescription.Wrap( 250 )
 		bSizer5.Add( self.lblDescription, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
 		self.urlWebpage = wx.HyperlinkCtrl( self, wx.ID_ANY, u"YARDWiz Website", u"http://code.google.com/p/yardwiz", wx.DefaultPosition, wx.DefaultSize, wx.HL_ALIGN_CENTRE|wx.HL_DEFAULT_STYLE )
-		bSizer5.Add( self.urlWebpage, 0, wx.ALIGN_CENTER|wx.EXPAND|wx.LEFT|wx.RIGHT, 5 )
+		bSizer5.Add( self.urlWebpage, 0, wx.ALIGN_CENTER|wx.ALL|wx.EXPAND, 5 )
 		
 		self.btnLicense = wx.Button( self, wx.ID_ANY, u"License...", wx.DefaultPosition, wx.DefaultSize, wx.NO_BORDER|wx.NO_BORDER )
 		bSizer5.Add( self.btnLicense, 0, wx.BOTTOM|wx.EXPAND|wx.TOP, 5 )
+		
 		
 		self.SetSizer( bSizer5 )
 		self.Layout()
@@ -611,7 +627,9 @@ class LicenseDialog ( wx.Dialog ):
 		self.m_sdbSizer2OK = wx.Button( self, wx.ID_OK )
 		m_sdbSizer2.AddButton( self.m_sdbSizer2OK )
 		m_sdbSizer2.Realize();
+		
 		bSizer6.Add( m_sdbSizer2, 1, wx.ALIGN_RIGHT|wx.EXPAND, 5 )
+		
 		
 		self.SetSizer( bSizer6 )
 		self.Layout()
@@ -648,7 +666,9 @@ class SettingsDialog ( wx.Dialog ):
 		self.sdbSaveCancelCancel = wx.Button( self, wx.ID_CANCEL )
 		sdbSaveCancel.AddButton( self.sdbSaveCancelCancel )
 		sdbSaveCancel.Realize();
+		
 		sizer.Add( sdbSaveCancel, 0, wx.ALIGN_RIGHT|wx.ALL|wx.EXPAND, 5 )
+		
 		
 		self.SetSizer( sizer )
 		self.Layout()
@@ -716,7 +736,9 @@ class SchedulerDialog ( wx.Dialog ):
 		
 		bSizer10.Add( self.btnClose, 0, wx.ALIGN_CENTER|wx.ALL, 5 )
 		
+		
 		bSizer9.Add( bSizer10, 0, wx.ALIGN_CENTER|wx.EXPAND, 5 )
+		
 		
 		self.SetSizer( bSizer9 )
 		self.Layout()

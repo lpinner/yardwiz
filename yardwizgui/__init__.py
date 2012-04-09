@@ -1512,6 +1512,7 @@ class AboutDialog( gui.AboutDialog ):
 
         txtlicense=license()
         txtversion=version()[0]
+        txtgetwizpnp=getwizpnpversion(True)
 
         sxmin,symin=centrepos(self,parent)
         self.SetPosition((sxmin,symin))
@@ -1519,6 +1520,7 @@ class AboutDialog( gui.AboutDialog ):
         self.LicenseDialog=LicenseDialog(self)
         self.LicenseDialog.txtLicense.SetValue(txtlicense)
         self.lblVersion.SetLabel('Version: '+txtversion)
+        self.lblGetWizPnPversion.SetLabel('GetWizPnP version: '+txtgetwizpnp)
         self.lblCopyright.SetLabel(txtlicense.split('\n')[0].strip())
 
         self.ShowModal()

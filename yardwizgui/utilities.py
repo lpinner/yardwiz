@@ -1233,8 +1233,9 @@ def filesize(path):
 def frozen():
     return hasattr(sys, "frozen")
 
-def getwizpnpversion():
-    version=[0,0,0]
+def getwizpnpversion(as_string=False):
+    if as_string :version='<=0.4.3a'
+    else:version=[0,0,0]
     cmd = [wizexe,'--version']
     try:
         proc=subproc(cmd)
@@ -1242,6 +1243,7 @@ def getwizpnpversion():
         stdout,stderr=proc.communicate()
         #version=[int(x) for x in stdout.strip()[0:5].split('.')]
         version=[int(x) for x in stderr.strip()[0:5].split('.')]
+        if as_string:version=stderr.strip()
     except Exception as err:
         print str(err)
     return version
