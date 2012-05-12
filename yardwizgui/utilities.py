@@ -48,7 +48,7 @@ class ThreadedUtility( Thread ):
     def Log(self,msg,*args,**kwargs):
         evt = Log(wizEVT_LOG, -1, msg,*args,**kwargs)
         self.PostEvent(evt)
-    
+
     def PostEvent(self,evt):
         try:wx.PostEvent(self.parent,evt)
         except Exception as err:
@@ -485,7 +485,7 @@ class ThreadedDeleter( ThreadedUtility ):
         self.PostEvent(evt)
 
 class ThreadedDownloader( ThreadedUtility ):
-    def __init__(self, parent, device, programs, evtPlay, evtStop):
+    def __init__(self, parent, device, programs, evtPlay, evtStop,retries=1,deletefail=1):
         ThreadedUtility.__init__( self, parent )
 
         self.parent=parent
@@ -496,6 +496,8 @@ class ThreadedDownloader( ThreadedUtility ):
         self.Play.set()
         self.Stop.clear()
         self.proc=None
+        self.retries=retries
+        self.deletefail=deletefail
 
         self.total=0
         for program in self.programs:
@@ -513,7 +515,7 @@ class ThreadedDownloader( ThreadedUtility ):
             self._updateprogress({},'Downloading %s...'%program['title'])
             self.Play.set()
             self.Stop.clear()
-            #raise Exception('Debug!')
+            self.attempts=0
             self._download(program)
             self.total-=program['size']
             if self.Stop.isSet():break
@@ -531,6 +533,8 @@ class ThreadedDownloader( ThreadedUtility ):
         else:return
 
     def _download(self,program):
+        self.attempts+=1
+
         self.Log('Downloading %s...'%program['title'])
 
         fd=program['filename'].encode(filesysenc)
@@ -597,6 +601,7 @@ class ThreadedDownloader( ThreadedUtility ):
                         return
                     elif self.Play.isSet():
                         break
+                self.attempts=0
                 self._download(program)
                 return
             else: #We're still downloading, update the progress
@@ -644,7 +649,10 @@ class ThreadedDownloader( ThreadedUtility ):
             self.Log('Error, unable to download %s.'%program['filename'],logging.ERROR)
             self.Log('getWizPnP STDOUT:'+stdout,logging.ERROR)
             self.Log('getWizPnP STDERR:'+stderr,logging.ERROR)
-            if not 'Copy failed: Forbidden' in stderr:
+            if self.attempts<self.retries:
+                self.Log('Retrying (attempt %s).'%(self.attempts+1))
+                return self._download(program)
+            if not 'Copy failed: Forbidden' in stderr and self.deletefail:
                 try:delete(program['filename'])
                 except:self.Log('Error: Unable to delete %s'%program['filename'],logging.ERROR)
             self._downloadcomplete(index=program['index'],stopped=True)
@@ -792,7 +800,7 @@ class ThreadedPlayer( ThreadedUtility ):
         return data.strip('>').strip()=='1'
 
 class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
-    def __init__( self, parent, startDateTime, prgQueue):
+    def __init__( self, parent, startDateTime, prgQueue,retries,deletefail):
         ThreadedUtility.__init__( self, parent )
         wx.EvtHandler.__init__( self )
 
@@ -803,6 +811,8 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         self.evtPlay=Event()
         self.downloading=False
         self.timeremaining=None
+        self.retries=retries
+        self.deletefail=deletefail
 
         self.Bind(EVT_DOWNLOADCOMPLETE, self._ondownloadcomplete)
         self.Bind(EVT_LOG, self._onlog)
@@ -838,7 +848,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         while not self.Queue.empty():
             if self.evtStop.is_set():return
             program = self.Queue.get()
-            td= ThreadedDownloader( self, program['device'], [program], self.evtPlay, self.evtStop)
+            td= ThreadedDownloader( self, program['device'], [program], self.evtPlay, self.evtStop,self.retries,self.deletefail)
             td.join()#Block until  download is complete
             if self.evtStop.is_set():return
             self.Queue.task_done()
@@ -1268,8 +1278,10 @@ def kill(proc):
                     logger.debug('No such process %s'%(proc.pid))
                     return
                 for child in parent.get_children():
-                    child.kill()
-                parent.kill()
+                    try:child.kill()
+                    except:pass
+                try:parent.kill()
+                except:pass
             except ImportError:
                 try:
                     cmd = ['pskill','/accepteula', '-t',str(proc.pid)]

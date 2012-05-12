@@ -382,16 +382,19 @@ class GUI( gui.GUI ):
 
             v=getwizpnpversion()
             if v<[0,5,3]:
-                del self.configspec['Settings']['tempfile']
-                self.tempfile=False
+                try:del self.configspec['Settings']['tempfile']
+                except:pass
+                self.tempfile=True
             else:
                 self.tempfile=self.config.getboolean('Settings','tempfile')
             
         else:
             self.tempfile=False
             if 'vlcargs' in self.configspec['Settings']:
-                del self.configspec['Settings']['vlcargs']
-                del self.configspec['Settings']['tempfile']
+                try:del self.configspec['Settings']['vlcargs']
+                except:pass
+                try:del self.configspec['Settings']['tempfile']
+                except:pass
             self.btnVLC.Hide()
             self.mnuPrograms.DeleteItem(self.mitStream)
 
@@ -420,6 +423,10 @@ class GUI( gui.GUI ):
            or not os.path.exists(self.downloadcompletesound):
             self.downloadcompletesound=os.path.join(data_path(),'sounds','downloadcomplete.wav')
             self.config.set('Sounds','downloadcomplete', self.downloadcompletesound)
+
+        #postdownload sound
+        self.retries=self.config.getint('Settings','retries')
+        self.deletefail=self.config.getboolean('Settings','delete')
 
     def _CheckWiz(self):
         if self._connecting or self._deleting or self._downloading:return
@@ -750,7 +757,7 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( False )
         self.mitDownload.Enable( False )
         self._downloading=True
-        self.ThreadedDownloader=ThreadedDownloader(self,self.device,programs,self.Play,self.Stop)
+        self.ThreadedDownloader=ThreadedDownloader(self,self.device,programs,self.Play,self.Stop, self.retries,self.deletefail)
 
     def _DownloadComplete(self,index,stopped):
         pidx=0
@@ -1062,7 +1069,7 @@ class GUI( gui.GUI ):
 
             if self.ThreadedScheduler is None:
                 self.scheduletime=scheduletime
-                self.ThreadedScheduler = ThreadedScheduler(self, scheduletime,self.schedulequeue)
+                self.ThreadedScheduler = ThreadedScheduler(self, scheduletime,self.schedulequeue,self.retries,self.deletefail)
 
             elif scheduletime!=self.scheduletime:
                 self.scheduletime=scheduletime

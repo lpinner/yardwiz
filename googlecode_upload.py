@@ -99,12 +99,12 @@ def get_svn_auth_via_svn(project_name, config_dir, realm):
   try:
     from svn.core import SVN_AUTH_CRED_SIMPLE, svn_config_read_auth_data
     from svn.core import SubversionException
-    from svn.core import svn_subr_version
+    from svn.core import SVN_VER_MINOR,SVN_VER_MAJOR
   except ImportError:
     raise SvnAuthError
 
   # svn_config_read_auth_data Python binding wasn't fixed until 1.5.
-  if svn_subr_version().minor < 5:
+  if [SVN_VER_MAJOR,SVN_VER_MINOR] < [1,5]:
     raise SvnAuthError
 
   # auth may be none even if no exception is raised, e.g. if config_dir does

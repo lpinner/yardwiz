@@ -11,6 +11,7 @@ fadetooltip='Use fade in/out effects.'
 logfiletooltip='The path of the current log file. Changing this has no effect.'
 vlctooltip='For more, see: http://wiki.videolan.org/VLC_command-line_help'
 streamtooltip='Using a temporary file when playing in VLC allows you to pause and rewind.'
+retriestooltip='Number of times to retry a failed download.'
 
 configspec={
     'Settings':{
@@ -26,7 +27,9 @@ configspec={
         'filename_dateformat':['Date format for filenames', 'str', dateformattooltip],
         'confirmdelete':['Confirm delete', 'bool'],
         'quicklisting':['Enable quick listing', 'bool',quicklistingtooltip ],
-        'showtooltips':['Show ToolTips', 'bool']
+        'showtooltips':['Show ToolTips', 'bool'],
+        'retries':['Retry failed downloads', 'str',retriestooltip],
+        'delete':['Delete failed downloads', 'bool']
         },
     'Sounds':{ #This will need to be rewritten if we add more sounds...
         'playsounds':['Play sound after download', 'bool'],
