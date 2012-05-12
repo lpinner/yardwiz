@@ -1,5 +1,5 @@
 import os,sys,time,signal,ctypes,copy,logging,logging.handlers,traceback
-import subprocess,re,ConfigParser,socket,struct,glob,tempfile
+import subprocess,re,ConfigParser,socket,struct,glob,tempfile,shutil
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
@@ -438,7 +438,6 @@ class ThreadedConverter( ThreadedUtility ):
         evt = ConvertComplete(wizEVT_CONVERTCOMPLETE, -1)
         self.PostEvent(evt)
 
-
 class ThreadedDeleter( ThreadedUtility ):
     def __init__( self, parent, evtStop, device, programs,indices):
         ThreadedUtility.__init__( self, parent )
@@ -586,6 +585,7 @@ class ThreadedDownloader( ThreadedUtility ):
                 except:
                     self.Log('Unable to pause download.',logging.ERROR)
                     raise
+                #if '.tvwiz' in f:delete(sorted(glob.glob(os.path.join(f,'[0-9][0-9][0-9][0-9]')))[-1])
                 self.Log('Download paused.')
                 while True:
                     self.Play.wait(0.5) #block until Play is set
@@ -613,7 +613,8 @@ class ThreadedDownloader( ThreadedUtility ):
 
                     now=time.time()
                     speed=((size-prevsize)/(now-start))
-                    speeds.append(speed)
+                    if speed>0.0001:speeds.append(speed)
+                    else:speed=0.0
                     n=float(len(speeds))
                     esttime=''
                     totaltime=''
@@ -651,6 +652,7 @@ class ThreadedDownloader( ThreadedUtility ):
             self.Log('getWizPnP STDERR:'+stderr,logging.ERROR)
             if self.attempts<self.retries:
                 self.Log('Retrying (attempt %s).'%(self.attempts+1))
+                #if '.tvwiz' in f:delete(sorted(glob.glob(os.path.join(f,'[0-9][0-9][0-9][0-9]')))[-1])
                 return self._download(program)
             if not 'Copy failed: Forbidden' in stderr and self.deletefail:
                 try:delete(program['filename'])
@@ -1203,7 +1205,10 @@ def delete(f,n=5):
         for i in range(n):#Try to delete the file n times
             try:
                 time.sleep(1)
-                os.unlink(f)
+                if os.path.isdir(f):
+                    shutil.rmtree(f)
+                else:
+                    os.unlink(f)
             except:
                 if i==n-1:raise
                 else:continue
