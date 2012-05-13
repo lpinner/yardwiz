@@ -137,8 +137,11 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             for j in range(self.GetColumnCount()):
                 cwidth=self.GetColumnWidth(j)
                 hwidth=self.HeaderWidths[j]
-                twidth = self.GetTextExtent(str(values[j]))[0]+10
-    
+                try:
+                    twidth = self.GetTextExtent(str(values[j]))[0]+10
+                except UnicodeEncodeError:
+                    twidth = self.GetTextExtent(values[j].encode('utf-8'))[0]+10    
+                    
                 self.SetColumnWidth(j,max([cwidth,hwidth,twidth]))
         
     def DeleteItem(self,item):
