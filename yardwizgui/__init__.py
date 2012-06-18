@@ -533,8 +533,8 @@ class GUI( gui.GUI ):
         if not device:
             self._Discover()
             self._Connected(False)
-            if self.cbxDevice.GetCount()==1:self._Connect()
-            return
+            device=str(self.cbxDevice.GetValue()).strip()
+            if not device:return
 
         if device in self.devices:
             self.device=self.devices[device]
