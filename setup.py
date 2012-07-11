@@ -277,7 +277,8 @@ if 'linux' in sys.platform and 'install' in sys.argv:
     os.chmod(os.path.join(data,'share/applications/yardwiz.desktop'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IXUSR|stat.S_IRGRP|stat.S_IXGRP|stat.S_IROTH|stat.S_IXOTH)
     print 'Changing mode of %s/share/pixmaps/yardwiz.png to 744'%data
     if prefix!=data:
-        os.symlink(os.path.join(data,'share/applications/yardwiz.desktop'),os.path.join(prefix,'share/applications/yardwiz.desktop'))
+        try:os.symlink(os.path.join(data,'share/applications/yardwiz.desktop'),os.path.join(prefix,'share/applications/yardwiz.desktop'))
+        except:pass
     os.chmod(os.path.join(data,'share/pixmaps/yardwiz.png'),stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IROTH)
     if os.path.exists('%s/bin/getWizPnP'%data):
         print 'Changing mode of %s/bin/getWizPnP to 755'%data
