@@ -706,6 +706,8 @@ class GUI( gui.GUI ):
 
             if self.cbxDevice.GetCount()>0:
                 self.cbxDevice.SetSelection(0)
+                sx,sy=self.cbxDevice.GetClientSizeTuple()
+                self.cbxDevice.SetMinSize((self.cbxDevice.GetWidestItemWidth()+self.cbxDevice.GetButtonSize().x+20,sy))
 
         else:
             #self.cbxDevice.Clear()

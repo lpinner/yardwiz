@@ -20,7 +20,8 @@
 # THE SOFTWARE.
 
 if __name__=='__main__':
-    import wx,yardwizgui
+    import wx
     wxapp = wx.PySimpleApp(0)
+    import yardwizgui
     wizgui = yardwizgui.GUI()
     wxapp.MainLoop()
