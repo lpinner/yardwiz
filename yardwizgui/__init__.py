@@ -399,7 +399,8 @@ class GUI( gui.GUI ):
                 try:del self.configspec['Settings']['tempfile']
                 except:pass
             self.btnVLC.Hide()
-            self.mnuPrograms.DeleteItem(self.mitStream)
+            try:self.mnuPrograms.DeleteItem(self.mitStream)
+            except:pass
 
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
