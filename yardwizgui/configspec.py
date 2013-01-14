@@ -1,3 +1,4 @@
+cachedevicetooltip='Cache Beyonwiz device addresses'
 devicetooltip='Enter your Beyonwiz device in one of the following formats:\n\t- IP:port (e.g. 192.168.0.5:5678)\n\t- IP (port will default to 49152)\n\t- device name (e.g. Lounge Wiz)'
 autoconnecttooltip='Automatically list recordings on startup.'
 onselecttooltip='Automatically list recordings after selecting a device from the "Wiz Server:" list.'
@@ -15,6 +16,7 @@ retriestooltip='Number of times to retry a failed download.'
 
 configspec={
     'Settings':{
+        'cachedevice':['Remember device addresses', 'bool',cachedevicetooltip],
         'device':['Device', 'str', devicetooltip],
         'autoconnect':['Auto list recordings', 'bool',autoconnecttooltip],
         'onselect':['Auto update recordings', 'bool',onselecttooltip],

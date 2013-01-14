@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Mar 17 2012)
+## Python code generated with wxFormBuilder (version Oct 19 2012)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -41,6 +41,7 @@ class GUI ( wx.Frame ):
 		self.cbxDevice = wx.combo.BitmapComboBox( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( -1,-1 ), "", wx.TE_PROCESS_ENTER ) 
 		self.cbxDevice.SetFont( wx.Font( 11, 70, 90, 90, False, wx.EmptyString ) )
 		self.cbxDevice.SetToolTipString( u"Enter your Beyonwiz device in one of the following formats:\n\n    - IP:port (e.g. 192.168.0.5:5678)\n    - IP (port will default to 49152)\n    - device name (e.g. LoungeWiz)\n\nIf you leave this field blank and click the Connect button, YARDWiz will try to discover your Beyonwiz." )
+		self.cbxDevice.SetMinSize( wx.Size( 250,-1 ) )
 		
 		bSizer81.Add( self.cbxDevice, 0, wx.ALIGN_CENTER|wx.ALIGN_CENTER_VERTICAL|wx.ALL|wx.EXPAND, 5 )
 		
@@ -88,6 +89,7 @@ class GUI ( wx.Frame ):
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtLog = wx.TextCtrl( self.nbtabLog, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.NO_BORDER|wx.VSCROLL )
+		self.txtLog.SetMaxLength( 0 ) 
 		self.txtLog.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer7.Add( self.txtLog, 1, wx.EXPAND, 0 )
@@ -101,6 +103,7 @@ class GUI ( wx.Frame ):
 		bSizer8 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtInfo = wx.TextCtrl( self.nbtabInfo, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.NO_BORDER|wx.VSCROLL )
+		self.txtInfo.SetMaxLength( 0 ) 
 		self.txtInfo.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer8.Add( self.txtInfo, 1, wx.EXPAND, 0 )
@@ -620,6 +623,7 @@ class LicenseDialog ( wx.Dialog ):
 		bSizer6 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtLicense = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 450,300 ), wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH|wx.TE_WORDWRAP|wx.VSCROLL )
+		self.txtLicense.SetMaxLength( 0 ) 
 		bSizer6.Add( self.txtLicense, 0, wx.ALL|wx.EXPAND, 5 )
 		
 		m_sdbSizer2 = wx.StdDialogButtonSizer()

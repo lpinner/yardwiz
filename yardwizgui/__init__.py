@@ -238,6 +238,8 @@ class GUI( gui.GUI ):
         #write stuff to various controls, eg server & port
         self.devices=odict()
         self.device=None
+        #if not self.config.getboolean('Settings','cachedevice'):
+        #    self.config.set('Settings','device','')
         devices=self.config.get('Settings','device').strip()
         logger.debug('Devices="%s"'%devices)
         if self.cbxDevice.GetCount()>0:
@@ -1267,8 +1269,8 @@ class GUI( gui.GUI ):
         #Remove logfile so it doesn't get written out
         self.config.remove_option('Debug', 'logfile')
 
-        #Remove logfile so it doesn't get written out
-        self.config.remove_option('Debug', 'logfile')
+        if not self.config.getboolean('Settings','cachedevice'):
+            self.config.set('Settings','device','')
 
         sections = self.config.sections()
         for section in sections:
