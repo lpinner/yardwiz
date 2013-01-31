@@ -25,7 +25,6 @@ import os,sys,threading,time,ConfigParser,logging,Queue
 import re,webbrowser,pickle
 import ordereddict
 import wx
-#import wx.lib.agw.multidirdialog as mdd
 import gui, configspec
 from ordereddict import OrderedDict as odict
 

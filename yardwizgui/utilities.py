@@ -1026,6 +1026,9 @@ class Stderr(object):
     softspace = 0
     _first = 1
 
+    def __init__(self,logfile):
+        self.logfile=logfile
+        
     def errordialog(self,message, caption):
         import wx
         wxapp = wx.PySimpleApp(0)
@@ -1036,21 +1039,24 @@ class Stderr(object):
     def write(self, text,*args,**kwargs):
         if self._first:
             self._first=0
-            self.errordialog("Errors occurred, see the logfile '%s' for details" % logfile, "Errors occurred")
+            self.errordialog("Errors occurred, see the logfile '%s' for details" % self.logfile, "Errors occurred")
         logger.error(text.strip())
 
     def flush(self):
         pass
 
 class Callback:
+    
     def __init__(self, callback, *args, **kwargs):
         self.callback = callback
         self.args = args
         self.kwargs = kwargs
+        
     def __call__(self):
         return self.callback(*self.args,**self.kwargs)
         
 class Device(object):
+
     def __init__(self,device):
 
         self.ip,self.port,self.name=('','','')
@@ -1424,15 +1430,9 @@ def which(name, returnfirst=True, flags=os.F_OK | os.X_OK, path=None):
     else:return ''
 
 #######################################################################
-#Workarounds for py2exe/py2app
-#######################################################################
-if frozen() or 'pythonw.exe' in sys.executable:
-    sys.stderr = Stderr()
-
-#######################################################################
 #Setup logging
 #######################################################################
-tmp=os.environ.get('TEMP',os.environ.get('TMP','/tmp'))
+tmp=tempfile.gettempdir() #os.environ.get('TEMP',os.environ.get('TMP','/tmp'))
 now=time.time()
 logtime=time.strftime('%Y%m%d.%H%M%S',time.localtime(now))+'.%s'%int(now%1*10000)
 logfile=os.path.join(tmp, '%s.%s.log'%(APPNAME,logtime))
@@ -1449,7 +1449,14 @@ handler.setFormatter(formatter)
 logger = logging.getLogger(APPNAME)
 logger.addHandler(handler)
 logger.setLevel(logging.ERROR)
+
 del f,logtime,tmp,now,formatter,handler
+
+#######################################################################
+#Workarounds for py2exe/py2app
+#######################################################################
+if frozen() or 'pythonw.exe' in sys.executable:
+    sys.stderr = Stderr(logfile)
 
 #######################################################################
 #Workarounds for crossplatform issues
@@ -1461,9 +1468,9 @@ isosx=sys.platform == 'darwin'
 filesysenc=sys.getfilesystemencoding()
 
 path = os.environ.get("PATH", os.defpath)
-if not '.' in path.split(os.pathsep):path='.'+os.pathsep+path
+if not '.' in path.split(os.pathsep):path=path+os.pathsep+'.'
 p=os.path.abspath(os.path.dirname(sys.argv[0]))
-if not p in path.split(os.pathsep):path=p+os.pathsep+path
+if not p in path.split(os.pathsep):path=path+os.pathsep+p
 os.environ['PATH']=path
 getwizpnp=['getWizPnP.exe','getWizPnP.pl','getWizPnP','getwizpnp']
 wizexe=''
@@ -1473,7 +1480,7 @@ for f in getwizpnp:
         wizexe=f
         break
 
-vlc=['vlc']
+vlc=['vlc','VLC']
 vlcexe=''
 if iswin:
     p=r'VideoLAN\VLC'
@@ -1487,11 +1494,13 @@ if iswin:
     os.environ['PATH']=path
     vlc.append('vlc.exe')
 
+elif isosx:
+    os.environ['PATH']=path+os.pathsep+'Applications/VLC.app/Contents/MacOS'
+
 for f in vlc:
     if which(f):
         vlcexe=f
         break
-#vlcexe=''
 
 if iswin:
     CTRL_C_EVENT = 0
