@@ -1495,7 +1495,7 @@ if iswin:
     vlc.append('vlc.exe')
 
 elif isosx:
-    os.environ['PATH']=path+os.pathsep+'Applications/VLC.app/Contents/MacOS'
+    os.environ['PATH']=path+os.pathsep+'/Applications/VLC.app/Contents/MacOS'
 
 for f in vlc:
     if which(f):
