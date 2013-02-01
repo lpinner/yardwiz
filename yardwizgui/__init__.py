@@ -376,7 +376,7 @@ class GUI( gui.GUI ):
         logger.debug('VLC path: %s'%vlcexe)
         if vlcexe:
             self.vlcargs=self.config.get('Settings','vlcargs').split()
-            if isosx and '--qt-minimal-view' in self.vlcargs:
+            if not iswin and '--qt-minimal-view' in self.vlcargs:
                 self.vlcargs.remove('--qt-minimal-view')
                 self.config.set('Settings','vlcargs',' '.join(self.vlcargs))
                 
