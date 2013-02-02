@@ -988,7 +988,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
 
     def _onupdateprogress(self,event):
         if not self.tp and event.progress.get('downloaded',0)>5:
-            self.args+=['--no-video-title']
+            if not '--no-video-title' in self.args:self.args+=['--no-video-title']
             self.tp=ThreadedPlayer( self, self.Stop, self.Play,self.program['filename'],self.args)        
         #pass
 
