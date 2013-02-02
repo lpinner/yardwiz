@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- 
 
 ###########################################################################
-## Python code generated with wxFormBuilder (version Oct 19 2012)
+## Python code generated with wxFormBuilder (version Oct  8 2012)
 ## http://www.wxformbuilder.org/
 ##
 ## PLEASE DO "NOT" EDIT THIS FILE!
@@ -162,17 +162,11 @@ class GUI ( wx.Frame ):
 		
 		bSizer12.Add( self.btnClearQueue, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.RIGHT|wx.TOP, 5 )
 		
-		self.btnPlay = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
-		self.btnPlay.Enable( False )
-		self.btnPlay.SetToolTipString( u"Resume download" )
+		self.btnPlayPause = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
+		self.btnPlayPause.Enable( False )
+		self.btnPlayPause.SetToolTipString( u"Resume download" )
 		
-		bSizer12.Add( self.btnPlay, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
-		
-		self.btnPause = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
-		self.btnPause.Enable( False )
-		self.btnPause.SetToolTipString( u"Pause download" )
-		
-		bSizer12.Add( self.btnPause, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.TOP, 5 )
+		bSizer12.Add( self.btnPlayPause, 0, wx.ALIGN_CENTER|wx.BOTTOM|wx.LEFT|wx.TOP, 5 )
 		
 		self.btnStop = wx.BitmapButton( self.m_panel4, wx.ID_ANY, wx.NullBitmap, wx.DefaultPosition, wx.Size( -1,-1 ), wx.BU_AUTODRAW )
 		self.btnStop.Enable( False )
@@ -295,8 +289,7 @@ class GUI ( wx.Frame ):
 		self.Bind( wx.EVT_MENU, self.mitDownloadAll_OnSelect, id = self.mitDownloadAll.GetId() )
 		self.btnDownload.Bind( wx.EVT_BUTTON, self.btnDownload_OnClick )
 		self.btnClearQueue.Bind( wx.EVT_BUTTON, self.btnClearQueue_OnClick )
-		self.btnPlay.Bind( wx.EVT_BUTTON, self.btnPlay_OnClick )
-		self.btnPause.Bind( wx.EVT_BUTTON, self.btnPause_OnClick )
+		self.btnPlayPause.Bind( wx.EVT_BUTTON, self.btnPlayPause_OnClick )
 		self.btnStop.Bind( wx.EVT_BUTTON, self.btnStop_OnClick )
 		self.btnVLC.Bind( wx.EVT_BUTTON, self.btnVLC_OnClick )
 		self.btnExit.Bind( wx.EVT_BUTTON, self.btnExit_onClick )
@@ -337,8 +330,7 @@ class GUI ( wx.Frame ):
 		self.Unbind( wx.EVT_MENU, id = self.mitDownloadAll.GetId() )
 		self.btnDownload.Unbind( wx.EVT_BUTTON, None )
 		self.btnClearQueue.Unbind( wx.EVT_BUTTON, None )
-		self.btnPlay.Unbind( wx.EVT_BUTTON, None )
-		self.btnPause.Unbind( wx.EVT_BUTTON, None )
+		self.btnPlayPause.Unbind( wx.EVT_BUTTON, None )
 		self.btnStop.Unbind( wx.EVT_BUTTON, None )
 		self.btnVLC.Unbind( wx.EVT_BUTTON, None )
 		self.btnExit.Unbind( wx.EVT_BUTTON, None )
@@ -433,10 +425,7 @@ class GUI ( wx.Frame ):
 	def btnClearQueue_OnClick( self, event ):
 		event.Skip()
 	
-	def btnPlay_OnClick( self, event ):
-		event.Skip()
-	
-	def btnPause_OnClick( self, event ):
+	def btnPlayPause_OnClick( self, event ):
 		event.Skip()
 	
 	def btnStop_OnClick( self, event ):

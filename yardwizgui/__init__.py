@@ -43,23 +43,21 @@ class GUI( gui.GUI ):
         gui.GUI.__init__( self, parent=None )
 
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
-        icons=os.path.join(data_path(),u'icons')
-        ico = wx.Icon( os.path.join(icons, u"yardwiz.png"), wx.BITMAP_TYPE_ANY )
+        self.icons=os.path.join(data_path(),u'icons')
+        ico = wx.Icon( os.path.join(self.icons, u"yardwiz.png"), wx.BITMAP_TYPE_ANY )
         self.SetIcon(ico)
-        self.btnConnect.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"reload.png"), wx.BITMAP_TYPE_ANY ))
-        self.btnConnect.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"reload_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnClearQueue.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"clear.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnClearQueue.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"clear_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnDownload.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"download.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnDownload.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"download_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnPlay.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"play.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnPlay.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"play_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnPause.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"pause.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnPause.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"pause_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnStop.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"stop.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnVLC.SetBitmapLabel( wx.Bitmap( os.path.join(icons, u"vlc.png"), wx.BITMAP_TYPE_ANY ) )
-        self.btnVLC.SetBitmapDisabled( wx.Bitmap( os.path.join(icons, u"vlc_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnConnect.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"reload.png"), wx.BITMAP_TYPE_ANY ))
+        self.btnConnect.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"reload_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnClearQueue.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"clear.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnClearQueue.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"clear_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnDownload.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"download.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnDownload.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"download_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnPlayPause.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"play.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnPlayPause.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"play_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnStop.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"stop.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnVLC.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"vlc.png"), wx.BITMAP_TYPE_ANY ) )
+        self.btnVLC.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"vlc_disabled.png"), wx.BITMAP_TYPE_ANY ) )
         self.mitScheduled.Enable(False)
         self.btnVLC.Disable()
 
@@ -72,6 +70,7 @@ class GUI( gui.GUI ):
         self._deleting=False
         self._downloading=False
         self.player=None
+        self.playpause=True       
         self.total=0
         self.tempfile=False
         self.schedulelist=[]
@@ -751,15 +750,14 @@ class GUI( gui.GUI ):
             self.connecttimer.Start(250,wx.TIMER_ONE_SHOT)
             return
 
-        self.btnPlay.Enable( False )
-        self.btnPause.Enable( True )
+        self.btnPlayPause.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"pause.png"), wx.BITMAP_TYPE_ANY ) )
+        self.playpause=False
+        self.btnPlayPause.Enable( True )
+        self.btnPlayPause.SetToolTipString('Pause download')
         self.btnStop.Enable( True )
         self.lblProgressText.SetLabelText('')
         self.gaugeProgressBar.Hide()
         self.gaugeProgressBar.Show()
-        #self.btnPlay.Show() #This produces 'unexpected results' on ubuntu 10.04 & 10.10
-        #self.btnPause.Show()
-        #self.btnStop.Show()
         self.btnClearQueue.Enable( False )
         self.btnDownload.Enable( False )
         self.btnConnect.Enable( False )
@@ -798,16 +796,16 @@ class GUI( gui.GUI ):
 
         if len(self.queue)==0 or stopped:
             self._downloading=False
-            #self.btnPlay.Hide() #This produces 'unexpected results' on ubuntu 10.04 & 10.10
-            #self.btnPause.Hide()
-            #self.btnStop.Hide()
             self.gaugeProgressBar.Hide()
             self.StatusBar.SetFieldsCount(1)
             self.StatusBar.SetFields([''])
             self.lblProgressText.SetLabelText('')
             self.lblProgressText.Hide()
-            self.btnPlay.Enable( False )
-            self.btnPause.Enable( False )
+            self.btnPlayPause.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"play.png"), wx.BITMAP_TYPE_ANY ) )
+            self.playpause=True
+            self.btnPlayPause.Enable( False )
+            self.btnPlayPause.SetToolTipString('Resume download')
+
             self.btnStop.Enable( False )
             self.btnConnect.Enable( True )
             self.mitQueue.Enable(True)
@@ -1316,16 +1314,26 @@ class GUI( gui.GUI ):
     def btnDownload_OnClick( self, event ):
         self._DownloadQueue()
 
-    def btnPlay_OnClick( self, event ):#hiding and showing play etc... buttons isn't working on ubuntu 10.04
-        self.btnPlay.Enable( False )
-        self.btnPause.Enable( True )
+    def btnPlayPause_OnClick( self, event ):
+        if self.playpause:self.btnPlay_OnClick(event)
+        else:self.btnPause_OnClick(event)
+            
+    def btnPlay_OnClick( self, event ):
+        self.btnPlayPause.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"pause.png"), wx.BITMAP_TYPE_ANY ) )
+        self.playpause=False
+        self.btnPlayPause.Enable( True )
+        self.btnPlayPause.SetToolTipString('Pause download')
+
         self.btnStop.Enable( True )
         self.Play.set()
         event.Skip()
 
     def btnPause_OnClick( self, event ):
-        self.btnPlay.Enable( True )
-        self.btnPause.Enable( False )
+        self.btnPlayPause.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"play.png"), wx.BITMAP_TYPE_ANY ) )
+        self.playpause=True
+        self.btnPlayPause.Enable( True )
+        self.btnPlayPause.SetToolTipString('Resume download')
+
         self.Play.clear()
 
     def btnStop_OnClick( self, event ):
@@ -1524,7 +1532,7 @@ class AboutDialog( gui.AboutDialog ):
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         path=data_path()
         icons=os.path.join(path,u'icons')
-        ico=os.path.join(icons, u"yardwiz.png")
+        ico=os.path.join(self.icons, u"yardwiz.png")
         self.SetIcon( wx.Icon( ico, wx.BITMAP_TYPE_ANY ) )
         self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
 
