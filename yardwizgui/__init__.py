@@ -1532,7 +1532,7 @@ class AboutDialog( gui.AboutDialog ):
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         path=data_path()
         icons=os.path.join(path,u'icons')
-        ico=os.path.join(self.icons, u"yardwiz.png")
+        ico=os.path.join(icons, u"yardwiz.png")
         self.SetIcon( wx.Icon( ico, wx.BITMAP_TYPE_ANY ) )
         self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
 
