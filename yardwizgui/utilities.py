@@ -83,7 +83,7 @@ class ThreadedChecker( ThreadedUtility ):
             self.PostEvent(evt)
             return
         try:
-            self.proc=subproc(cmd)
+            self.proc=subproc(cmd,env=wizenv)
             while self.proc.poll() is None:
                 time.sleep(0.1)
                 if self.Stop.isSet():
@@ -161,7 +161,7 @@ class ThreadedConnector( ThreadedUtility ):
 
     def _quicklistprograms(self):
         cmd=[wizexe,'--all','--sort=fatd']+self.device.args
-        self.proc=subproc(cmd+['-q','--List'])
+        self.proc=subproc(cmd+['-q','--List'],env=wizenv)
 
         programs=[]
         import time
@@ -194,7 +194,7 @@ class ThreadedConnector( ThreadedUtility ):
         del self.proc
 
         cmd.extend(['-vv','--episode','--index'])
-        self.proc=subproc(cmd)
+        self.proc=subproc(cmd,env=wizenv)
         proglines=[]
         exists=[]
         updated=[]
@@ -240,7 +240,7 @@ class ThreadedConnector( ThreadedUtility ):
     def _listprograms(self):
         self.thread=None
         cmd=[wizexe,'--all','-v','-l','--episode','--index','--sort=fatd']+self.device.args
-        self.proc=subproc(cmd)
+        self.proc=subproc(cmd,env=wizenv)
         proglines=[]
         index=-1
         programs=[]
@@ -349,7 +349,7 @@ class ThreadedConnector( ThreadedUtility ):
     def _getinfo(self):
         time.sleep(0.25)
         cmd=[wizexe,'-vv','--all','-l','--episode','--index','--sort=fatd']+self.device.args
-        proc=subproc(cmd)
+        proc=subproc(cmd,env=wizenv)
         proglines=[]
         index=-1
         programs=[]
@@ -460,14 +460,14 @@ class ThreadedDeleter( ThreadedUtility ):
             cmddel=cmd+['--delete',program['index']]
             cmdchk=cmd+['--list',program['index']]
             try:
-                self.proc=subproc(cmddel)
+                self.proc=subproc(cmddel,env=wizenv)
                 while self.proc.poll() is None:
                     time.sleep(0.1)
                     if self.Stop.isSet():return
                 exit_code=self.proc.poll()
                 stdout,stderr=self.proc.communicate()
                 if stderr.strip() or exit_code:raise Exception,'Unable to delete %s\n%s'%(program['title'],stderr.strip())
-                self.proc=subproc(cmdchk)
+                self.proc=subproc(cmdchk,env=wizenv)
                 exit_code=self.proc.wait()
                 stdout,stderr=self.proc.communicate()
                 if stdout.strip():raise Exception,'Unable to delete %s'%(program['title'])
@@ -544,7 +544,7 @@ class ThreadedDownloader( ThreadedUtility ):
         if 'ts' in e.lower():cmd+=['-t']
 
         try:
-            self.proc=subproc(cmd)
+            self.proc=subproc(cmd,env=wizenv)
         except Exception,err:
             self.Log('Error, unable to download %s.'%program['filename'],logging.ERROR)
             self.Log(str(err),logging.ERROR)
@@ -642,6 +642,12 @@ class ThreadedDownloader( ThreadedUtility ):
                     self._updateprogress(progress,'Downloading %s...'%program['title'])
                     start=time.time()
                     prevsize=size
+                elif time.time()-start>5: #No file after 5 seconds
+                    try:
+                        self._stopdownload()
+                    except:
+                        self.Log('Unable to download.',logging.ERROR)
+                        raise
 
         try:exit_code=self.proc.poll()
         except:return#We're probably exiting
@@ -961,7 +967,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         else:
             cmd=[wizexe,'--stdout','--all','-R','--BWName',self.program['index']]+self.device.args
             try:
-                self.wizproc=subproc(cmd)
+                self.wizproc=subproc(cmd,env=wizenv)
                 cmd=[vlcexe,'--no-video-title','-']
                 self.vlcproc = subproc(cmd,stdin=self.wizproc.stdout)
                 while self.vlcproc.poll() is None:
@@ -1259,7 +1265,7 @@ def getwizpnpversion(as_string=False):
     else:version=[0,0,0]
     cmd = [wizexe,'--version']
     try:
-        proc=subproc(cmd)
+        proc=subproc(cmd,env=wizenv)
         exit_code=proc.wait()
         stdout,stderr=proc.communicate()
         #version=[int(x) for x in stdout.strip()[0:5].split('.')]
@@ -1327,18 +1333,18 @@ def license():
         license=open(os.path.join(os.path.dirname(sys.argv[0]),'LICENSE')).read().strip()
     return license
 
-def subproc(cmd,stdin=False):
+def subproc(cmd,stdin=False,env=os.environ):
     logger.debug(subprocess.list2cmdline(cmd))
     logger.debug(str(cmd))
     if stdin:
         if type(stdin) is not file:stdin=subprocess.PIPE
-        proc=subprocess.Popen(cmd, stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+        proc=subprocess.Popen(cmd, stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env,**Popen_kwargs)
     else:
         if 'pythonw.exe' in sys.executable:
-            proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+            proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env,**Popen_kwargs)
             proc.stdin.close()
         else:
-            proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,**Popen_kwargs)
+            proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env,**Popen_kwargs)
     return proc
 
 def timefromsecs(secs):
@@ -1474,6 +1480,14 @@ if not p in path.split(os.pathsep):path=path+os.pathsep+p
 os.environ['PATH']=path
 getwizpnp=['getWizPnP.exe','getWizPnP.pl','getWizPnP','getwizpnp']
 wizexe=''
+
+#Create a limited environment for getWizPnP with HOME and APPDATA stripped out
+# so .getwizpnp/getwizpnp.conf don't get used.
+#This can be changed later on to use the new GETWIZPNPCONF environment variable (0.5.4+)
+wizenv=os.environ.copy()
+wizenv['HOME']=''
+wizenv['APPDATA']=''
+
 if not iswin:del getwizpnp[0]
 for f in getwizpnp:
     if which(f):
@@ -1482,6 +1496,7 @@ for f in getwizpnp:
 
 vlc=['vlc','VLC']
 vlcexe=''
+
 if iswin:
     p=r'VideoLAN\VLC'
     programfiles=[os.environ['ProgramFiles']]
@@ -1493,7 +1508,6 @@ if iswin:
             path=vlcpath+os.pathsep+path
     os.environ['PATH']=path
     vlc.append('vlc.exe')
-
 elif isosx:
     os.environ['PATH']=path+os.pathsep+'/Applications/VLC.app/Contents/MacOS'
 
