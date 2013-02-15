@@ -186,6 +186,16 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
           options={'py2app': OPTIONS},
           setup_requires=['py2app'])
   
+    os.rename('dist/YARDWiz.app', 'dist/YARDWiz2.app')
+    cmd='ditto -rsrc -arch i386 dist/YARDWiz2.app dist/YARDWiz.app'
+    proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout,stderr=proc.communicate()
+    exit_code=proc.wait()
+    if exit_code:
+        print stderr
+        sys.exit(0)        
+    else:print stdout
+
     print 'Copying getWizPnP to app'
     shutil.copy('getWizPnP','dist/YARDWiz.app/Contents/Resources/getWizPnP')
     print 'Changing mode of getWizPnP to 755'
@@ -193,11 +203,12 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     os.unlink('YARDWiz.py')
     shutil.rmtree('build')
     print 'Creating disk image'
-    cmd='hdiutil create -size 120m -imagekey zlib-level=9 -srcfolder dist/YARDWiz.app dist/YARDWiz-%s-OSX-10.6.dmg'%short_version
+    cmd='hdiutil create -size 120m -imagekey zlib-level=9 -srcfolder dist/YARDWiz.app dist/YARDWiz-%s-OSX-10.8.dmg'%short_version
     proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout,stderr=proc.communicate()
     exit_code=proc.wait()
     if exit_code:print stderr
+    else:print stdout
     sys.exit(0)
 
 elif 'uninstall' in sys.argv:

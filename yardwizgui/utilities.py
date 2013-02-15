@@ -1487,6 +1487,7 @@ wizexe=''
 wizenv=os.environ.copy()
 wizenv['HOME']=''
 wizenv['APPDATA']=''
+wizenv['GETWIZPNPCONF']=''
 
 if not iswin:del getwizpnp[0]
 for f in getwizpnp:

@@ -1537,7 +1537,7 @@ class AboutDialog( gui.AboutDialog ):
         self.bmpIcon.SetBitmap( wx.Bitmap(ico , wx.BITMAP_TYPE_ANY ) )
 
         txtlicense=license()
-        txtversion=version()[0]
+        txtversion=version()[1]
         txtgetwizpnp=getwizpnpversion(True)
 
         sxmin,symin=centrepos(self,parent)

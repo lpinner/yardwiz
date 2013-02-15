@@ -1,4 +1,4 @@
-include yardwiz yardwiz.desktop.in install.bat uninstall.bat README LICENSE RELEASE VERSION
+include yardwiz yardwiz.desktop.in README LICENSE RELEASE VERSION
 recursive-include yardwizgui/config *
 recursive-include yardwizgui/icons *
 recursive-include yardwizgui/sounds *
