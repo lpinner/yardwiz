@@ -497,6 +497,12 @@ class ThreadedDownloader( ThreadedUtility ):
         self.proc=None
         self.retries=retries
         self.deletefail=deletefail
+        self.extraargs=['--noepisode','--nodate','--nodateLast']
+
+        v=getwizpnpversion()
+        
+        if v>=[0,5,4]:
+            self.extraargs+=['--retry=30']
 
         self.total=0
         for program in self.programs:
@@ -540,7 +546,7 @@ class ThreadedDownloader( ThreadedUtility ):
         d=os.path.dirname(fd)
         f,e=os.path.splitext(os.path.basename(fd))
 
-        cmd=[wizexe,'--all','-q','-R','--BWName','-O',d,'-T',f,program['index']]+self.device.args
+        cmd=[wizexe,'--all','-q','-R','--BWName','-O',d,'-T',f,program['index']]+self.device.args+self.extraargs
         if 'ts' in e.lower():cmd+=['-t']
 
         try:
@@ -897,6 +903,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         self.device=device
         self.program=copy.copy(program)
         self.args=args
+        self.extraargs=[]
         self.stream=not usetempfile
         self.Play=Event()
         self.Play.set()
@@ -906,6 +913,10 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         self.tp=None
 
         v=getwizpnpversion()
+        
+        if v>=[0,5,4]:
+            self.extraargs=['--retry','30']
+            
         if self.stream and v<[0,5,3]:
             self.stream=False
             self.Log('Unable to play recordings without a tempfile with getWizPnP<0.5.3')
@@ -959,13 +970,12 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
             evt = StreamComplete(wizEVT_STREAMCOMPLETE, -1)
             self.PostEvent(evt)
             return [msg,trc]
-                    
 
     def run(self):
         if not self.stream:
             self.td= ThreadedDownloader( self, self.device, [self.program], self.Play, self.Stop)
         else:
-            cmd=[wizexe,'--stdout','--all','-R','--BWName',self.program['index']]+self.device.args
+            cmd=[wizexe,'--stdout','--all','-R','--BWName',self.program['index']]+self.device.args+self.extraargs
             try:
                 self.wizproc=subproc(cmd,env=wizenv)
                 cmd=[vlcexe,'--no-video-title','-']
