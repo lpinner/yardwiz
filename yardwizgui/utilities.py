@@ -497,7 +497,7 @@ class ThreadedDownloader( ThreadedUtility ):
         self.proc=None
         self.retries=retries
         self.deletefail=deletefail
-        self.extraargs=['--noepisode','--nodate','--nodateLast']
+        self.extraargs=[]#['--noepisode','--nodate','--nodateLast']
 
         v=getwizpnpversion()
         
@@ -649,7 +649,7 @@ class ThreadedDownloader( ThreadedUtility ):
                     self._updateprogress(progress,'Downloading %s...'%program['title'])
                     start=time.time()
                     prevsize=size
-                elif time.time()-start>5: #No file after 5 seconds
+                elif time.time()-start>10: #No file after 10 seconds
                     try:
                         self._stopdownload()
                     except:
