@@ -503,6 +503,7 @@ class ThreadedDownloader( ThreadedUtility ):
         
         if v>=[0,5,4]:
             self.extraargs+=['--retry=30']
+            if iswin:self.extraargs+=['--delay=0.25']
 
         self.total=0
         for program in self.programs:
@@ -548,7 +549,7 @@ class ThreadedDownloader( ThreadedUtility ):
 
         cmd=[wizexe,'--all','-q','-R','--BWName','-O',d,'-T',f,program['index']]+self.device.args+self.extraargs
         if 'ts' in e.lower():cmd+=['-t']
-
+        
         try:
             self.proc=subproc(cmd,env=wizenv)
         except Exception,err:

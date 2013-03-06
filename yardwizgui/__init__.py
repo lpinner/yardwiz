@@ -685,6 +685,7 @@ class GUI( gui.GUI ):
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
+        if iswin:cmd+=['--wizpnpTimeout=2']
         try:
             proc=subproc(cmd)
         except Exception,err:
