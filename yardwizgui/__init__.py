@@ -213,6 +213,8 @@ class GUI( gui.GUI ):
 
     def _ApplyConfig(self):
 
+        v=getwizpnpversion()
+
         #debug
         debug=self.config.getboolean('Debug','debug')
         if debug:
@@ -371,6 +373,19 @@ class GUI( gui.GUI ):
             if 'fade' in self.configspec['Window']:
                 del self.configspec['Window']['fade']
 
+        #getWizPnP
+        self.wizargs=[]
+        if iswin:
+            self.wizargs+=['--wizpnpTimeout=%s'%self.config.get('getWizPnP','wizpnptimeout')]
+            if v>=[0,5,4]:
+                self.wizargs+=['--delay=%s'%self.config.get('getWizPnP','delay')]
+            else:
+                del self.configspec['getWizPnP']['delay']
+                self.config.remove_option('getWizPnP','delay')
+        else:
+            del self.configspec['getWizPnP']
+            self.config.remove_section('getWizPnP')
+        
         #VLC Player
         logger.debug('VLC path: %s'%vlcexe)
         if vlcexe:
@@ -387,7 +402,6 @@ class GUI( gui.GUI ):
             if pos>-1 and not self.mnuPrograms.FindItemByPosition(pos-1).IsSeparator():
                 self.mnuPrograms.InsertSeparator(pos)
 
-            v=getwizpnpversion()
             if v<[0,5,3]:
                 try:del self.configspec['Settings']['tempfile']
                 except:pass
@@ -554,7 +568,7 @@ class GUI( gui.GUI ):
 
         #Connect to the Wiz etc...
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,quick=self.quicklisting)
+        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,quick=self.quicklisting,wizargs=self.wizargs)
 
     def _Connected(self,event=None):
 
@@ -685,7 +699,7 @@ class GUI( gui.GUI ):
     def _Discover(self):
         self._Log('Searching for Wizzes.')
         cmd=[wizexe,'--discover']
-        if iswin:cmd+=['--wizpnpTimeout=2']
+        #if iswin:cmd+=['--wizpnpTimeout=2']
         try:
             proc=subproc(cmd)
         except Exception,err:
@@ -767,7 +781,7 @@ class GUI( gui.GUI ):
         self.mitQueue.Enable( False )
         self.mitDownload.Enable( False )
         self._downloading=True
-        self.ThreadedDownloader=ThreadedDownloader(self,self.device,programs,self.Play,self.Stop, self.retries,self.deletefail)
+        self.ThreadedDownloader=ThreadedDownloader(self,self.device,programs,self.Play,self.Stop, self.retries,self.deletefail,wizargs=self.wizargs)
 
     def _DownloadComplete(self,index,stopped):
         pidx=0
@@ -948,7 +962,7 @@ class GUI( gui.GUI ):
     def _Play(self,filename=None):
         if filename is None:filename=self.filename
         if filename:
-            self.player=ThreadedPlayer(self, self.Stop, self.Play,self.filename,self.vlcargs)
+            self.player=ThreadedPlayer(self, self.Stop, self.Play,self.filename,vlcargs=self.vlcargs)
 
     def _PostDownloadCommand(self,program):
         cmd=self.postcmd.split('#')[0].strip()
@@ -1079,7 +1093,7 @@ class GUI( gui.GUI ):
 
             if self.ThreadedScheduler is None:
                 self.scheduletime=scheduletime
-                self.ThreadedScheduler = ThreadedScheduler(self, scheduletime,self.schedulequeue,self.retries,self.deletefail)
+                self.ThreadedScheduler = ThreadedScheduler(self, scheduletime,self.schedulequeue,self.retries,self.deletefail,self.wizargs)
 
             elif scheduletime!=self.scheduletime:
                 self.scheduletime=scheduletime
@@ -1181,7 +1195,7 @@ class GUI( gui.GUI ):
             self._ShowTab(self.idxLog)
             return
         self.mitStream.Enable(False)
-        tp=ThreadedStreamPlayer(self, self.device, program, self.StopStreaming, self.vlcargs, self.tempfile)
+        tp=ThreadedStreamPlayer(self, self.device, program, self.StopStreaming, self.tempfile, self.vlcargs, self.wizargs)
         
     def _UpdateProgram(self,event):
         idx=self.lstPrograms.FindItemData(-1,event.index)

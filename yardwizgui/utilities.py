@@ -132,11 +132,12 @@ class ThreadedChecker( ThreadedUtility ):
         return '\n'.join(errors)
     
 class ThreadedConnector( ThreadedUtility ):
-    def __init__( self, parent, evtStop, device, quick=False):
+    def __init__( self, parent, evtStop, device, quick=False,wizargs=[]):
         ThreadedUtility.__init__( self, parent )
         self.device=device
         self.parent=parent
         self.quick=quick
+        self.wizargs=wizargs
         self.thread=None
         self._stop = evtStop
         self._stop.clear()
@@ -160,7 +161,7 @@ class ThreadedConnector( ThreadedUtility ):
             self.PostEvent(evt)
 
     def _quicklistprograms(self):
-        cmd=[wizexe,'--all','--sort=fatd']+self.device.args
+        cmd=[wizexe,'--all','--sort=fatd']+self.device.args+self.wizargs
         self.proc=subproc(cmd+['-q','--List'],env=wizenv)
 
         programs=[]
@@ -239,7 +240,7 @@ class ThreadedConnector( ThreadedUtility ):
 
     def _listprograms(self):
         self.thread=None
-        cmd=[wizexe,'--all','-v','-l','--episode','--index','--sort=fatd']+self.device.args
+        cmd=[wizexe,'--all','-v','-l','--episode','--index','--sort=fatd']+self.device.args+self.wizargs
         self.proc=subproc(cmd,env=wizenv)
         proglines=[]
         index=-1
@@ -439,13 +440,14 @@ class ThreadedConverter( ThreadedUtility ):
         self.PostEvent(evt)
 
 class ThreadedDeleter( ThreadedUtility ):
-    def __init__( self, parent, evtStop, device, programs,indices):
+    def __init__( self, parent, evtStop, device, programs,indices,wizargs=[]):
         ThreadedUtility.__init__( self, parent )
         self.parent=parent
         self.Stop=evtStop
         self.device=device
         self.programs=programs
         self.indices=indices
+        self.wizargs=wizargs
         self.start()
         
     def run(self):
@@ -454,7 +456,7 @@ class ThreadedDeleter( ThreadedUtility ):
             self.PostEvent(evt)
             return
 
-        cmd=[wizexe,'--all','--BWName']+self.device.args
+        cmd=[wizexe,'--all','--BWName']+self.device.args+self.wizargs
 
         for idx,program in zip(self.indices,self.programs):
             cmddel=cmd+['--delete',program['index']]
@@ -484,7 +486,7 @@ class ThreadedDeleter( ThreadedUtility ):
         self.PostEvent(evt)
 
 class ThreadedDownloader( ThreadedUtility ):
-    def __init__(self, parent, device, programs, evtPlay, evtStop,retries=1,deletefail=1):
+    def __init__(self, parent, device, programs, evtPlay, evtStop,retries=1,deletefail=1,wizargs=[]):
         ThreadedUtility.__init__( self, parent )
 
         self.parent=parent
@@ -497,13 +499,12 @@ class ThreadedDownloader( ThreadedUtility ):
         self.proc=None
         self.retries=retries
         self.deletefail=deletefail
-        self.extraargs=[]#['--noepisode','--nodate','--nodateLast']
+        self.wizargs=wizargs
 
         v=getwizpnpversion()
         
         if v>=[0,5,4]:
-            self.extraargs+=['--retry=30']
-            if iswin:self.extraargs+=['--delay=0.25']
+            self.wizargs+=['--retry=30']
 
         self.total=0
         for program in self.programs:
@@ -547,7 +548,7 @@ class ThreadedDownloader( ThreadedUtility ):
         d=os.path.dirname(fd)
         f,e=os.path.splitext(os.path.basename(fd))
 
-        cmd=[wizexe,'--all','-q','-R','--BWName','-O',d,'-T',f,program['index']]+self.device.args+self.extraargs
+        cmd=[wizexe,'--all','-q','-R','--BWName','-O',d,'-T',f,program['index']]+self.device.args+self.wizargs
         if 'ts' in e.lower():cmd+=['-t']
         
         try:
@@ -703,13 +704,14 @@ class ThreadedDownloader( ThreadedUtility ):
         except:pass
 
 class ThreadedPlayer( ThreadedUtility ):
-    def __init__( self, parent, evtStop, evtPlay,filename,args=None):
+    def __init__( self, parent, evtStop, evtPlay,filename,vlcargs=[]):
         ThreadedUtility.__init__( self, parent )
         self.parent=parent
         self.Stop=evtStop
         self.Play=evtPlay
         self.filename=filename
-        self.args=args
+        self.vlcargs=vlcargs
+
         self.start()
 
     def run(self):
@@ -717,7 +719,7 @@ class ThreadedPlayer( ThreadedUtility ):
         self.port=self.getfreeport()
         cmd=[vlcexe,'--extraintf=rc','--rc-host=localhost:%s'%self.port,'--quiet','--verbose=0']
         if not iswin:cmd+=['--rc-fake-tty']
-        if self.args:cmd+=self.args
+        cmd+=self.vlcargs
         cmd+=[self.filename.encode(filesysenc)]
 
         try:
@@ -815,7 +817,7 @@ class ThreadedPlayer( ThreadedUtility ):
         return data.strip('>').strip()=='1'
 
 class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
-    def __init__( self, parent, startDateTime, prgQueue,retries,deletefail):
+    def __init__( self, parent, startDateTime, prgQueue,retries,deletefail,wizargs=[]):
         ThreadedUtility.__init__( self, parent )
         wx.EvtHandler.__init__( self )
 
@@ -828,7 +830,8 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         self.timeremaining=None
         self.retries=retries
         self.deletefail=deletefail
-
+        self.wizargs=wizargs
+        
         self.Bind(EVT_DOWNLOADCOMPLETE, self._ondownloadcomplete)
         self.Bind(EVT_LOG, self._onlog)
         self.Bind(EVT_UPDATEPROGRESS, self._onupdateprogress)
@@ -863,7 +866,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         while not self.Queue.empty():
             if self.evtStop.is_set():return
             program = self.Queue.get()
-            td= ThreadedDownloader( self, program['device'], [program], self.evtPlay, self.evtStop,self.retries,self.deletefail)
+            td= ThreadedDownloader( self, program['device'], [program], self.evtPlay, self.evtStop,self.retries,self.deletefail,wizargs=self.wizargs)
             td.join()#Block until  download is complete
             if self.evtStop.is_set():return
             self.Queue.task_done()
@@ -896,15 +899,15 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         except:pass
 
 class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
-    def __init__( self, parent, device, program, Stop, args, usetempfile=False):
+    def __init__( self, parent, device, program, Stop, usetempfile=False, vlcargs=[],wizargs=[]):
         ThreadedUtility.__init__( self, parent )
         wx.EvtHandler.__init__( self )
 
         self.parent=parent
         self.device=device
         self.program=copy.copy(program)
-        self.args=args
-        self.extraargs=[]
+        self.vlcargs=vlcargs
+        self.wizargs=wizargs
         self.stream=not usetempfile
         self.Play=Event()
         self.Play.set()
@@ -916,7 +919,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         v=getwizpnpversion()
         
         if v>=[0,5,4]:
-            self.extraargs=['--retry','30']
+            self.wizargs+=['--retry','30']
             
         if self.stream and v<[0,5,3]:
             self.stream=False
@@ -974,12 +977,12 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
 
     def run(self):
         if not self.stream:
-            self.td= ThreadedDownloader( self, self.device, [self.program], self.Play, self.Stop)
+            self.td= ThreadedDownloader( self, self.device, [self.program], self.Play, self.Stop,wizargs=self.wizargs)
         else:
-            cmd=[wizexe,'--stdout','--all','-R','--BWName',self.program['index']]+self.device.args+self.extraargs
+            cmd=[wizexe,'--stdout','--all','-R','--BWName',self.program['index']]+self.device.args+self.wizargs
             try:
                 self.wizproc=subproc(cmd,env=wizenv)
-                cmd=[vlcexe,'--no-video-title','-']
+                cmd=[vlcexe,'--no-video-title','-']+self.vlcargs
                 self.vlcproc = subproc(cmd,stdin=self.wizproc.stdout)
                 while self.vlcproc.poll() is None:
                     if self.wizproc.poll():raise Exception('getWizPnP is no longer running!')
@@ -1005,8 +1008,8 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
 
     def _onupdateprogress(self,event):
         if not self.tp and event.progress.get('downloaded',0)>5:
-            if not '--no-video-title' in self.args:self.args+=['--no-video-title']
-            self.tp=ThreadedPlayer( self, self.Stop, self.Play,self.program['filename'],self.args)        
+            if not '--no-video-title' in self.vlcargs:self.vlcargs+=['--no-video-title']
+            self.tp=ThreadedPlayer( self, self.Stop, self.Play,self.program['filename'],self.vlcargs)        
         #pass
 
     def _onlog(self,event):
