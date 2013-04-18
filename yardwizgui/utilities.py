@@ -1509,7 +1509,7 @@ for f in getwizpnp:
         wizexe=f
         break
 
-vlc=['vlc','VLC']
+vlc=['VLC','vlc']
 vlcexe=''
 
 if iswin:
