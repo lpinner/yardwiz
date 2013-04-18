@@ -383,8 +383,10 @@ class GUI( gui.GUI ):
                 del self.configspec['getWizPnP']['delay']
                 self.config.remove_option('getWizPnP','delay')
         else:
-            del self.configspec['getWizPnP']
-            self.config.remove_section('getWizPnP')
+            try:
+                del self.configspec['getWizPnP']
+                self.config.remove_section('getWizPnP')
+            except:pass
         
         #VLC Player
         logger.debug('VLC path: %s'%vlcexe)
