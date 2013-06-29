@@ -47,9 +47,9 @@ class DateTimeCtrl(wx.Panel):
 
         self.dpc.SetSizeHintsSz( wx.Size( 120,-1 ), wx.DefaultSize )
         h = self.dpc.GetSize().height
-        
-        self.tc = wx.lib.masked.TimeCtrl( self, -1,value, wx.DefaultPosition , (-1,h), 
-                                          wx.TE_PROCESS_TAB|self.dpc.GetBorder(), 
+
+        self.tc = wx.lib.masked.TimeCtrl( self, -1,value, wx.DefaultPosition , (-1,h),
+                                          wx.TE_PROCESS_TAB|self.dpc.GetBorder(),
                                           display_seconds=False, useFixedWidthFont=False)
 
         self.tc.SetFont(self.dpc.GetFont())
@@ -106,19 +106,20 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
     #So the user can set the secondary sort column (to break ties)
     SecondarySortColumn=-1
 
-    #So we can disable sorting if required
-    _sortenabled=True
-
     def __init__(self, *args, **kwargs):
         self._args=args
         self._kwargs=kwargs
+
+        #So we can disable sorting if required
+        self._sortenabled=True
+
         wx.ListCtrl.__init__(self,*args,**kwargs)
         self.itemDataMap = ordereddict.OrderedDict()
         ListCtrlAutoWidthMixin.__init__(self)
         ColumnSorterMixin.__init__(self, 0)
 
         #As we override the default ColumnSorter
-        self.DefaultSorter=ColumnSorterMixin.GetColumnSorter(self)
+        self.DefaultSorter=self.ColumnSorter
 
     def ClearAll(self,*args,**kwargs):
         wx.ListCtrl.ClearAll(self)
@@ -134,12 +135,12 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
             self.itemDataMap[itemdata]=values
             wx.ListCtrl.Append(self,values)
 
-            for j in range(self.GetColumnCount()):
-                cwidth=self.GetColumnWidth(j)
-                hwidth=self.HeaderWidths[j]
-                twidth = self.GetTextExtent(values[j])[0]+10    
-                self.SetColumnWidth(j,max([cwidth,hwidth,twidth]))
-        
+            for col in range(self.GetColumnCount()):
+                cwidth=self.GetColumnWidth(col)
+                hwidth=self.HeaderWidths[col]
+                twidth = self.GetTextExtent(values[col])[0]+10
+                self.SetColumnWidth(col,max([cwidth,hwidth,twidth]))
+
     def DeleteItem(self,item):
         del self.itemDataMap[self.GetItemData(item)]
         wx.ListCtrl.DeleteItem(self,item)
@@ -159,6 +160,23 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
 
     def GetColumnSorter(self):
         return self.CustomSorter
+
+    def ColumnSorter(self, key1, key2):
+        col = self._col
+        ascending = self._colSortFlag[col]
+        item1 = self.itemDataMap[key1][col]
+        item2 = self.itemDataMap[key2][col]
+
+        cmpVal = cmp(item1, item2)
+
+        # If the items are equal then pick something else to make the sort value unique
+        if cmpVal == 0:
+            cmpVal = apply(cmp, self.GetSecondarySortValues(col, key1, key2))
+
+        if ascending:
+            return cmpVal
+        else:
+            return -cmpVal
 
     def SetSecondarySortColumn(self, col):
         self.SecondarySortColumn=col
@@ -232,23 +250,36 @@ class SortableListCtrl(wx.ListCtrl, ColumnSorterMixin,ListCtrlAutoWidthMixin):
         else:return -order
 
     def CustomSorter(self, key1, key2):
-        CustomSorters=[self.NumSorter,self.DateSorter]
-        for sorter in CustomSorters:  #Assume it's a float or date and fall back to the default sorter if this fails
-            try:return sorter(key1, key2)
-            except: pass
-        try:return self.DefaultSorter(key1, key2)
-        except:
-            raise
+        if self._sortenabled:
+            CustomSorters=[self.NumSorter,self.DateSorter]
+            for sorter in CustomSorters:  #Assume it's a float or date and fall back to the default sorter if this fails
+                try:return sorter(key1, key2)
+                except Exception as err: pass#print err# pass
+            try:return self.DefaultSorter(key1, key2)
+            except:
+                raise
 
     def SetSortEnabled(self, enabled=True):
+        self._sortenabled=enabled
         if enabled:
-            self.Bind(wx.EVT_LIST_COL_CLICK, self._ColumnSorterMixin__OnColClick,self)
+            self.Unbind( wx.EVT_LIST_COL_CLICK ) #Unbinding doesn't work, need to stop event propagation
+            self.Bind(wx.EVT_LIST_COL_CLICK, self.__OnColClick)
         else:
-            #self.Unbind( wx.EVT_LIST_COL_CLICK ) #Unbinding doesn't work, need to stop event propagation
+            self.Unbind( wx.EVT_LIST_COL_CLICK ) #Unbinding doesn't work, need to stop event propagation
             self.Bind(wx.EVT_LIST_COL_CLICK, self.__OnColClickSortDisabled)
 
     def __OnColClickSortDisabled(self, evt):
         pass
+
+    def __OnColClick(self, evt):
+        oldCol = self._col
+        self._col = col = evt.GetColumn()
+        self._colSortFlag[col] = int(not self._colSortFlag[col])
+        self.GetListCtrl().SortItems(self.GetColumnSorter())
+        if wx.Platform != "__WXMAC__" or wx.SystemOptions.GetOptionInt("mac.listctrl.always_use_generic") == 1:
+            self._ColumnSorterMixin__updateImages(oldCol)
+        evt.StopPropagation()# Skip()
+        self.OnSortOrderChanged()
 
 class PropertyScrolledPanel(ScrolledPanel):
     def __init__(self, *args, **kwargs):
@@ -268,7 +299,7 @@ class PropertyScrolledPanel(ScrolledPanel):
 
     def ScrollChildIntoView(self,*args,**kwargs):
         return None
-    
+
     def OnPaneChanged(self, evt=None):
         self.Freeze()
         expanded=-1
@@ -276,7 +307,7 @@ class PropertyScrolledPanel(ScrolledPanel):
             if pane.Expanded:
                 if i==self.expanded:pane.Collapse()
                 else:expanded=i
-            
+
         self.expanded=expanded
 
         self.Thaw()
@@ -337,7 +368,7 @@ class PropertyScrolledPanel(ScrolledPanel):
             pane.SetSizer(border)
 
             self.Sizer.Add(cp, 0, wx.RIGHT|wx.LEFT|wx.EXPAND, 5)
-            
+
             self._config[section]=opts
 
         self.panes[0].Expand()

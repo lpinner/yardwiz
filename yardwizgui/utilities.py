@@ -18,7 +18,7 @@ MiB=1000.0**2
 #Helper classes
 #######################################################################
 class ThreadedUtility( Thread ):
-    
+
     def __init__( self, parent):
 
         Thread.__init__( self )
@@ -36,7 +36,7 @@ class ThreadedUtility( Thread ):
             raise
         except:
             self.excepthook(*sys.exc_info())
-            
+
     def excepthook(self, type, value, tb):
         msg=''.join(traceback.format_exception(type, value, tb))
         if logger.getEffectiveLevel()==logging.DEBUG:
@@ -44,7 +44,7 @@ class ThreadedUtility( Thread ):
         else:
             self.Log("Errors occurred, see the logfile '%s' for details" % logfile, logging.ERROR)
         logger.error(msg)
-    
+
     def Log(self,msg,*args,**kwargs):
         evt = Log(wizEVT_LOG, -1, msg,*args,**kwargs)
         self.PostEvent(evt)
@@ -52,7 +52,7 @@ class ThreadedUtility( Thread ):
     def PostEvent(self,evt):
         try:wx.PostEvent(self.parent,evt)
         except Exception as err:
-            logger.error(str(err)) 
+            logger.error(str(err))
             pass #We're probably exiting
 
     def isonline(self, device):
@@ -68,7 +68,7 @@ class ThreadedUtility( Thread ):
                 self.Log('Unable to contact the WizPnP server.\n'+str(err),logging.ERROR)
                 return False
         else: return True
-        
+
 class ThreadedChecker( ThreadedUtility ):
     def __init__( self, parent, evtStop, device):
         ThreadedUtility.__init__( self, parent )
@@ -110,7 +110,7 @@ class ThreadedChecker( ThreadedUtility ):
             else:msg+='No errors found.'
         evt = CheckComplete(wizEVT_CHECKCOMPLETE, -1,checked,msg)
         self.PostEvent(evt)
-        
+
     def _parseerrors(self,stderr):
         lines=stderr.split('\n')
         errors=[]
@@ -130,7 +130,7 @@ class ThreadedChecker( ThreadedUtility ):
                         error.append(line)
             if error:errors.extend([program]+error)
         return '\n'.join(errors)
-    
+
 class ThreadedConnector( ThreadedUtility ):
     def __init__( self, parent, evtStop, device, quick=False,wizargs=[]):
         ThreadedUtility.__init__( self, parent )
@@ -146,7 +146,7 @@ class ThreadedConnector( ThreadedUtility ):
 
         if not self.isonline(self.device):
             evt = Connected(wizEVT_CONNECTED, -1,False,None)
-            self.PostEvent(evt)    
+            self.PostEvent(evt)
             return
 
         if self.quick:
@@ -213,7 +213,7 @@ class ThreadedConnector( ThreadedUtility ):
                         program=self._parseprogram(tmp)
                         if not program['index'] in updated:
                             updated.append(program['index'])
-                            program['info']='\n'.join(tmp)                        
+                            program['info']='\n'.join(tmp)
                             idx=programs.index(program['index'])
                             exists.append(program['index'])
                             evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, idx)
@@ -338,17 +338,12 @@ class ThreadedConnector( ThreadedUtility ):
             else:
                 datetime=line.split('-')[0].strip()
         if info:
-            program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,
-                                                     unicode(title,'UTF-8',errors='ignore'),
-                                                     unicode(info,'UTF-8',errors='ignore'),
-                                                     datetime,playtime)
-
-        program['title']=unicode(program['title'],'UTF-8',errors='ignore')
+            program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
 
         return program
 
     def _getinfo(self):
-        time.sleep(0.25)
+        time.sleep(0.5)
         cmd=[wizexe,'-vv','--all','-l','--episode','--index','--sort=fatd']+self.device.args
         proc=subproc(cmd,env=wizenv)
         proglines=[]
@@ -369,10 +364,8 @@ class ThreadedConnector( ThreadedUtility ):
                         tmp=list(proglines)
                         proglines=[]
                         program=self._parseprogram(tmp)
-                        program=self._parseprogram(tmp)
                         if not program['index'] in programs:
                             programs.append(program['index'])
-                            program['info']=unicode('\n'.join(tmp),'UTF-8',errors='ignore')
                             index+=1
                             evt = UpdateProgram(wizEVT_UPDATEPROGRAM, -1, program, index)
                             self.PostEvent(evt)
@@ -449,7 +442,7 @@ class ThreadedDeleter( ThreadedUtility ):
         self.indices=indices
         self.wizargs=wizargs
         self.start()
-        
+
     def run(self):
         if not self.isonline(self.device):
             evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1)
@@ -502,7 +495,7 @@ class ThreadedDownloader( ThreadedUtility ):
         self.wizargs=wizargs
 
         v=getwizpnpversion()
-        
+
         if v>=[0,5,4]:
             self.wizargs+=['--retry=30']
 
@@ -550,13 +543,13 @@ class ThreadedDownloader( ThreadedUtility ):
 
         cmd=[wizexe,'--all','-q','-R','--BWName','-O',d,'-T',f,program['index']]+self.device.args+self.wizargs
         if 'ts' in e.lower():cmd+=['-t']
-        
+
         try:
             self.proc=subproc(cmd,env=wizenv)
         except Exception,err:
             self.Log('Error, unable to download %s.'%program['filename'],logging.ERROR)
             self.Log(str(err),logging.ERROR)
-            
+
         f=program['filename']
         s=program['size']*MB
         total=self.total*MB
@@ -831,7 +824,7 @@ class ThreadedScheduler( ThreadedUtility, wx.EvtHandler):
         self.retries=retries
         self.deletefail=deletefail
         self.wizargs=wizargs
-        
+
         self.Bind(EVT_DOWNLOADCOMPLETE, self._ondownloadcomplete)
         self.Bind(EVT_LOG, self._onlog)
         self.Bind(EVT_UPDATEPROGRESS, self._onupdateprogress)
@@ -917,18 +910,18 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
         self.tp=None
 
         v=getwizpnpversion()
-        
+
         if v>=[0,5,4]:
             self.wizargs+=['--retry','30']
-            
+
         if self.stream and v<[0,5,3]:
             self.stream=False
             self.Log('Unable to play recordings without a tempfile with getWizPnP<0.5.3')
-            
+
         if not self.stream:
             self.program['filename']=tempfile.mktemp(suffix='.ts')
             logger.debug(self.program['filename'])
-        
+
         self.Bind(EVT_DOWNLOADCOMPLETE, self._ondownloadcomplete)
         self.Bind(EVT_LOG, self._onlog)
         self.Bind(EVT_UPDATEPROGRESS, self._onupdateprogress)
@@ -970,7 +963,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
                     msg+=[self.vlcproc.stderr.read()]
             except Exception as err:
                 trc+=[str(err)]
-                    
+
             evt = StreamComplete(wizEVT_STREAMCOMPLETE, -1)
             self.PostEvent(evt)
             return [msg,trc]
@@ -997,7 +990,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
                 self.Log('Error, unable to stream %s.'%self.program['title'],logging.ERROR)
                 if msg:self.Log('\n'.join(msg),logging.ERROR)
                 if trc:logger.debug('\n'.join(trc))
-            
+
 
     def _ondownloadcomplete(self,event):
         if event.stopped:self.stop()
@@ -1009,7 +1002,7 @@ class ThreadedStreamPlayer( ThreadedUtility, wx.EvtHandler):
     def _onupdateprogress(self,event):
         if not self.tp and event.progress.get('downloaded',0)>5:
             if not '--no-video-title' in self.vlcargs:self.vlcargs+=['--no-video-title']
-            self.tp=ThreadedPlayer( self, self.Stop, self.Play,self.program['filename'],self.vlcargs)        
+            self.tp=ThreadedPlayer( self, self.Stop, self.Play,self.program['filename'],self.vlcargs)
         #pass
 
     def _onlog(self,event):
@@ -1048,7 +1041,7 @@ class Stderr(object):
 
     def __init__(self,logfile):
         self.logfile=logfile
-        
+
     def errordialog(self,message, caption):
         import wx
         wxapp = wx.PySimpleApp(0)
@@ -1066,15 +1059,15 @@ class Stderr(object):
         pass
 
 class Callback:
-    
+
     def __init__(self, callback, *args, **kwargs):
         self.callback = callback
         self.args = args
         self.kwargs = kwargs
-        
+
     def __call__(self):
         return self.callback(*self.args,**self.kwargs)
-        
+
 class Device(object):
 
     def __init__(self,device):
@@ -1094,7 +1087,7 @@ class Device(object):
         logger.debug('Device display="%s"'%self.display)
         logger.debug('Device args="%s"'%self.args)
         logger.debug('Device str="%s"'%self.device)
-        
+
     def __str__(self):
         '''String representation that can be parsed as a new Device.'''
         return self.device
@@ -1113,7 +1106,7 @@ class Device(object):
         if self.ip and not self.name:
             s=self.ip
             if self._port:s+=':'+self._port
-        elif self.ip and self._port and self.name: 
+        elif self.ip and self._port and self.name:
             s='%s (%s:%s)'%(self.name,self.ip,self.port)
         else: s=self.name
         return s
@@ -1289,7 +1282,7 @@ def getwizpnpversion(as_string=False):
         print str(err)
     return version
 def kill(proc):
-    
+
     if iswin:
         #killing using self.proc.kill() doesn't seem to work on getwizpnp.exe
         CTRL_C_EVENT = 0
@@ -1305,7 +1298,7 @@ def kill(proc):
             try:
                 import psutil
                 try:parent = psutil.Process(proc.pid)
-                except: 
+                except:
                     logger.debug('No such process %s'%(proc.pid))
                     return
                 for child in parent.get_children():
@@ -1338,7 +1331,7 @@ def kill(proc):
         proc.send_signal(signal.SIGINT)
     time.sleep(0.5)
     logger.debug('Killed process %s, %s'%(proc.pid,proc.poll()))
-    
+
 def license():
     try:
         import __license__
@@ -1518,7 +1511,7 @@ if iswin:
     pf86=os.environ.get('ProgramFiles(x86)')
     if pf86:programfiles.append(pf86)
     for pf in programfiles:
-        vlcpath=os.path.join(pf,p) 
+        vlcpath=os.path.join(pf,p)
         if not vlcpath in path.split(os.pathsep):
             path=vlcpath+os.pathsep+path
     os.environ['PATH']=path

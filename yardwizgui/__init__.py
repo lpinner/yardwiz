@@ -70,7 +70,7 @@ class GUI( gui.GUI ):
         self._deleting=False
         self._downloading=False
         self.player=None
-        self.playpause=True       
+        self.playpause=True
         self.total=0
         self.tempfile=False
         self.schedulelist=[]
@@ -100,7 +100,7 @@ class GUI( gui.GUI ):
         self.Bind(EVT_PLAYCOMPLETE, self.onPlayComplete)
         self.Bind(EVT_STREAMCOMPLETE, self.onStreamComplete)
         self.Bind(EVT_UPDATEPROGRESS, self.onUpdateProgress)
-        self.lstPrograms.SetSortEnabled(True)
+        self.lstPrograms.SetSortEnabled(False)
 
         #Bind F5 to connect
         self._BindEvent( wx.EVT_KEY_DOWN, self.OnKeyDown,self )
@@ -157,7 +157,7 @@ class GUI( gui.GUI ):
         if self.device and self.config.getboolean('Settings','autoconnect'):
             self._Connect()
 
-        
+
     #######################################################################
     #Methods
     #######################################################################
@@ -165,36 +165,44 @@ class GUI( gui.GUI ):
 
         if event:
             program=event.program #This will fail when the program is added manually, not via the AddProgram event
+            iidx=event.index
 
-        if type(program['date']) is str:
+        for p in program:
+            if type(program[p]) is str:program[p]=unicode(program[p],errors='ignore')
+            elif type(program[p]) is unicode:program[p]=unicode(program[p].encode(errors='ignore'))
+
+        if type(program['date']) is unicode:
             program['date']=time.strptime(program['date'],self.getwizpnp_dateformat) #Already converted if added manually
 
         display_date=time.strftime(self.display_dateformat,program['date'])
-        program['length']=program.get('length','')
+        program['length']=program.get('length',u'')
         program['size']=program.get('size',0)
-        program['channel']=program.get('channel','')
+        program['channel']=program.get('channel',u'')
 
         if program['index'] in self.programs:
             self.programs[program['index']].update(program)
         else:
             self.programs[program['index']]=program
 
-        iidx=event.index
+        iidx=self.programs.keys().index(program['index'])
         lidx=self.lstPrograms.FindItemData(-1,iidx)
 
         if  program['index'] in self.deleted:
             if lidx>-1:self.lstPrograms.DeleteItem(lidx)
             return
-        
+
         if lidx>-1:
             self.lstPrograms.SetStringItem(lidx,0,program['title'])
             self.lstPrograms.SetStringItem(lidx,1,program['channel'])
             self.lstPrograms.SetStringItem(lidx,2,time.strftime(self.display_dateformat,program['date']))
-            self.lstPrograms.SetStringItem(lidx,3,"%0.1f" % program['size'])
+            self.lstPrograms.SetStringItem(lidx,3,u"%0.1f" % program['size'])
             self.lstPrograms.SetStringItem(lidx,4,program['length'])
         else:
             lidx=self.lstPrograms.GetItemCount()
-            self.lstPrograms.Append({iidx:[program['title'],program['channel'],display_date,program['size'],program['length']]})
+            self.lstPrograms.Append({iidx:[program['title'],program['channel'],display_date,u"%0.1f" % program['size'],program['length']]})
+            #import time as t
+            #t.sleep(1)
+            #self.lstPrograms.Append({lidx:[program['title'],program['channel'],display_date,u"%0.1f" % program['size'],program['length']]})
             self.lstPrograms.SetItemData(lidx,iidx)
             self.total+=program['size']
 
@@ -263,7 +271,7 @@ class GUI( gui.GUI ):
             except:
                 self.cbxDevice.SetSelection(0)
                 self.device=self.devices.values()[0]
-                
+
             sx,sy=self.cbxDevice.GetClientSizeTuple()
             self.cbxDevice.SetMinSize((self.cbxDevice.GetWidestItemWidth()+self.cbxDevice.GetButtonSize().x+20,sy))
 
@@ -332,7 +340,7 @@ class GUI( gui.GUI ):
                 except Exception,err:
                     logger.debug('Exception,err: %s'%str(err))
                     gexit_code=1
-                    
+
                 try:
                     logger.debug('Checking compiz')
                     proc=subproc(['compiz', '--version'])
@@ -387,7 +395,7 @@ class GUI( gui.GUI ):
                 del self.configspec['getWizPnP']
                 self.config.remove_section('getWizPnP')
             except:pass
-        
+
         #VLC Player
         logger.debug('VLC path: %s'%vlcexe)
         if vlcexe:
@@ -395,12 +403,12 @@ class GUI( gui.GUI ):
             if not iswin and '--qt-minimal-view' in self.vlcargs:
                 self.vlcargs.remove('--qt-minimal-view')
                 self.config.set('Settings','vlcargs',' '.join(self.vlcargs))
-                
+
             self.btnVLC.Disable()
             self.mitStream.Enable()
             pos=-1
             for pos,mit in enumerate(self.mnuPrograms.GetMenuItems()):
-                if mit.Label == self.mitStream.Label:break                
+                if mit.Label == self.mitStream.Label:break
             if pos>-1 and not self.mnuPrograms.FindItemByPosition(pos-1).IsSeparator():
                 self.mnuPrograms.InsertSeparator(pos)
 
@@ -410,7 +418,7 @@ class GUI( gui.GUI ):
                 self.tempfile=True
             else:
                 self.tempfile=self.config.getboolean('Settings','tempfile')
-            
+
         else:
             self.tempfile=False
             if 'vlcargs' in self.configspec['Settings']:
@@ -480,12 +488,13 @@ class GUI( gui.GUI ):
                 try:self._BindEvent(event,handler,cw)
                 except:pass
         except:pass
-        
+
     def _CheckComplete(self,event):
         if event and event.message:self._Log(event.message)
         self._checking=False
         self._Enable()
-        
+        self.lstPrograms.SetSortEnabled()
+
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _CleanupConfig(self):
@@ -579,21 +588,24 @@ class GUI( gui.GUI ):
 
         self._connecting=False
         self._Enable()
-        
+
         downloaded,deleted=self.downloaded[:],self.deleted[:]
         for pidx in downloaded:
             if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
         for pidx in self.deleted:
             if pidx not in self.programs:del self.deleted[self.deleted.index(pidx)]
 
+        if event and event.connected:
+            self.lstPrograms.SetSortEnabled()
+
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _Convert(self):
-        
+
         self.CancelConversion.clear()
-        #dirdlg=mdd.MultiDirDialog(self, message='Select one or more tvwiz folders.', 
+        #dirdlg=mdd.MultiDirDialog(self, message='Select one or more tvwiz folders.',
         #                          agwStyle=mdd.DD_MULTIPLE|mdd.DD_DIR_MUST_EXIST)
-        dirdlg=wx.DirDialog(self, message='Select a tvwiz folder.', 
+        dirdlg=wx.DirDialog(self, message='Select a tvwiz folder.',
                             defaultPath=self.config.get('Settings','lastdir'),
                             style=wx.DD_DIR_MUST_EXIST)
 
@@ -667,7 +679,7 @@ class GUI( gui.GUI ):
                 self.gaugeProgressBar.Pulse()
                 self.lblProgressText.Show()
                 self.lblProgressText.SetLabelText('Deleting recordings...')
-    
+
             self._ShowTab(self.idxLog)
             indices.reverse()
             programs.reverse()
@@ -837,11 +849,10 @@ class GUI( gui.GUI ):
                 self.btnClearQueue.Enable( True )
                 self.btnDownload.Enable( True )
                 self.lstQueue.Enable( True )
-        
+
     def _Enable(self):
         self.Stop.clear()
         self.mitDelete.Enable( True )
-        self.lstPrograms.SetSortEnabled(True)
         self.mitCheck.Enable( True )
         if not self._downloading:
             self.btnConnect.Enable( True )
@@ -907,7 +918,7 @@ class GUI( gui.GUI ):
                     dialog.add_filter(tsfilter)
 
                 response = dialog.run()
-                
+
                 if response == gtk.RESPONSE_OK:
                     filename=dialog.get_filename()
                     filter=dialog.get_filter().get_name()
@@ -1175,14 +1186,14 @@ class GUI( gui.GUI ):
                 pidx = self.programs.keys()[lidx]
                 program = self.programs[pidx]
                 size+=program['size']
-               
+
                 idx = self.lstPrograms.GetNextSelected(idx)
-            
+
             self.StatusBar.SetFieldsCount(2)
             if i==1:msg='Selected recording %sMB'%round(size,1)
             else:msg='Selected recordings %sMB'%round(size,1)
             self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1),msg])
-        
+
     def _ShowTab(self,tabindex):
         self.nbTabArea.ChangeSelection(tabindex)
 
@@ -1198,26 +1209,31 @@ class GUI( gui.GUI ):
             return
         self.mitStream.Enable(False)
         tp=ThreadedStreamPlayer(self, self.device, program, self.StopStreaming, self.tempfile, self.vlcargs, self.wizargs)
-        
+
     def _UpdateProgram(self,event):
-        idx=self.lstPrograms.FindItemData(-1,event.index)
         program=event.program
-        if type(program['date']) is str:program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
+
+        for p in program:
+            if type(program[p]) is str:program[p]=unicode(program[p],errors='ignore')
+            elif type(program[p]) is unicode:program[p]=unicode(program[p].encode(errors='ignore'))
+
+        if type(program['date']) is unicode:program['date']=time.strptime(program['date'],self.getwizpnp_dateformat)
         if program['index'] in self.programs:
+            idx=self.lstPrograms.FindItemData(-1,self.programs.keys().index(program['index']))
             if self.programs[program['index']]['size']==0:
                 self.total+=program['size']
             self.programs[program['index']].update(program)
         else:
-            self.programs[program['index']]=program
-            self.total+=program['size']
+            self._AddProgram(program=program)
+            return
         if self.total>0 and not self._downloading:
             self.StatusBar.SetFieldsCount(1)
             self.StatusBar.SetFields(['Total recordings %sMB'%round(self.total,1)])
         try:
             self.lstPrograms.SetStringItem(idx,0,program['title'])
             self.lstPrograms.SetStringItem(idx,1,program['channel'])
-            self.lstPrograms.SetStringItem(idx,2,time.strftime(self.display_dateformat,program['date']))
-            self.lstPrograms.SetStringItem(idx,3,"%0.1f" % program['size'])
+            self.lstPrograms.SetStringItem(idx,2,unicode(time.strftime(self.display_dateformat,program['date'])))
+            self.lstPrograms.SetStringItem(idx,3,u"%0.1f" % program['size'])
             self.lstPrograms.SetStringItem(idx,4,program['length'])
         except:return #we're probably exiting
 
@@ -1334,7 +1350,7 @@ class GUI( gui.GUI ):
     def btnPlayPause_OnClick( self, event ):
         if self.playpause:self.btnPlay_OnClick(event)
         else:self.btnPause_OnClick(event)
-            
+
     def btnPlay_OnClick( self, event ):
         self.btnPlayPause.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"pause.png"), wx.BITMAP_TYPE_ANY ) )
         self.playpause=False
@@ -1363,7 +1379,7 @@ class GUI( gui.GUI ):
     def cbxDevice_OnCombobox( self, event ):
         if self.config.getboolean('Settings','onselect'):
             self._Connect()
-        
+
     def cbxDevice_OnKillFocus( self, event ):
         if self.cbxDevice.IsEnabled():
             device=str(self.cbxDevice.GetValue())
@@ -1375,7 +1391,7 @@ class GUI( gui.GUI ):
                     self.devices[device]=self.device
                     self.cbxDevice.Append(self.device.display)
                 self._Enable()
-    
+
                 #Update config
                 self.config.set('Settings','device',';'.join(map(str,self.devices.values())))
                 logger.debug(self.config.get('Settings','device'))
@@ -1448,12 +1464,12 @@ class GUI( gui.GUI ):
 
     def mitStream_OnSelect( self, event ):
         self._Stream()
-    
+
     def mitPreferences_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)
         self.cbxDevice_OnKillFocus(None) #Clicking a menu item doesn't move focus off a control,
                                          #so make sure the device name gets updated.
-        settings=SettingsDialog(self,self.config,self.configspec) 
+        settings=SettingsDialog(self,self.config,self.configspec)
         if settings.saved:
             self.config=settings.config
             self._ApplyConfig()
