@@ -313,10 +313,11 @@ class ThreadedConnector( ThreadedUtility ):
             info=('/').join(info[1:]).strip()
             if info and len(info)<50:
                 program['title']='%s - %s'%(title.strip(),info.strip())
-                info=None
+                info=''
         else:
-            info=None
+            info=''
 
+        otherlines=[]
         for line in proglines[1:]:
             if 'Index name' in line:
                 program['index']=line.split(':')[1].strip()
@@ -336,9 +337,13 @@ class ThreadedConnector( ThreadedUtility ):
             elif 'autoDelete' in line:
                 pass
             else:
-                datetime=line.split('-')[0].strip()
+                otherlines.append(line.strip())
+                
+        info='\n'.join([info]+otherlines).strip()
         if info:
-            program['info'] = '%s: %s \n%s\n%s\n%s'%(channel,title,info,datetime,playtime)
+            program['info'] = '%s: %s \n%s\n%s'%(channel,title,info,playtime)
+        else:
+            program['info'] = '%s: %s \n%s'%(channel,title,playtime)
 
         return program
 

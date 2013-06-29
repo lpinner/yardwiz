@@ -180,6 +180,8 @@ class GUI( gui.GUI ):
         program['channel']=program.get('channel',u'')
 
         if program['index'] in self.programs:
+            if len(self.programs[program['index']].get('info','')) > len(program['info']):
+                del program['info']
             self.programs[program['index']].update(program)
         else:
             self.programs[program['index']]=program
@@ -200,9 +202,6 @@ class GUI( gui.GUI ):
         else:
             lidx=self.lstPrograms.GetItemCount()
             self.lstPrograms.Append({iidx:[program['title'],program['channel'],display_date,u"%0.1f" % program['size'],program['length']]})
-            #import time as t
-            #t.sleep(1)
-            #self.lstPrograms.Append({lidx:[program['title'],program['channel'],display_date,u"%0.1f" % program['size'],program['length']]})
             self.lstPrograms.SetItemData(lidx,iidx)
             self.total+=program['size']
 
