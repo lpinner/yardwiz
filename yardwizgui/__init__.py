@@ -692,6 +692,7 @@ class GUI( gui.GUI ):
         self._deleting=False
         if not self._downloading:
             self._Enable()
+            self.lstPrograms.SetSortEnabled(True)
 
     def _DeleteProgram(self,event):
         if event.index>-1:
