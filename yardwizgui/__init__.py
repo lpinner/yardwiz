@@ -1088,7 +1088,8 @@ class GUI( gui.GUI ):
                 else:return
 
             idx = self.lstPrograms.GetNextSelected(idx)
-
+            
+        if not schedulelist:return
         programs=[self.programs[pidx]['title'] for pidx in schedulelist]
         self._FadeOut(stop=200,delta=-25)
         sd=SchedulerDialog(self, programs, self.scheduletime, showcancel)
