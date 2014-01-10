@@ -142,10 +142,11 @@ class ThreadedConnector( ThreadedUtility ):
         self._stop = evtStop
         self._stop.clear()
         self.start()
+
     def run(self):
 
         if not self.isonline(self.device):
-            evt = Connected(wizEVT_CONNECTED, -1,False,None)
+            evt = Connected(wizEVT_CONNECTED, -1,False)
             self.PostEvent(evt)
             return
 
@@ -154,11 +155,13 @@ class ThreadedConnector( ThreadedUtility ):
         else:
             exit_code,err=self._listprograms()
         if exit_code > 0:
-            evt = Connected(wizEVT_CONNECTED, -1,False,'Unable to list programs on the WizPnP server:\n%s'%err)
+            evt = Connected(wizEVT_CONNECTED, -1,False)
             self.PostEvent(evt)
+            self.Log('Unable to list programs on the WizPnP server:\n%s'%err, logging.ERROR)
         else:
-            evt = Connected(wizEVT_CONNECTED, -1,True,'Finished listing programs on the WizPnP server')
+            evt = Connected(wizEVT_CONNECTED, -1,True)
             self.PostEvent(evt)
+            self.Log('Finished listing programs on the WizPnP server')
 
     def _quicklistprograms(self):
         cmd=[wizexe,'--all','--sort=fatd']+self.device.args+self.wizargs
@@ -579,8 +582,8 @@ class ThreadedDownloader( ThreadedUtility ):
                         else:break
 
                 except Exception,err:
-                    self.Log('Unable to stop download or delete %s.'%program['filename'],logging.ERROR)
-                    self.Log(str(err),logging.ERROR)
+                    msg='Unable to stop download or delete %s\n%s.'%(program['filename'],str(err))
+                    self.Log(msg,logging.ERROR)
                 else:
                     self.Log('Download cancelled.')
                 return
@@ -600,8 +603,8 @@ class ThreadedDownloader( ThreadedUtility ):
                         try:
                             delete(program['filename'])
                         except Exception,err:
-                            self.Log('Unable to delete %s.'%program['filename'],logging.ERROR)
-                            self.Log(str(err),logging.ERROR)
+                            msg='Unable to delete %s.\n%s'%(program['filename'],str(err))
+                            self.Log(msg,logging.ERROR)
                         else:
                             self.Log('Download cancelled.')
                         return
@@ -659,9 +662,10 @@ class ThreadedDownloader( ThreadedUtility ):
         except:return#We're probably exiting
         stdout,stderr=self.proc.communicate()
         if exit_code or not os.path.exists(f) or percent < 100:
-            self.Log('Error, unable to download %s.'%program['filename'],logging.ERROR)
-            self.Log('getWizPnP STDOUT:'+stdout,logging.ERROR)
-            self.Log('getWizPnP STDERR:'+stderr,logging.ERROR)
+            msg='Error, unable to download %s.\n'%program['filename']
+            msg+='getWizPnP STDOUT:%s'%stdout
+            msg+='getWizPnP STDERR:%s'%stderr
+            self.Log(msg,logging.ERROR)
             if self.attempts<self.retries:
                 self.Log('Retrying (attempt %s).'%(self.attempts+1))
                 #if '.tvwiz' in f:delete(sorted(glob.glob(os.path.join(f,'[0-9][0-9][0-9][0-9]')))[-1])

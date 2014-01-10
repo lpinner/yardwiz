@@ -582,8 +582,10 @@ class GUI( gui.GUI ):
 
     def _Connected(self,event=None):
 
-        if event and event.message:
-            self._Log(event.message)
+        #if event and event.connected:
+        #    if event.message:self._Log(event.message)
+        #elif event and not event.connected:
+        #    error_message(self,str(event.message))
 
         self._connecting=False
         self._Enable()
@@ -643,10 +645,12 @@ class GUI( gui.GUI ):
             program = self.programs[pidx]
 
             if '*RECORDING' in program['title']:
-                self._Log('Unable to delete %s as it is currently recording.'%program['title'])
+                msg='Unable to delete %s as it is currently recording.'%program['title']
+                self._Log(msg,logging.ERROR)
                 self._ShowTab(self.idxLog)
             elif '*LOCKED' in program['title']:
-                self._Log('Unable to delete %s as it is LOCKED.'%program['title'])
+                msg='Unable to delete %s as it is LOCKED.'%program['title']
+                self._Log(msg,logging.ERROR)
                 self._ShowTab(self.idxLog)
             else:
                 prognames.append('%s-%s'%(program['title'],time.strftime(self.filename_dateformat,program['date'])))
@@ -720,6 +724,7 @@ class GUI( gui.GUI ):
             logger.error(str(err))
             self._Log('Error searching for Wizzes:')
             self._Log(str(err))
+            error_message(self, str(err),'Error searching for Wizzes:')
         stdout,stderr=proc.communicate()
         exit_code=proc.wait()
         stdout=stdout.strip()
@@ -746,7 +751,8 @@ class GUI( gui.GUI ):
         else:
             #self.cbxDevice.Clear()
             #self.cbxDevice.SetValue('')
-            self._Log('Unable to discover any Wizzes.')
+            msg='Unable to discover any Wizzes.'
+            self._Log(msg,logging.ERROR)
             self._ShowTab(self.idxLog)
 
         #Update config
@@ -817,7 +823,8 @@ class GUI( gui.GUI ):
                         sound = wx.Sound(self.downloadcompletesound)
                         sound.Play(wx.SOUND_ASYNC)
                     except Exception, err:
-                        self._Log(err)
+                        self._Log(str(err))
+                        error_message(self, str(err))
 
         if not stopped and pidx:
             program=self.programs[pidx]
@@ -963,7 +970,7 @@ class GUI( gui.GUI ):
         self.gaugeProgressBar.SetValue(0)
         self.gaugeProgressBar._Hide()
 
-    def _Log(self,msg):
+    def _Log(self,msg,severity=logging.INFO):
         self.txtLog.SetInsertionPointEnd()
         msg=msg.strip()
         if msg:
@@ -971,6 +978,7 @@ class GUI( gui.GUI ):
             except:self.txtLog.WriteText(str(msg)+'\n')
             self.txtLog.ShowPosition(self.txtLog.GetLastPosition())
             logger.debug(msg)
+            if severity > logging.INFO:error_message(self,msg)
 
     def _Play(self,filename=None):
         if filename is None:filename=self.filename
@@ -988,6 +996,7 @@ class GUI( gui.GUI ):
             except Exception,err:
                 self._Log('Can\'t run post download command on %s'%program['filename'])
                 self._Log(str(err))
+                error_message(self, 'Can\'t run post download command\n'+str(err))
 
     def _Pulse(self,*args,**kwargs):
         if not self._downloading:
@@ -1011,7 +1020,8 @@ class GUI( gui.GUI ):
             program = self.programs[pidx]
             pidx=program['index']
             if '*RECORDING' in program['title']:
-                self._Log('Unable to download %s as it is currently recording.'%program['title'])
+                msg='Unable to download %s as it is currently recording.'%program['title']
+                self._Log(msg,logging.ERROR)
                 self._ShowTab(self.idxLog)
             elif pidx not in self.queue:
                 i+=1
@@ -1078,7 +1088,8 @@ class GUI( gui.GUI ):
             pidx=self.programs.keys()[qidx]
             program = self.programs[pidx]
             if '*RECORDING' in program['title']:
-                self._Log('Unable to schedule %s as it is currently recording.'%program['title'])
+                msg='Unable to schedule %s as it is currently recording.'%program['title']
+                self._Log(msg,logging.ERROR)
                 self._ShowTab(self.idxLog)
             elif pidx not in self.schedulelist:
                 filename = self._GetFileName(program)
@@ -1205,7 +1216,8 @@ class GUI( gui.GUI ):
         pidx=self.programs.keys()[qidx]
         program = self.programs[pidx]
         if '*RECORDING' in program['title']:
-            self._Log('Unable to play %s as it is currently recording.'%program['title'])
+            msg='Unable to play %s as it is currently recording.'%program['title']
+            self._Log(msg,logging.ERROR)
             self._ShowTab(self.idxLog)
             return
         self.mitStream.Enable(False)
@@ -1529,7 +1541,7 @@ class GUI( gui.GUI ):
             event.Skip()
 
     def onLog( self, event ):
-        self._Log(event.message)
+        self._Log(event.message, event.severity)
 
     def onPlayComplete( self, event ):
         self.btnVLC.Disable()
@@ -1686,3 +1698,26 @@ class ConfirmDelete( gui.ConfirmDelete ):
             self.DialogButtonsNo.Enable(True)
             self.chkShowAgain.Fit()
             self.Fit()
+
+def info_message(parent,message,caption='Info'):
+    dlg = wx.MessageDialog(
+    parent=parent,
+    message=message,
+    caption=caption,
+    style=wx.OK | wx.ICON_INFORMATION | wx.STAY_ON_TOP,
+    pos=(200,200)
+    )
+    dlg.ShowModal()
+    dlg.Destroy()
+
+def error_message(parent,message,caption='Error'):
+    dlg = wx.MessageDialog(
+    parent=parent,
+    message=message,
+    caption=caption,
+    style=wx.OK | wx.ICON_ERROR | wx.STAY_ON_TOP
+    )
+    dlg.ShowModal()
+    dlg.Destroy()
+    
+    
