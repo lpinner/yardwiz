@@ -162,6 +162,7 @@ class ThreadedConnector( ThreadedUtility ):
         self._stop = evtStop
         self._stop.clear()
         self.start()
+        self.getwizpnp_dateformats=['%b.%d.%Y_%H.%M','%a %b %d %H:%M:%S %Y']
 
     def run(self):
 
@@ -311,6 +312,9 @@ class ThreadedConnector( ThreadedUtility ):
         datetime=program[-1].split('-')[0] #Handle multiple instant recording bug - http://www.beyonwiz.com.au/phpbb2/viewtopic.php?p=95311#95311
                                            #Index can be recordings/<NAME>_<DATETIME>-<N> so strip off the "<-N>"
                                            #E.g. recordings/_Sunrise _live_ Feb.14.2012_6.14-1
+        try:d=time.strptime(datetime,self.getwizpnp_dateformats[0])
+        except ValueError:datetime='Jan.1.9999_00.00'
+        
         title=' '.join(program[:-1]).replace('/_','/')
         title='/'.join(title.split('/')[1:])
         title=title.replace('_',':') #Strip off the root folder
@@ -341,7 +345,7 @@ class ThreadedConnector( ThreadedUtility ):
             info=''
 
         otherlines=[]
-        for line in proglines[1:]:
+        for i,line in enumerate(proglines[1:]):
             if 'Index name' in line:
                 program['index']=line.split(':')[1].strip()
                 dirs=program['index'].split('/')
@@ -351,6 +355,14 @@ class ThreadedConnector( ThreadedUtility ):
                 program['date']=datetime[-1].split('-')[0]#Handle multiple instant recording bug - http://www.beyonwiz.com.au/phpbb2/viewtopic.php?p=95311#95311
                                                           #Index can be recordings/<NAME>_<DATETIME>-<N> so strip off the "<-N>"
                                                           #E.g. recordings/_Sunrise _live_ Feb.14.2012_6.14-1
+                try:d=time.strptime(program['date'],self.getwizpnp_dateformats[0])
+                except ValueError:
+                    try: #Mon Jan 27 19:20:08 2014 - Mon Jan 27 19:21:04 2014
+                        datetime=proglines[i+2].split('-')[0].strip()
+                        d=time.strptime(datetime,self.getwizpnp_dateformats[1])
+                        program['date']=time.strftime(self.getwizpnp_dateformats[0], d)
+                    except: 
+                        program['date']='Jan.1.9999_00.00'
 
             elif 'playtime' in line:
                 playtime=line
