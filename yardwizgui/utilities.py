@@ -1183,7 +1183,7 @@ class Trunc(object):
         '''
         try:fp = open(self.__path,'rb') #LP 03/01/2012 - open as rb so code works on windows
         except:
-            if not os.path.exists(path): #LP 06/03/2012 - Raise a more understandable error
+            if not os.path.exists(self.__path): #LP 06/03/2012 - Raise a more understandable error
                 raise TypeError('%s is not a TVWiz directory'%os.path.dirname(self.__path))
             else:raise
         while True:
