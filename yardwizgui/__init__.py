@@ -69,6 +69,8 @@ class GUI( gui.GUI ):
         self._connecting=False
         self._deleting=False
         self._downloading=False
+        self.deleteded=[]
+        self.downloaded=[]
         self.player=None
         self.playpause=True
         self.total=0
@@ -704,6 +706,7 @@ class GUI( gui.GUI ):
             if lidx>-1:
                 pidx=self.programs.keys()[event.index]
                 if pidx not in self.deleted:self.deleted.append(pidx)
+                pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
                 self.lstPrograms.DeleteItem(lidx)
                 self.total-=self.programs[pidx]['size']
                 if not self._downloading:
@@ -812,6 +815,7 @@ class GUI( gui.GUI ):
             self.lstQueue.DeleteItem(0)
             if not stopped:
                 self.downloaded.append(pidx)
+                pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
                 try:
                     self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
                     self.lstPrograms.Select(item, 0) #Deselect
@@ -992,7 +996,7 @@ class GUI( gui.GUI ):
             cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
             logger.debug('Postdownload command: %s'%cmd)
             try:
-                pid = subprocess.Popen(cmd).pid #Don't wait, nor check the output, leave that up to the user
+                pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
             except Exception,err:
                 self._Log('Can\'t run post download command on %s'%program['filename'])
                 self._Log(str(err))
@@ -1065,12 +1069,12 @@ class GUI( gui.GUI ):
 
         #Already downloaded recordings
         self.downloadedcache=os.path.join(configdir,'downloaded.cache')
-        try:self.downloaded=pickle.load( open(self.downloadedcache))
+        try:self.downloaded=list(set(pickle.load( open(self.downloadedcache))+self.downloaded))
         except:self.downloaded=[]
 
         #Already deleted recordings
         self.deletedcache=os.path.join(configdir,'deleted.cache')
-        try:self.deleted=pickle.load( open(self.deletedcache))
+        try:self.deleted=list(set(pickle.load( open(self.deletedcache))+self.deleted))
         except:self.deleted=[]
 
     def _Reset(self):
