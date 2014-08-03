@@ -991,12 +991,16 @@ class GUI( gui.GUI ):
 
     def _PostDownloadCommand(self,program):
         cmd=self.postcmd.split('#')[0].strip()
+        
         if cmd:
+            import shlex
             cmd=cmd.replace('%F', '"%s"'%program['filename'])
             cmd=cmd.replace('%D', '"%s"'%os.path.dirname(program['filename']))
+            cmd=shlex.split(cmd)
             logger.debug('Postdownload command: %s'%cmd)
             try:
-                pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
+                #pid = subprocess.Popen(cmd,shell=True).pid #Don't wait, nor check the output, leave that up to the user
+                pid = subprocess.Popen(cmd).pid #Don't wait, nor check the output, leave that up to the user
             except Exception,err:
                 self._Log('Can\'t run post download command on %s'%program['filename'])
                 self._Log(str(err))
