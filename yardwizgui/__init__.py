@@ -42,6 +42,17 @@ class GUI( gui.GUI ):
     def __init__( self):
         gui.GUI.__init__( self, parent=None )
 
+        if 'APPDATA' in os.environ:
+            self.configdir = os.path.join(os.environ['APPDATA'], APPNAME.lower())
+        elif 'XDG_CONFIG_HOME' in os.environ:
+            self.configdir = os.path.join(os.environ['XDG_CONFIG_HOME'], APPNAME.lower())
+        else:
+            confighome = os.path.join(wx.GetHomeDir(), '.config')
+            if os.path.exists(confighome) and os.path.isdir(confighome):
+                self.configdir = os.path.join(confighome, APPNAME.lower())
+            else:
+                self.configdir = os.path.join(wx.GetHomeDir(), '.'+APPNAME.lower())
+
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         self.icons=os.path.join(data_path(),u'icons')
         ico = wx.Icon( os.path.join(self.icons, u"yardwiz.png"), wx.BITMAP_TYPE_ANY )
@@ -69,8 +80,10 @@ class GUI( gui.GUI ):
         self._connecting=False
         self._deleting=False
         self._downloading=False
-        self.deleteded=[]
-        self.downloaded=[]
+        self.deletedcache=os.path.join(self.configdir,'deleted.cache')
+        self.downloadedcache=os.path.join(self.configdir,'downloaded.cache')
+        self.deleted=PickledSet(self.deletedcache)
+        self.downloaded=PickledSet(self.downloadedcache)
         self.player=None
         self.playpause=True
         self.total=0
@@ -592,11 +605,14 @@ class GUI( gui.GUI ):
         self._connecting=False
         self._Enable()
 
-        downloaded,deleted=self.downloaded[:],self.deleted[:]
+        downloaded,deleted=list(self.downloaded)[:],list(self.deleted)[:]
         for pidx in downloaded:
-            if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
-        for pidx in self.deleted:
-            if pidx not in self.programs:del self.deleted[self.deleted.index(pidx)]
+            #if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
+            if pidx not in self.programs:self.downloaded.remove(pidx)
+        for pidx in deleted:
+            #if pidx not in self.programs:del self.deleted[self.deleted.index(pidx)]
+            if pidx not in self.programs:self.deleted.remove(pidx)
+
 
         if event and event.connected:
             self.lstPrograms.SetSortEnabled()
@@ -705,8 +721,9 @@ class GUI( gui.GUI ):
             lidx=self.lstPrograms.FindItemData(-1,event.index)
             if lidx>-1:
                 pidx=self.programs.keys()[event.index]
-                if pidx not in self.deleted:self.deleted.append(pidx)
-                pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
+                #if pidx not in self.deleted:self.deleted.append(pidx)
+                #pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
+                if pidx not in self.deleted:self.deleted.add(pidx)
                 self.lstPrograms.DeleteItem(lidx)
                 self.total-=self.programs[pidx]['size']
                 if not self._downloading:
@@ -814,8 +831,10 @@ class GUI( gui.GUI ):
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
             if not stopped:
-                self.downloaded.append(pidx)
-                pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
+                #self.downloaded.append(pidx)
+                #pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
+                self.downloaded.add(pidx)
+
                 try:
                     self.lstPrograms.SetItemTextColour(item, wx.Colour(45,83,164))
                     self.lstPrograms.Select(item, 0) #Deselect
@@ -1050,17 +1069,7 @@ class GUI( gui.GUI ):
 
     def _ReadConfig(self):
         #read from a config file
-        if 'APPDATA' in os.environ:
-            configdir = os.path.join(os.environ['APPDATA'], APPNAME.lower())
-        elif 'XDG_CONFIG_HOME' in os.environ:
-            configdir = os.path.join(os.environ['XDG_CONFIG_HOME'], APPNAME.lower())
-        else:
-            confighome = os.path.join(wx.GetHomeDir(), '.config')
-            if os.path.exists(confighome) and os.path.isdir(confighome):
-                configdir = os.path.join(confighome, APPNAME.lower())
-            else:
-                configdir = os.path.join(wx.GetHomeDir(), '.'+APPNAME.lower())
-
+        configdir=self.configdir
         defaultconfig=os.path.join(data_path(),'config','defaults.ini')
         self.userconfig=os.path.join(configdir,'config.ini')
         self.config=ConfigParser.RawConfigParser(dict_type=ordereddict.OrderedDict)
@@ -1072,14 +1081,14 @@ class GUI( gui.GUI ):
         self.config.set('Debug','logfile',logfile)
 
         #Already downloaded recordings
-        self.downloadedcache=os.path.join(configdir,'downloaded.cache')
-        try:self.downloaded=list(set(pickle.load( open(self.downloadedcache))+self.downloaded))
-        except:self.downloaded=[]
+        #self.downloadedcache=os.path.join(configdir,'downloaded.cache')
+        #try:self.downloaded=list(set(pickle.load( open(self.downloadedcache))+self.downloaded))
+        #except:self.downloaded=[]
 
         #Already deleted recordings
-        self.deletedcache=os.path.join(configdir,'deleted.cache')
-        try:self.deleted=list(set(pickle.load( open(self.deletedcache))+self.deleted))
-        except:self.deleted=[]
+        #self.deletedcache=os.path.join(configdir,'deleted.cache')
+        #try:self.deleted=list(set(pickle.load( open(self.deletedcache))+self.deleted))
+        #except:self.deleted=[]
 
     def _Reset(self):
         self._ClearQueue()
@@ -1344,8 +1353,8 @@ class GUI( gui.GUI ):
         #Add logfile back in so it shows in "Tools->Options..." dialog
         self.config.set('Debug', 'logfile', logfile)
 
-        pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
-        pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
+        #pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
+        #pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
 
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']

@@ -19,10 +19,11 @@
 # THE SOFTWARE.
 
 import os,sys,time,signal,ctypes,copy,logging,logging.handlers,traceback
-import subprocess,re,ConfigParser,socket,struct,glob,tempfile,shutil
+import subprocess,re,ConfigParser,socket,struct,glob,tempfile,shutil,pickle
 import wx
 from ordereddict import OrderedDict as odict
 from collections import deque
+from contextlib import contextmanager
 from Queue import Queue
 from threading import Thread,Event,Timer
 from datetime import datetime, timedelta
@@ -37,6 +38,59 @@ MiB=1000.0**2
 #######################################################################
 #Helper classes
 #######################################################################
+
+class PickledSet(object):
+    def __init__(self, filepath, iterable=None, timeout=1):
+        self.filepath = filepath
+        self.timeout = timeout
+        if iterable is not None:
+            try:self._write(self._read() | {value})
+            except TypeError:self._write(set(self._read()) | {value})
+
+    @contextmanager
+    def file_lock(self, lock_file, timeout):
+        """file lock based on code from http://amix.dk/blog/post/19531"""
+        start = time.time
+        while os.path.exists(lock_file+'.lock'):
+            time.sleep(0.1)
+            if time.time() - start > timeout:
+                raise RuntimeError('%s is locked' % lock_file)
+        open(lock_file+'.lock', 'w').write("1")
+        try:
+            yield
+        finally:
+            os.remove(lock_file+'.lock')   
+
+    def _read(self):
+        with self.file_lock(self.filepath, self.timeout):
+            try: return pickle.load(open(self.filepath, "rb"))
+            except IOError: return set([])
+
+    def _write(self, value):
+        with self.file_lock(self.filepath, self.timeout):
+            pickle.dump(value, open(self.filepath, "wb"))
+
+    def __contains__(self, value):
+        return value in self._read()
+
+    def __iter__(self):
+        return self._read().__iter__()
+
+    def __repr__(self):
+        return repr(self._read())
+
+    def __str__(self):
+        return str(self._read())
+
+    def add(self, value):
+        try:self._write(self._read() | {value})
+        except TypeError:self._write(set(self._read()) | {value})
+
+    def remove(self, value):
+        tmp=self._read()
+        tmp.remove(value)
+        self._write(tmp)
+        
 class ThreadedUtility( Thread ):
 
     def __init__( self, parent):
