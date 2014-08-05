@@ -272,13 +272,16 @@ def upload_find_auth(file_path, project_name, summary, description,
     # Try to load username/password from svn config for first try.
     if config_dir is None:
       config_dir = get_svn_config_dir()
-    (svn_username, password) = get_svn_auth(project_name, config_dir)
+    (svn_username, svn_password) = get_svn_auth(project_name, config_dir)
     if user_name is None:
       # If username was not supplied by caller, use svn config.
       user_name = svn_username
+    if password is None:
+      # If password was not supplied by caller, use svn config.
+      password = svn_password
   else:
     # Just initialize password for the first try.
-    password = None
+    pass # password = None
 
   while tries > 0:
     if user_name is None:
@@ -327,7 +330,7 @@ def main():
   parser.add_option('-l', '--labels', dest='labels',
                     help='An optional list of comma-separated labels to attach '
                     'to the file')
-
+  
   options, args = parser.parse_args()
 
   if not options.summary:
@@ -350,7 +353,7 @@ def main():
 
   status, reason, url = upload_find_auth(file_path, options.project,
                                          options.summary, options.description,
-                                         labels,options.user, options.password)
+                                         labels,user_name=options.user, password=options.password)
   if url:
     print 'The file was uploaded successfully.'
     print 'URL: %s' % url
