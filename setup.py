@@ -40,7 +40,7 @@ def writelicenseversion(version,display_version):
     #    version='.'.join(version)
     #except:
     #    pass
-       
+
     license=open('LICENSE').read().strip()
     v=open('yardwizgui/__version__.py', 'w')
     l=open('yardwizgui/__license__.py', 'w')
@@ -144,7 +144,7 @@ if 'linux' in sys.platform and 'install' in sys.argv:
 elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     from setuptools import setup
     import glob,stat
-        
+
     APP = [ 'YARDWiz.py']
     DATA_FILES = [('',['README']),
                   ('',['LICENSE']),
@@ -176,7 +176,7 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
                'encodings.shift_jis','encodings.shift_jis_2004','encodings.shift_jisx0213','encodings.tis_620',
                'encodings.uu_codec','encodings.bz2_codec','encodings.utf_16','encodings.utf_16_be',
                'encodings.utf_16_le','encodings.utf_32','encodings.utf_32_be','encodings.utf_32_le']}
-    
+
     shutil.copy('yardwiz','YARDWiz.py')
     if os.path.exists('dist'):shutil.rmtree('dist')
     if os.path.exists('build'):shutil.rmtree('build')
@@ -185,7 +185,7 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
           data_files=DATA_FILES,
           options={'py2app': OPTIONS},
           setup_requires=['py2app'])
-  
+
     os.rename('dist/YARDWiz.app', 'dist/YARDWiz2.app')
     cmd='ditto -rsrc -arch i386 dist/YARDWiz2.app dist/YARDWiz.app'
     proc=subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -193,7 +193,7 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     exit_code=proc.wait()
     if exit_code:
         print stderr
-        sys.exit(0)        
+        sys.exit(0)
     else:print stdout
 
     print 'Copying getWizPnP to app'
@@ -260,7 +260,7 @@ elif 'py2exe' in sys.argv:
     #                        }]
     setupargs['windows'] = [{'script':'yardwiz',
                             'icon_resources':[(2, r'yardwizgui/icons/icon.ico')],
-                            
+
                             }]
     setupargs['options']={"py2exe":
                             {'excludes':['xml','ssl','httplib','urllib','xml','_ssl','email','doctest','pdb','unittest','inspect','pyreadline'],
@@ -314,7 +314,11 @@ elif 'py2exe' in sys.argv:
     proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout,stderr=proc.communicate()
     exit_code=proc.wait()
-    if exit_code:print stderr
+    if exit_code:
+      print 'stderr'
+      print stderr
+      print 'stdout'
+      print stdout
     else:
         print stdout
         print 'Zipping files'
@@ -334,4 +338,3 @@ except:pass
 try:
     os.unlink('yardwiz.desktop')
 except:pass
-
