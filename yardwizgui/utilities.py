@@ -539,7 +539,7 @@ class ThreadedDeleter( ThreadedUtility ):
 
     def run(self):
         if not self.isonline(self.device):
-            evt = DeleteProgram(wizEVT_DELETEPROGRAM, -1)
+            evt = DeleteComplete(wizEVT_DELETECOMPLETE, -1)
             self.PostEvent(evt)
             return
 
