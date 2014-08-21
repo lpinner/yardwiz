@@ -260,8 +260,6 @@ class GUI( gui.GUI ):
         #write stuff to various controls, eg server & port
         self.devices=odict()
         self.device=None
-        #if not self.config.getboolean('Settings','cachedevice'):
-        #    self.config.set('Settings','device','')
         devices=self.config.get('Settings','device').strip()
         logger.debug('Devices="%s"'%devices)
         if self.cbxDevice.GetCount()>0:
@@ -721,8 +719,6 @@ class GUI( gui.GUI ):
             lidx=self.lstPrograms.FindItemData(-1,event.index)
             if lidx>-1:
                 pidx=self.programs.keys()[event.index]
-                #if pidx not in self.deleted:self.deleted.append(pidx)
-                #pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
                 if pidx not in self.deleted:self.deleted.add(pidx)
                 self.lstPrograms.DeleteItem(lidx)
                 self.total-=self.programs[pidx]['size']
@@ -831,8 +827,6 @@ class GUI( gui.GUI ):
             del self.queue[0]
             self.lstQueue.DeleteItem(0)
             if not stopped:
-                #self.downloaded.append(pidx)
-                #pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
                 self.downloaded.add(pidx)
 
                 try:
@@ -1079,16 +1073,6 @@ class GUI( gui.GUI ):
 
         #Add logfile to config so it shows in "Tools->Options..." dialog
         self.config.set('Debug','logfile',logfile)
-
-        #Already downloaded recordings
-        #self.downloadedcache=os.path.join(configdir,'downloaded.cache')
-        #try:self.downloaded=list(set(pickle.load( open(self.downloadedcache))+self.downloaded))
-        #except:self.downloaded=[]
-
-        #Already deleted recordings
-        #self.deletedcache=os.path.join(configdir,'deleted.cache')
-        #try:self.deleted=list(set(pickle.load( open(self.deletedcache))+self.deleted))
-        #except:self.deleted=[]
 
     def _Reset(self):
         self._ClearQueue()
@@ -1352,9 +1336,6 @@ class GUI( gui.GUI ):
 
         #Add logfile back in so it shows in "Tools->Options..." dialog
         self.config.set('Debug', 'logfile', logfile)
-
-        #pickle.dump( self.downloaded, open( self.downloadedcache, "w" ) )
-        #pickle.dump( self.deleted, open( self.deletedcache, "w" ) )
 
     def _sanitize(self,filename):
         chars=['\\','/',':','*','?','"','<','>','|','$']
