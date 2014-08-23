@@ -603,16 +603,15 @@ class GUI( gui.GUI ):
         self._connecting=False
         self._Enable()
 
-        downloaded,deleted=list(self.downloaded)[:],list(self.deleted)[:]
-        for pidx in downloaded:
-            #if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
-            if pidx not in self.programs:self.downloaded.remove(pidx)
-        for pidx in deleted:
-            #if pidx not in self.programs:del self.deleted[self.deleted.index(pidx)]
-            if pidx not in self.programs:self.deleted.remove(pidx)
-
-
         if event and event.connected:
+            downloaded,deleted=list(self.downloaded)[:],list(self.deleted)[:]
+            for pidx in downloaded:
+                #if pidx not in self.programs:del self.downloaded[self.downloaded.index(pidx)]
+                if pidx not in self.programs:self.downloaded.remove(pidx)
+            for pidx in deleted:
+                #if pidx not in self.programs:del self.deleted[self.deleted.index(pidx)]
+                if pidx not in self.programs:self.deleted.remove(pidx)
+
             self.lstPrograms.SetSortEnabled()
 
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
