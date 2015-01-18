@@ -52,7 +52,8 @@ class GUI( gui.GUI ):
                 self.configdir = os.path.join(confighome, APPNAME.lower())
             else:
                 self.configdir = os.path.join(wx.GetHomeDir(), '.'+APPNAME.lower())
-
+        if not os.path.exists(self.configdir): mkdirs(self.configdir)
+        
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         self.icons=os.path.join(data_path(),u'icons')
         ico = wx.Icon( os.path.join(self.icons, u"yardwiz.png"), wx.BITMAP_TYPE_ANY )
@@ -961,6 +962,8 @@ class GUI( gui.GUI ):
                 else:
                     filespec='|'.join([twspec,tsspec])
                     ext=['.tvwiz','.ts']
+                #Issue 40
+                if isosx:filename+='.foo'
                 dlg = wx.FileDialog(self, "Save As...", self.config.get('Settings','lastdir'), filename,filespec, wx.FD_SAVE)
                 if (dlg.ShowModal() == wx.ID_OK):
                     f=dlg.Filename#.encode(filesysenc)

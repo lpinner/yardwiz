@@ -1435,6 +1435,16 @@ def license():
         license=open(os.path.join(os.path.dirname(sys.argv[0]),'LICENSE')).read().strip()
     return license
 
+def mkdirs(path):
+    '''http://stackoverflow.com/questions/600268/mkdir-p-functionality-in-python'''
+    import errno
+    try:
+        os.makedirs(path)
+    except OSError as exc: # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else: raise
+
 def subproc(cmd,stdin=False,env=os.environ):
     logger.debug(subprocess.list2cmdline(cmd))
     logger.debug(str(cmd))
