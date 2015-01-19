@@ -16,3 +16,7 @@ proj.file-list = [loc('build-yardwiz-linux.py'),
                   loc('upload_release.py'),
                   loc('yardwiz')]
 proj.file-type = 'shared'
+proj.launch-config = {loc('../../../../../../home/bnl/bin/syncmusic2'): ('pr'\
+        'oject',
+        (u'-r /media/OurServer/Music -l /media/OurServer/Music/Luke.m3u --nfiles=350 -o /home/bnl/lukesphone/Music --bitrate=128',
+         ''))}
