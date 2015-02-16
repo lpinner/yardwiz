@@ -50,7 +50,7 @@ class PickledSet(object):
     @contextmanager
     def file_lock(self, lock_file, timeout):
         """file lock based on code from http://amix.dk/blog/post/19531"""
-        start = time.time
+        start = time.time()
         while os.path.exists(lock_file+'.lock'):
             time.sleep(0.1)
             if time.time() - start > timeout:
