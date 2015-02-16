@@ -10,11 +10,11 @@ else
   exit 1
 fi
 cd ~
-rm -rf YARDWiz-0.*
+rm -rf YARDWiz-[0-9].[0-9].[0-9]*
 cp $YWDIR/dist/YARDWiz-[0-9].[0-9].[0-9].zip .
-unzip YARDWiz-0.*.zip
+unzip YARDWiz-[0-9].[0-9].[0-9]*.zip
 cd YARDWiz-[0-9].[0-9].[0-9]
 cp $YWDIR/buildfiles/getWizPnP-OSX getWizPnP
 chmod +x getWizPnP
 /Library/Frameworks/Python.framework/Versions/2.7/bin/python setup.py py2app
-cp dist/YARDWiz-0.*.dmg $YWDIR/dist/
+cp dist/YARDWiz-[0-9].[0-9].[0-9]*.dmg $YWDIR/dist/
