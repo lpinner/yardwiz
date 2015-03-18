@@ -1,0 +1,1 @@
+![http://yardwiz.googlecode.com/svn/images/screenshot-ubuntu.png](http://yardwiz.googlecode.com/svn/images/screenshot-ubuntu.png)

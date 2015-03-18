@@ -1,0 +1,1 @@
+![http://yardwiz.googlecode.com/svn/images/screenshot-win7.png](http://yardwiz.googlecode.com/svn/images/screenshot-win7.png)
