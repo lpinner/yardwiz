@@ -11,7 +11,7 @@ Screenshots
 -----------
 | Linux | Windows | OSX|
 | --------| ------------- | -----|
-|[![Screenshot Linux](../branches/wiki/images/thumbnail-ubuntu.png)](../branches/wiki/images/screenshot-ubuntu.png)|[![Screenshot Windows](../branches/wiki/images/thumbnail-win7.png)](./branches/wiki/images/screenshot-win7.png)|[![Screenshot OSX](../branches/wiki/images/thumbnail-osx.png)](./branches/wiki/images/screenshot-osx.png)|
+|[![Screenshot Linux](../wiki/images/thumbnail-ubuntu.png)](../wiki/images/screenshot-ubuntu.png)|[![Screenshot Windows](../wiki/images/thumbnail-win7.png)](./wiki/images/screenshot-win7.png)|[![Screenshot OSX](../wiki/images/thumbnail-osx.png)](./wiki/images/screenshot-osx.png)|
 
 
 Requirements
