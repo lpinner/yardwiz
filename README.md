@@ -5,8 +5,6 @@ Introduction
 ------------
 YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP prgram.  getWizPnP is a command line program that allows you (among other things) to list and download recordings from a Beyonwiz DP series PVR over the network using the WizPnP interface. YARDWiz draws a lot of inspiration from the Two Wizards WizZilla software.
 
-I wrote YARDWiz as I wanted a simple getWinPnP GUI that ran on my Linux laptop.
-
 Screenshots
 -----------
 | Linux | Windows | OSX|
@@ -16,10 +14,10 @@ Screenshots
 
 Requirements
 ------------
-YARDWiz has been tested successfully on Windows 7 Pro, Windows XP Pro, Ubuntu 10.04, 10.10 and 11.04, OpenSuse 11.4, Fedora 14 & 15 and Mac OSX 10.6.2 and 10.6.7 with python 2.6 & 2.7, wxPython 2.8 and getWizPnP 0.4.3a and 0.5.2. It should work on Windows Vista and other linux flavours.
+YARDWiz has been tested successfully on Windows XP - 10, Ubuntu 10.04-14.04, OpenSuse 11.4, Fedora 14 & 15 and Mac OSX 10.6 - 10.10 with python 2.6 & 2.7, wxPython 2.8. It should work on Windows Vista and other linux flavours.
 
 ### Windows
-A windows installer is now available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
+A windows installer is available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
 
 ### OSX
 An OSX application is available which is self contained and doesn't require the installation of python, wxpython or getWizPnP.
