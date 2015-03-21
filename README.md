@@ -8,7 +8,7 @@ YARDWiz is a simple crossplatform GUI front end for prl's getWizPnP prgram.  get
 
 | Linux | Windows | OSX|
 | --------| ------------- | -----|
-|[![Screenshot Linux](../wiki/images/thumbnail-ubuntu.png)](../wiki/images/screenshot-ubuntu.png)|[![Screenshot Windows](../wiki/images/thumbnail-win7.png)](./wiki/images/screenshot-win7.png)|[![Screenshot OSX](../wiki/images/thumbnail-osx.png)](./wiki/images/screenshot-osx.png)|
+|[![Screenshot Linux](https://raw.githubusercontent.com/lpinner/yardwiz/wiki/images/thumbnail-ubuntu.png)](https://github.com/lpinner/yardwiz/tree/wiki/images/screenshot-ubuntu.png)|[![Screenshot Windows](https://raw.githubusercontent.com/lpinner/yardwiz/wiki/images/thumbnail-win7.png)](https://github.com/lpinner/yardwiz/tree/wiki/images/screenshot-win7.png)|[![Screenshot OSX](https://raw.githubusercontent.com/lpinner/yardwiz/wiki/images/thumbnail-osx.png)](https://github.com/lpinner/yardwiz/tree/wiki/images/screenshot-osx.png)|
 
 ## Downloads ##
 Downloads are hosted on Bintray [![Latest version](https://api.bintray.com/packages/lukepinnerau/generic/YARDWiz/images/download.png)](http://goo.gl/KIcLUV)
