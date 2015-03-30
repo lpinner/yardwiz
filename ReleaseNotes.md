@@ -4,11 +4,11 @@
   * I think it's time to call this thing version 1!
 
 ### Fixed in 1.0 ###
-  * Resolves [Issue #41](../issues/41)
+  * Resolves Issue #41
 
 ## 0.4.6 ##
 ### Fixed in 0.4.6 ###
-  * Fix truncated filename suggestions in OS X file picker dialog [Issue #40](../issues/40).
+  * Fix truncated filename suggestions in OS X file picker dialog Issue #40.
   * Fix crash on startup on fresh installs.
 
 ## 0.4.5 ##
@@ -51,7 +51,7 @@
   * Move '.' to end of path for security
   * Hardcode VLC path on OSX
   * Fix multiple --no-video-title arg when calling VLC
-  * Create a limited environment for getWizPnP with HOME/APPDATA stripped out/empty GETWIZPNPCONF environment variable (getWizPnP 0.5.4+) so .getwizpnp/getwizpnp.conf doesn't get used. Resolves [Issue #2](../issues/2).
+  * Create a limited environment for getWizPnP with HOME/APPDATA stripped out/empty GETWIZPNPCONF environment variable (getWizPnP 0.5.4+) so .getwizpnp/getwizpnp.conf doesn't get used. Resolves Issue #2.
 
 ## 0.4.2 ##
 ### New in 0.4.2 ###
@@ -84,7 +84,7 @@
   * Stop auto scrolling when selecting a control in the Tools->Options dialog.
   * Fix bug setting tooltip on option label in the Tools->Options dialog so both option label and option value display tooltips.
   * Symlink yardwiz.desktop to /usr/share/applications so it shows up in the Ubuntu Unity dash.
-  * Include psutil in py2exe build. Resolves [Issue #3](../issues/3).
+  * Include psutil in py2exe build. Resolves Issue #3.
 
 ---
 
@@ -137,11 +137,11 @@
 ## 0.3.3 ##
 ### New in 0.3.3 ###
   * Added basic download scheduler.
-  * Enabled downloads in .tvwiz format [Issue #23](../issues/23).
+  * Enabled downloads in .tvwiz format Issue #23.
 
 ### Fixed in 0.3.3 ###
-  * Removed Beyonwiz subfolder names from downloaded filenames [Issue #24](../issues/24).
-  * Worked around column autosize bug truncating long titles on Win XP [Issue #25](../issues/25).
+  * Removed Beyonwiz subfolder names from downloaded filenames Issue #24.
+  * Worked around column autosize bug truncating long titles on Win XP Issue #25.
 
 ## 0.3.2 ##
 ### New in 0.3.2 ###
@@ -150,8 +150,8 @@
 
 ### Fixed in 0.3.2 ###
   * Fixed bug with 9 decimal places after seconds in estimated download time remaining.
-  * Worked around [Issue #20](../issues/20) - YARDWiz <=v3.1 never finishes listing recordings
-  * Worked around [Issue #21](../issues/21) - YARDWiz hangs on completion of downloads on OSX
+  * Worked around Issue #20 - YARDWiz <=v3.1 never finishes listing recordings
+  * Worked around Issue #21 - YARDWiz hangs on completion of downloads on OSX
   * Other minor bug fixes.
 
 ## 0.3.1 ##
@@ -174,7 +174,7 @@
   * Fixed debug output on OSX
   * Fixed ConfigParser issue on Ubuntu 10.04LTS
   * Fixed hang on application exit in Linux when a download is paused.
-  * Worked around [Issue #19](../issues/19) - Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed".
+  * Worked around Issue #19 - Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed".
 
 ## 0.3.0 ##
 ### New in 0.3.0 ###
@@ -204,8 +204,8 @@
 
 ## 0.2.8 ##
 ### Fixed in 0.2.8 ###
-  * Resolves [Issue #16](../issues/16)
-  * Resolves [Issue #17](../issues/17)
+  * Resolves Issue #16
+  * Resolves Issue #17
   * Minor tweaks for OSX
 
 ## 0.2.7 ##
@@ -219,8 +219,8 @@
 ### New in 0.2.6 ###
   * Added link to online help.
 ### Fixed in 0.2.6 ###
-  * Fixes issue with GUI becoming unresponsive when deleting [Issue #14](../issues/14)
-  * Fixes issue with GUI appearing offscreen [Issue #15](../issues/15)
+  * Fixes issue with GUI becoming unresponsive when deleting Issue #14
+  * Fixes issue with GUI appearing offscreen Issue #15
 
 ## 0.2.5 ##
 ### Fixed in 0.2.5 ###
@@ -238,7 +238,7 @@
   * Added option to specify a command to be run after a download is complete
   * Added option to play a sound after a download is complete
 ### Fixed in 0.2.3 ###
-  * Resolved [Issue #4](../issues/4)
+  * Resolved Issue #4
   * Minor tweaks and bugfixes
 
 ## 0.2.2 ##
