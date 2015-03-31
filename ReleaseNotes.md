@@ -4,11 +4,11 @@
   * I think it's time to call this thing version 1!
 
 ### Fixed in 1.0 ###
-  * Resolves Issue #41
+  * Resolves Issue [#41](https://github.com/lpinner/yardwiz/issues/41)
 
 ## 0.4.6 ##
 ### Fixed in 0.4.6 ###
-  * Fix truncated filename suggestions in OS X file picker dialog Issue #40.
+  * Fix truncated filename suggestions in OS X file picker dialog Issue [#40](https://github.com/lpinner/yardwiz/issues/40).
   * Fix crash on startup on fresh installs.
 
 ## 0.4.5 ##
@@ -137,11 +137,11 @@
 ## 0.3.3 ##
 ### New in 0.3.3 ###
   * Added basic download scheduler.
-  * Enabled downloads in .tvwiz format Issue #23.
+  * Enabled downloads in .tvwiz format Issue [#23](https://github.com/lpinner/yardwiz/issues/23).
 
 ### Fixed in 0.3.3 ###
-  * Removed Beyonwiz subfolder names from downloaded filenames Issue #24.
-  * Worked around column autosize bug truncating long titles on Win XP Issue #25.
+  * Removed Beyonwiz subfolder names from downloaded filenames Issue [#24](https://github.com/lpinner/yardwiz/issues/24).
+  * Worked around column autosize bug truncating long titles on Win XP Issue [#25](https://github.com/lpinner/yardwiz/issues/25).
 
 ## 0.3.2 ##
 ### New in 0.3.2 ###
@@ -150,8 +150,8 @@
 
 ### Fixed in 0.3.2 ###
   * Fixed bug with 9 decimal places after seconds in estimated download time remaining.
-  * Worked around Issue #20 - YARDWiz <=v3.1 never finishes listing recordings
-  * Worked around Issue #21 - YARDWiz hangs on completion of downloads on OSX
+  * Worked around Issue [#20](https://github.com/lpinner/yardwiz/issues/20) - YARDWiz <=v3.1 never finishes listing recordings
+  * Worked around Issue [#21](https://github.com/lpinner/yardwiz/issues/21) - YARDWiz hangs on completion of downloads on OSX
   * Other minor bug fixes.
 
 ## 0.3.1 ##
@@ -174,7 +174,7 @@
   * Fixed debug output on OSX
   * Fixed ConfigParser issue on Ubuntu 10.04LTS
   * Fixed hang on application exit in Linux when a download is paused.
-  * Worked around Issue #19 - Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed".
+  * Worked around Issue [#19](https://github.com/lpinner/yardwiz/issues/19) - Downloads may fail with the getWizPnP error - "Search for WizPnP devices failed".
 
 ## 0.3.0 ##
 ### New in 0.3.0 ###
@@ -204,8 +204,8 @@
 
 ## 0.2.8 ##
 ### Fixed in 0.2.8 ###
-  * Resolves Issue #16
-  * Resolves Issue #17
+  * Resolves Issue [#16](https://github.com/lpinner/yardwiz/issues/16)
+  * Resolves Issue [#17](https://github.com/lpinner/yardwiz/issues/17)
   * Minor tweaks for OSX
 
 ## 0.2.7 ##
@@ -219,8 +219,8 @@
 ### New in 0.2.6 ###
   * Added link to online help.
 ### Fixed in 0.2.6 ###
-  * Fixes issue with GUI becoming unresponsive when deleting Issue #14
-  * Fixes issue with GUI appearing offscreen Issue #15
+  * Fixes issue with GUI becoming unresponsive when deleting Issue [#14](https://github.com/lpinner/yardwiz/issues/14)
+  * Fixes issue with GUI appearing offscreen Issue [#15](https://github.com/lpinner/yardwiz/issues/15)
 
 ## 0.2.5 ##
 ### Fixed in 0.2.5 ###
