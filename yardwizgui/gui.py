@@ -610,7 +610,6 @@ class LicenseDialog ( wx.Dialog ):
 		bSizer6 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtLicense = wx.TextCtrl( self, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.Size( 450,300 ), wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH|wx.TE_WORDWRAP|wx.VSCROLL )
-		self.txtLicense.SetMaxLength( 0 ) 
 		bSizer6.Add( self.txtLicense, 0, wx.ALL|wx.EXPAND, 5 )
 		
 		m_sdbSizer2 = wx.StdDialogButtonSizer()
