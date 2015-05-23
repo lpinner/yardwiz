@@ -89,7 +89,6 @@ class GUI ( wx.Frame ):
 		bSizer7 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtLog = wx.TextCtrl( self.nbtabLog, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.NO_BORDER|wx.VSCROLL )
-		self.txtLog.SetMaxLength( 0 ) 
 		self.txtLog.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer7.Add( self.txtLog, 1, wx.EXPAND, 0 )
@@ -103,7 +102,6 @@ class GUI ( wx.Frame ):
 		bSizer8 = wx.BoxSizer( wx.VERTICAL )
 		
 		self.txtInfo = wx.TextCtrl( self.nbtabInfo, wx.ID_ANY, wx.EmptyString, wx.DefaultPosition, wx.DefaultSize, wx.TE_MULTILINE|wx.TE_READONLY|wx.NO_BORDER|wx.VSCROLL )
-		self.txtInfo.SetMaxLength( 0 ) 
 		self.txtInfo.SetFont( wx.Font( 10, 70, 90, 90, False, wx.EmptyString ) )
 		
 		bSizer8.Add( self.txtInfo, 1, wx.EXPAND, 0 )
