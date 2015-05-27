@@ -53,7 +53,7 @@ class GUI( gui.GUI ):
             else:
                 self.configdir = os.path.join(wx.GetHomeDir(), '.'+APPNAME.lower())
         if not os.path.exists(self.configdir): mkdirs(self.configdir)
-        
+
         #Set the icons here as wxFormBuilder relative path is relative to the working dir, not the app dir
         self.icons=os.path.join(data_path(),u'icons')
         ico = wx.Icon( os.path.join(self.icons, u"yardwiz.png"), wx.BITMAP_TYPE_ANY )
@@ -445,6 +445,7 @@ class GUI( gui.GUI ):
 
         #Quick listing, can include deleted files
         self.quicklisting=self.config.getboolean('Settings','quicklisting')
+        self.enableinfo=self.config.getboolean('Settings','enableinfo')
 
         #Date formats
         self.getwizpnp_dateformat='%b.%d.%Y_%H.%M' #Apr.7.2011_21.28 '%a %b %d %H:%M:%S %Y'
@@ -592,7 +593,9 @@ class GUI( gui.GUI ):
 
         #Connect to the Wiz etc...
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
-        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,quick=self.quicklisting,wizargs=self.wizargs)
+        self.ThreadedConnector=ThreadedConnector(self,self.Stop,device=self.device,
+                                                 quick=self.quicklisting,wizargs=self.wizargs,
+                                                 enableinfo=self.enableinfo)
 
     def _Connected(self,event=None):
 
@@ -1006,7 +1009,7 @@ class GUI( gui.GUI ):
 
     def _PostDownloadCommand(self,program):
         cmd=self.postcmd.split('#')[0].strip()
-        
+
         if cmd:
             import shlex
             cmd=cmd.replace('%F', '"%s"'%program['filename'])
@@ -1102,7 +1105,7 @@ class GUI( gui.GUI ):
                 else:return
 
             idx = self.lstPrograms.GetNextSelected(idx)
-            
+
         if not schedulelist:return
         programs=[self.programs[pidx]['title'] for pidx in schedulelist]
         self._FadeOut(stop=200,delta=-25)
@@ -1719,5 +1722,5 @@ def error_message(parent,message,caption='Error'):
     )
     dlg.ShowModal()
     dlg.Destroy()
-    
-    
+
+

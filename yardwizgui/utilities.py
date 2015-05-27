@@ -59,7 +59,7 @@ class PickledSet(object):
         try:
             yield
         finally:
-            os.remove(lock_file+'.lock')   
+            os.remove(lock_file+'.lock')
 
     def _read(self):
         with self.file_lock(self.filepath, self.timeout):
@@ -90,7 +90,7 @@ class PickledSet(object):
         tmp=self._read()
         tmp.remove(value)
         self._write(tmp)
-        
+
 class ThreadedUtility( Thread ):
 
     def __init__( self, parent):
@@ -206,11 +206,12 @@ class ThreadedChecker( ThreadedUtility ):
         return '\n'.join(errors)
 
 class ThreadedConnector( ThreadedUtility ):
-    def __init__( self, parent, evtStop, device, quick=False,wizargs=[]):
+    def __init__( self, parent, evtStop, device, quick=False, enableinfo=True, wizargs=[]):
         ThreadedUtility.__init__( self, parent )
         self.device=device
         self.parent=parent
         self.quick=quick
+        self.enableinfo=enableinfo
         self.wizargs=wizargs
         self.thread=None
         self._stop = evtStop
@@ -271,6 +272,8 @@ class ThreadedConnector( ThreadedUtility ):
             return exit_code,str(err)#We're probably exiting
 
         del self.proc
+
+        if not self.enableinfo: return exit_code,''
 
         cmd.extend(['-vv','--episode','--index'])
         self.proc=subproc(cmd,env=wizenv)
@@ -368,7 +371,7 @@ class ThreadedConnector( ThreadedUtility ):
                                            #E.g. recordings/_Sunrise _live_ Feb.14.2012_6.14-1
         try:d=time.strptime(datetime,self.getwizpnp_dateformats[0])
         except ValueError:datetime='Jan.1.9999_00.00'
-        
+
         title=' '.join(program[:-1]).replace('/_','/')
         title='/'.join(title.split('/')[1:])
         title=title.replace('_',':') #Strip off the root folder
@@ -415,7 +418,7 @@ class ThreadedConnector( ThreadedUtility ):
                         datetime=proglines[i+2].split('-')[0].strip()
                         d=time.strptime(datetime,self.getwizpnp_dateformats[1])
                         program['date']=time.strftime(self.getwizpnp_dateformats[0], d)
-                    except: 
+                    except:
                         program['date']='Jan.1.9999_00.00'
 
             elif 'playtime' in line:
@@ -427,7 +430,7 @@ class ThreadedConnector( ThreadedUtility ):
                 pass
             else:
                 otherlines.append(line.strip())
-                
+
         info='\n'.join([info]+otherlines).strip()
         if info:
             program['info'] = '%s: %s \n%s\n%s'%(channel,title,info,playtime)

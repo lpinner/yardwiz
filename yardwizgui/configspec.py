@@ -35,6 +35,7 @@ logfiletooltip='The path of the current log file. Changing this has no effect.'
 vlctooltip='For more, see: http://wiki.videolan.org/VLC_command-line_help'
 streamtooltip='Using a temporary file when playing in VLC allows you to pause and rewind.'
 retriestooltip='Number of times to retry a failed download.'
+enableinfotooltip='Enable extended info when quicklisting.'
 
 configspec={
     'Settings':{
@@ -51,6 +52,7 @@ configspec={
         'filename_dateformat':['Date format for filenames', 'str', dateformattooltip],
         'confirmdelete':['Confirm delete', 'bool'],
         'quicklisting':['Enable quick listing', 'bool',quicklistingtooltip ],
+        'enableinfo':['Enable extended info', 'bool',enableinfotooltip ],
         'showtooltips':['Show ToolTips', 'bool'],
         'retries':['Retry failed downloads', 'str',retriestooltip],
         'delete':['Delete failed downloads', 'bool']
