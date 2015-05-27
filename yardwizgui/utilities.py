@@ -276,7 +276,8 @@ class ThreadedConnector( ThreadedUtility ):
         if not self.enableinfo: return exit_code,''
 
         cmd.extend(['-vv','--episode','--index'])
-        self.proc=subproc(cmd,env=wizenv)
+        stderr = tempfile.TemporaryFile()
+        self.proc=subproc(cmd,stderr=stderr,env=wizenv)
         proglines=[]
         exists=[]
         updated=[]
@@ -305,7 +306,8 @@ class ThreadedConnector( ThreadedUtility ):
         exit_code=1
         try:
             exit_code=self.proc.wait()
-            err=self.proc.stderr.read()
+            stderr.seek(0)
+            err=stderr.read() #self.proc.stderr.read()
             if exit_code > 0:
                 logger.debug('%s,%s'%(exit_code,err))
                 raise Exception,err
@@ -322,7 +324,8 @@ class ThreadedConnector( ThreadedUtility ):
     def _listprograms(self):
         self.thread=None
         cmd=[wizexe,'--all','-v','-l','--episode','--index','--sort=fatd']+self.device.args+self.wizargs
-        self.proc=subproc(cmd,env=wizenv)
+        stderr = tempfile.TemporaryFile()
+        self.proc=subproc(cmd,stderr=stderr,env=wizenv)
         proglines=[]
         index=-1
         programs=[]
@@ -354,7 +357,8 @@ class ThreadedConnector( ThreadedUtility ):
         exit_code=1
         try:
             exit_code=self.proc.wait()
-            err=self.proc.stderr.read()
+            stderr.seek(0)
+            err=stderr.read() #self.proc.stderr.read()
             if self.thread:
                 self.thread.join()
             if exit_code > 0:
@@ -442,7 +446,8 @@ class ThreadedConnector( ThreadedUtility ):
     def _getinfo(self):
         time.sleep(0.5)
         cmd=[wizexe,'-vv','--all','-l','--episode','--index','--sort=fatd']+self.device.args
-        proc=subproc(cmd,env=wizenv)
+        stderr = tempfile.TemporaryFile()
+        proc=subproc(cmd,stderr=stderr,env=wizenv)
         proglines=[]
         index=-1
         programs=[]
@@ -471,8 +476,9 @@ class ThreadedConnector( ThreadedUtility ):
 
         try:
             exit_code=proc.wait()
-            err=self.proc.stderr.read()
-            logger.debug('%s,%s'%(exit_code,stderr))
+            stderr.seek(0)
+            err=stderr.read() #self.proc.stderr.read()
+            logger.debug('%s,%s'%(exit_code,err))
             return exit_code,err
         except Exception,err:
             return 1,str(err)
@@ -1448,18 +1454,18 @@ def mkdirs(path):
             pass
         else: raise
 
-def subproc(cmd,stdin=False,env=os.environ):
+def subproc(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,stdin=None,env=os.environ):
     logger.debug(subprocess.list2cmdline(cmd))
     logger.debug(str(cmd))
     if stdin:
         if type(stdin) is not file:stdin=subprocess.PIPE
-        proc=subprocess.Popen(cmd, stdin=stdin, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env,**Popen_kwargs)
+        proc=subprocess.Popen(cmd, stdin=stdin, stdout=stdout, stderr=stderr,env=env,**Popen_kwargs)
     else:
         if 'pythonw.exe' in sys.executable:
-            proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env,**Popen_kwargs)
+            proc=subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr,env=env,**Popen_kwargs)
             proc.stdin.close()
         else:
-            proc=subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,env=env,**Popen_kwargs)
+            proc=subprocess.Popen(cmd, stdout=stdout, stderr=stderr,env=env,**Popen_kwargs)
     return proc
 
 def timefromsecs(secs):
