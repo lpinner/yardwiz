@@ -15,6 +15,9 @@ test*.*
 *.pyc
 .DS_Store
 make*
+release-post.txt
+build.sh
+build-yardwiz-linux-osx.py
 
 ### PyCharm ###
 ## Directory-based project format:
