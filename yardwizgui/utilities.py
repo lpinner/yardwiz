@@ -308,6 +308,7 @@ class ThreadedConnector( ThreadedUtility ):
             exit_code=self.proc.wait()
             stderr.seek(0)
             err=stderr.read() #self.proc.stderr.read()
+            stderr.close()
             if exit_code > 0:
                 logger.debug('%s,%s'%(exit_code,err))
                 raise Exception,err
@@ -359,6 +360,7 @@ class ThreadedConnector( ThreadedUtility ):
             exit_code=self.proc.wait()
             stderr.seek(0)
             err=stderr.read() #self.proc.stderr.read()
+            stderr.close()
             if self.thread:
                 self.thread.join()
             if exit_code > 0:
@@ -478,6 +480,7 @@ class ThreadedConnector( ThreadedUtility ):
             exit_code=proc.wait()
             stderr.seek(0)
             err=stderr.read() #self.proc.stderr.read()
+            stderr.close()
             logger.debug('%s,%s'%(exit_code,err))
             return exit_code,err
         except Exception,err:
