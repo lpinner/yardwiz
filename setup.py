@@ -146,9 +146,9 @@ elif 'darwin' in sys.platform and 'py2app' in sys.argv:
     import glob,stat
 
     APP = [ 'YARDWiz.py']
-    DATA_FILES = [('',['README']),
+    DATA_FILES = [('',['README.md']),
                   ('',['LICENSE']),
-                  ('',['RELEASE']),
+                  ('',['ReleaseNotes.md']),
                   ('',['VERSION'])]
     OPTIONS = {'extension': '.app', 'packages': 'yardwizgui',
                'iconfile': 'yardwizgui/icons/yardwiz.icns',
@@ -269,9 +269,9 @@ elif 'py2exe' in sys.argv:
                             }
                         }
     setupargs['data_files']=[('',['getwizpnp.exe']),
-                             ('',['README']),
+                             ('',['README.md']),
                              ('',['LICENSE']),
-                             ('',['RELEASE']),
+                             ('',['ReleaseNotes.md']),
                              ('',['VERSION']),
                              ('',['Microsoft.VC90.CRT.manifest']),
                              ('',glob.glob('msvc*90.dll')),
