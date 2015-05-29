@@ -1,0 +1,38 @@
+### Build stuff ###
+buildfiles/
+dist/
+*.dll
+*.exe
+*.bat
+MANIFEST
+
+### Scratch ###
+untitled*.py
+test*.*
+
+*~
+*.bak
+*.pyc
+.DS_Store
+make*
+
+### PyCharm ###
+## Directory-based project format:
+.idea/
+
+### Wing ###
+*.wpr
+*.wpu
+
+### Windows ###
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+
