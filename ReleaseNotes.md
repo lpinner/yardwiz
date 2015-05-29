@@ -1,4 +1,9 @@
 # Release notes #
+## 1.1 ##
+### Fixed in 1.1 ###
+  * Fix crash on startup when using wxpython 3x on Linux  - Issue [#42](https://github.com/lpinner/yardwiz/issues/42)
+  * Fix hang when there are large numbers of deleted recordings which caused the STDERR buffer to fill up - Issue [#43](https://github.com/lpinner/yardwiz/issues/43)
+
 ## 1.0 ##
 ### New in 1.0 ###
   * I think it's time to call this thing version 1!
