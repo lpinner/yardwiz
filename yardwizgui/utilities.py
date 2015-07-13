@@ -64,7 +64,7 @@ class PickledSet(object):
     def _read(self):
         with self.file_lock(self.filepath, self.timeout):
             try: return pickle.load(open(self.filepath, "rb"))
-            except IOError: return set([])
+            except IOError, ValueError: return set([])
 
     def _write(self, value):
         with self.file_lock(self.filepath, self.timeout):
