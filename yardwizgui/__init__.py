@@ -36,7 +36,7 @@ class GUI( gui.GUI ):
     idxLog=0
     idxInfo=1
     idxQueue=2
-
+    l=wx.Locale(wx.LANGUAGE_ENGLISH_AUSTRALIA)
     mincolwidth=60
 
     def __init__( self):
