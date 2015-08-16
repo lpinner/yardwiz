@@ -29,6 +29,7 @@ import gui, configspec
 from ordereddict import OrderedDict as odict
 
 APPNAME='YARDWiz'
+HELP_URL='https://github.com/lpinner/yardwiz/wiki'
 
 class GUI( gui.GUI ):
 
@@ -36,7 +37,6 @@ class GUI( gui.GUI ):
     idxLog=0
     idxInfo=1
     idxQueue=2
-    l=wx.Locale(wx.LANGUAGE_ENGLISH_AUSTRALIA)
     mincolwidth=60
 
     def __init__( self):
@@ -1476,7 +1476,7 @@ class GUI( gui.GUI ):
         self._DownloadQueue()
 
     def mitHelp_OnSelect( self, event ):
-        webbrowser.open_new_tab('http://code.google.com/p/yardwiz/wiki/Help')
+        webbrowser.open_new_tab(HELP_URL)
 
     def mitStream_OnSelect( self, event ):
         self._Stream()
