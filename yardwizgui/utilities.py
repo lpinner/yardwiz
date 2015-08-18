@@ -1151,7 +1151,7 @@ class Stderr(object):
 
     def errordialog(self,message, caption):
         import wx
-        wxapp = wx.PySimpleApp(0)
+        wxapp = wx.App(0)
         dlg = wx.MessageDialog(None,message, caption, wx.OK | wx.ICON_ERROR)
         dlg.ShowModal()
         dlg.Destroy()
@@ -1460,6 +1460,7 @@ def mkdirs(path):
 def subproc(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE,stdin=None,env=os.environ):
     logger.debug(subprocess.list2cmdline(cmd))
     logger.debug(str(cmd))
+    env = {str(i): str(env[i]) for i in env}
     if stdin:
         if type(stdin) is not file:stdin=subprocess.PIPE
         proc=subprocess.Popen(cmd, stdin=stdin, stdout=stdout, stderr=stderr,env=env,**Popen_kwargs)
