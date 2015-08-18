@@ -70,6 +70,7 @@ class GUI( gui.GUI ):
         self.btnStop.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"stop_disabled.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnVLC.SetBitmapLabel( wx.Bitmap( os.path.join(self.icons, u"vlc.png"), wx.BITMAP_TYPE_ANY ) )
         self.btnVLC.SetBitmapDisabled( wx.Bitmap( os.path.join(self.icons, u"vlc_disabled.png"), wx.BITMAP_TYPE_ANY ) )
+        self.mitCheck.Enable(False)
         self.mitScheduled.Enable(False)
         self.btnVLC.Disable()
 
@@ -474,8 +475,26 @@ class GUI( gui.GUI ):
         self.retries=self.config.getint('Settings','retries')
         self.deletefail=self.config.getboolean('Settings','delete')
 
+    def _BindEvent(self,event,handler,window):
+        try:window.Bind(event,handler)
+        except:pass
+        try:
+            for cw in window.GetChildren():
+                try:self._BindEvent(event,handler,cw)
+                except:pass
+        except:pass
+
+    def _CheckComplete(self,event):
+        if event and event.message:self._Log(event.message)
+        self._checking=False
+        self._Enable()
+        self.lstPrograms.SetSortEnabled()
+
+        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
     def _CheckWiz(self):
         if self._connecting or self._deleting or self._downloading:return
+        if not self.device:return
         self._checking=True
         self.Stop.clear()
         self.lstPrograms.SetSortEnabled(False)
@@ -493,23 +512,6 @@ class GUI( gui.GUI ):
         self._SetCursor(wx.StockCursor(wx.CURSOR_ARROWWAIT))
         self._Log('Checking recordings...')
         checker=ThreadedChecker(self,self.Stop,self.device)
-
-    def _BindEvent(self,event,handler,window):
-        try:window.Bind(event,handler)
-        except:pass
-        try:
-            for cw in window.GetChildren():
-                try:self._BindEvent(event,handler,cw)
-                except:pass
-        except:pass
-
-    def _CheckComplete(self,event):
-        if event and event.message:self._Log(event.message)
-        self._checking=False
-        self._Enable()
-        self.lstPrograms.SetSortEnabled()
-
-        self._SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
 
     def _CleanupConfig(self):
         #Bit of cleanup from previous versions
@@ -880,7 +882,8 @@ class GUI( gui.GUI ):
     def _Enable(self):
         self.Stop.clear()
         self.mitDelete.Enable( True )
-        self.mitCheck.Enable( True )
+        if self.device: 
+            self.mitCheck.Enable( True )
         if not self._downloading:
             self.btnConnect.Enable( True )
             self.cbxDevice.Enable( True )
@@ -1451,13 +1454,13 @@ class GUI( gui.GUI ):
     def lstQueue_OnMiddleClick( self, event ):
         self.mitRemove_OnSelect(event)
 
-    def mitCheck_OnSelect( self, event ):
-        self._CheckWiz()
-
     def mitAbout_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)
         dlg=AboutDialog(self)
         self._FadeIn(start=200,delta=25)
+
+    def mitCheck_OnSelect( self, event ):
+        self._CheckWiz()
 
     def mitClearQueue_OnSelect( self, event ):
         self._ClearQueue()
@@ -1477,9 +1480,6 @@ class GUI( gui.GUI ):
 
     def mitHelp_OnSelect( self, event ):
         webbrowser.open_new_tab('http://code.google.com/p/yardwiz/wiki/Help')
-
-    def mitStream_OnSelect( self, event ):
-        self._Stream()
 
     def mitPreferences_OnSelect( self, event ):
         self._FadeOut(stop=200,delta=-25)
@@ -1505,6 +1505,9 @@ class GUI( gui.GUI ):
         self._FadeOut(stop=200,delta=-25)
         self._ScheduledDownloads()
         self._FadeIn(start=200,delta=25)
+
+    def mitStream_OnSelect( self, event ):
+        self._Stream()
 
     def onActivate( self, event ):
         self._UpdateSize()
